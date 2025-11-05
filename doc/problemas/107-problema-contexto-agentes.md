@@ -7,7 +7,7 @@ La propuesta actual establece que el agente tiene acceso a:
 - Datos, documentos, historial, metadatos
 - Limitado al expediente específico (no acceso a otros expedientes)
 
-Ver: [[../032-contexto-agente|Contexto disponible para agentes]]
+Ver: [Contexto disponible para agentes](../032-contexto-agente.md)
 
 ## Fortalezas Identificadas
 
@@ -434,9 +434,9 @@ def execute_agent_action(agent, task, expediente):
 
 ## Relaciones
 
-- Ver: [[100-problematica-general|Problemática general]]
-- Ver: [[../032-contexto-agente|Propuesta de contexto actual]]
-- Ver: [[102-problema-permisos-seguridad|Minimización de datos]]
-- Ver: [[108-aspectos-ausentes|Procesamiento multimodal]]
-- Ver: [[105-problema-configuracion-agentes|Configuración de chunking]]
-- Ver: [[109-prioridades-mejora|Prioridades]]
+- Ver: [Problemática general](100-problematica-general.md)
+- Ver: [Propuesta de contexto actual](../032-contexto-agente.md)
+- Ver: [Minimización de datos](102-problema-permisos-seguridad.md)
+- Ver: [Procesamiento multimodal](108-aspectos-ausentes.md)
+- Ver: [Configuración de chunking](105-problema-configuracion-agentes.md)
+- Ver: [Prioridades](109-prioridades-mejora.md)

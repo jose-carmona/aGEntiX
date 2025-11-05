@@ -4,7 +4,7 @@
 
 La propuesta integra agentes IA en workflows BPMN mediante **acciones de tipo Agente** dentro de tareas existentes. El modelo permite combinar acciones automáticas, manuales y de agente.
 
-Ver: [[../020-bpmn-modelo|Modelo BPMN]], [[../023-acciones-agente|Acciones de agente]]
+Ver: [Modelo BPMN](../020-bpmn-modelo.md), [Acciones de agente](../023-acciones-agente.md)
 
 ## Fortalezas Identificadas
 
@@ -299,9 +299,9 @@ tarea_bpmn:
 
 ## Relaciones
 
-- Ver: [[100-problematica-general|Problemática general]]
-- Ver: [[../020-bpmn-modelo|Modelo BPMN actual]]
-- Ver: [[../023-acciones-agente|Acciones de agente]]
-- Ver: [[101-problema-arquitectura-mcp|Latencia y fallos MCP]]
-- Ver: [[105-problema-configuracion-agentes|Configuración de timeouts]]
-- Ver: [[109-prioridades-mejora|Prioridades]]
+- Ver: [Problemática general](100-problematica-general.md)
+- Ver: [Modelo BPMN actual](../020-bpmn-modelo.md)
+- Ver: [Acciones de agente](../023-acciones-agente.md)
+- Ver: [Latencia y fallos MCP](101-problema-arquitectura-mcp.md)
+- Ver: [Configuración de timeouts](105-problema-configuracion-agentes.md)
+- Ver: [Prioridades](109-prioridades-mejora.md)

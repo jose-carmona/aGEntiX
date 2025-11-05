@@ -8,7 +8,7 @@ La propuesta actual define un sistema de permisos basado en:
 - Propagación: `Agente → MCP → API`
 - Principio de mínimo privilegio
 
-Ver: [[../050-permisos-agente|Sistema de permisos]], [[../052-propagacion-permisos|Propagación de permisos]]
+Ver: [Sistema de permisos](../050-permisos-agente.md), [Propagación de permisos](../052-propagacion-permisos.md)
 
 ## Fortalezas Identificadas
 
@@ -179,9 +179,9 @@ agent_role:
 
 ## Relaciones
 
-- Ver: [[100-problematica-general|Problemática general]]
-- Ver: [[../050-permisos-agente|Sistema de permisos actual]]
-- Ver: [[../052-propagacion-permisos|Propagación en arquitectura]]
-- Ver: [[101-problema-arquitectura-mcp|Implementación en MCP]]
-- Ver: [[108-aspectos-ausentes|Aspectos de cumplimiento normativo]]
-- Ver: [[109-prioridades-mejora|Prioridades de mejora]]
+- Ver: [Problemática general](100-problematica-general.md)
+- Ver: [Sistema de permisos actual](../050-permisos-agente.md)
+- Ver: [Propagación en arquitectura](../052-propagacion-permisos.md)
+- Ver: [Implementación en MCP](101-problema-arquitectura-mcp.md)
+- Ver: [Aspectos de cumplimiento normativo](108-aspectos-ausentes.md)
+- Ver: [Prioridades de mejora](109-prioridades-mejora.md)

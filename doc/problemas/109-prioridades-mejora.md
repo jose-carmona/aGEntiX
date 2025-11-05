@@ -31,7 +31,7 @@ Este documento consolida y prioriza todas las mejoras identificadas en el análi
 Estas mejoras son **bloqueantes para producción**. Sin ellas, el sistema no debe desplegarse.
 
 ### C1. Cumplimiento GDPR y LOPD
-**Documento**: [[108-aspectos-ausentes#4-cumplimiento-normativo-específico]]
+**Documento**: [108-aspectos-ausentes#4-cumplimiento-normativo-específico](108-aspectos-ausentes#4-cumplimiento-normativo-específico.md)
 
 **Acciones**:
 1. Realizar DPIA (Data Protection Impact Assessment)
@@ -50,7 +50,7 @@ Estas mejoras son **bloqueantes para producción**. Sin ellas, el sistema no deb
 ---
 
 ### C2. Modelo de Permisos Granular
-**Documento**: [[102-problema-permisos-seguridad]]
+**Documento**: [102-problema-permisos-seguridad](102-problema-permisos-seguridad.md)
 
 **Acciones**:
 1. Definir catálogo explícito de permisos
@@ -69,7 +69,7 @@ Estas mejoras son **bloqueantes para producción**. Sin ellas, el sistema no deb
 ---
 
 ### C3. Manejo de Fallos en Workflows BPMN
-**Documento**: [[104-problema-integracion-bpmn]]
+**Documento**: [104-problema-integracion-bpmn](104-problema-integracion-bpmn.md)
 
 **Acciones**:
 1. Definir semántica de transacciones (patrón Saga)
@@ -87,7 +87,7 @@ Estas mejoras son **bloqueantes para producción**. Sin ellas, el sistema no deb
 ---
 
 ### C4. Formato Estructurado de Logs y Auditoría
-**Documento**: [[106-problema-auditoria-trazabilidad]]
+**Documento**: [106-problema-auditoria-trazabilidad](106-problema-auditoria-trazabilidad.md)
 
 **Acciones**:
 1. Definir esquema JSON de logs
@@ -105,7 +105,7 @@ Estas mejoras son **bloqueantes para producción**. Sin ellas, el sistema no deb
 ---
 
 ### C5. Cumplimiento Ley 39/2015 (Procedimiento Administrativo)
-**Documento**: [[108-aspectos-ausentes#4-cumplimiento-normativo-específico]]
+**Documento**: [108-aspectos-ausentes#4-cumplimiento-normativo-específico](108-aspectos-ausentes#4-cumplimiento-normativo-específico.md)
 
 **Acciones**:
 1. Asesoría legal sobre obligaciones específicas
@@ -123,7 +123,7 @@ Estas mejoras son **bloqueantes para producción**. Sin ellas, el sistema no deb
 ---
 
 ### C6. Especificación Detallada de MCP
-**Documento**: [[101-problema-arquitectura-mcp]]
+**Documento**: [101-problema-arquitectura-mcp](101-problema-arquitectura-mcp.md)
 
 **Acciones**:
 1. Definir esquema completo de recursos MCP
@@ -145,7 +145,7 @@ Estas mejoras son **bloqueantes para producción**. Sin ellas, el sistema no deb
 Necesarias antes de escalar el sistema. Pueden iniciarse después del lanzamiento de piloto mínimo, pero deben completarse en Fase 1.
 
 ### A1. Matriz de Decisión Clara (Enfoque Conservador)
-**Documento**: [[103-problema-enfoque-conservador]]
+**Documento**: [103-problema-enfoque-conservador](103-problema-enfoque-conservador.md)
 
 **Acciones**:
 1. Crear taxonomía detallada de tareas con ejemplos
@@ -159,7 +159,7 @@ Necesarias antes de escalar el sistema. Pueden iniciarse después del lanzamient
 ---
 
 ### A2. Modelo de Configuración Completo de Agentes
-**Documento**: [[105-problema-configuracion-agentes]]
+**Documento**: [105-problema-configuracion-agentes](105-problema-configuracion-agentes.md)
 
 **Acciones**:
 1. Ampliar esquema de configuración (rate limits, retry policies, etc.)
@@ -173,7 +173,7 @@ Necesarias antes de escalar el sistema. Pueden iniciarse después del lanzamient
 ---
 
 ### A3. Chunking Inteligente de Contexto
-**Documento**: [[107-problema-contexto-agentes]]
+**Documento**: [107-problema-contexto-agentes](107-problema-contexto-agentes.md)
 
 **Acciones**:
 1. Implementar semantic search con embeddings
@@ -187,7 +187,7 @@ Necesarias antes de escalar el sistema. Pueden iniciarse después del lanzamient
 ---
 
 ### A4. Gestión de Costes
-**Documento**: [[108-aspectos-ausentes#1-gestión-de-costes]]
+**Documento**: [108-aspectos-ausentes#1-gestión-de-costes](108-aspectos-ausentes#1-gestión-de-costes.md)
 
 **Acciones**:
 1. Implementar límites de coste (por expediente, agente, organización)
@@ -200,7 +200,7 @@ Necesarias antes de escalar el sistema. Pueden iniciarse después del lanzamient
 ---
 
 ### A5. Testing de Sesgo y Fairness
-**Documento**: [[108-aspectos-ausentes#5-sesgo-y-fairness]]
+**Documento**: [108-aspectos-ausentes#5-sesgo-y-fairness](108-aspectos-ausentes#5-sesgo-y-fairness.md)
 
 **Acciones**:
 1. Crear test suite con casos de diferentes demografías
@@ -213,7 +213,7 @@ Necesarias antes de escalar el sistema. Pueden iniciarse después del lanzamient
 ---
 
 ### A6. Explicabilidad
-**Documento**: [[108-aspectos-ausentes#6-explicabilidad-explainability]]
+**Documento**: [108-aspectos-ausentes#6-explicabilidad-explainability](108-aspectos-ausentes#6-explicabilidad-explainability.md)
 
 **Acciones**:
 1. Configurar agentes para chain-of-thought
@@ -226,7 +226,7 @@ Necesarias antes de escalar el sistema. Pueden iniciarse después del lanzamient
 ---
 
 ### A7. Análisis Automatizado de Logs
-**Documento**: [[106-problema-auditoria-trazabilidad]]
+**Documento**: [106-problema-auditoria-trazabilidad](106-problema-auditoria-trazabilidad.md)
 
 **Acciones**:
 1. Implementar detección de anomalías
@@ -239,7 +239,7 @@ Necesarias antes de escalar el sistema. Pueden iniciarse después del lanzamient
 ---
 
 ### A8. Plan de Continuidad de Negocio
-**Documento**: [[108-aspectos-ausentes#7-continuidad-de-negocio-y-disaster-recovery]]
+**Documento**: [108-aspectos-ausentes#7-continuidad-de-negocio-y-disaster-recovery](108-aspectos-ausentes#7-continuidad-de-negocio-y-disaster-recovery.md)
 
 **Acciones**:
 1. Diseñar degradación graciosa (GEX funciona sin agentes)
@@ -256,7 +256,7 @@ Necesarias antes de escalar el sistema. Pueden iniciarse después del lanzamient
 Mejoras significativas pero pueden diferirse a Fase 2.
 
 ### M1. Soporte Multimodal
-**Documento**: [[108-aspectos-ausentes#2-soporte-multimodal]]
+**Documento**: [108-aspectos-ausentes#2-soporte-multimodal](108-aspectos-ausentes#2-soporte-multimodal.md)
 
 **Acciones**:
 1. Evaluar capacidades multimodales de LLMs
@@ -268,7 +268,7 @@ Mejoras significativas pero pueden diferirse a Fase 2.
 ---
 
 ### M2. Paralelización en BPMN
-**Documento**: [[104-problema-integracion-bpmn]]
+**Documento**: [104-problema-integracion-bpmn](104-problema-integracion-bpmn.md)
 
 **Acciones**:
 1. Permitir acciones de agente en paralelo
@@ -280,7 +280,7 @@ Mejoras significativas pero pueden diferirse a Fase 2.
 ---
 
 ### M3. Catálogo de Agentes
-**Documento**: [[105-problema-configuracion-agentes]]
+**Documento**: [105-problema-configuracion-agentes](105-problema-configuracion-agentes.md)
 
 **Acciones**:
 1. Portal web con agentes disponibles
@@ -292,7 +292,7 @@ Mejoras significativas pero pueden diferirse a Fase 2.
 ---
 
 ### M4. Programa de Formación
-**Documento**: [[108-aspectos-ausentes#8-formación-y-change-management]]
+**Documento**: [108-aspectos-ausentes#8-formación-y-change-management](108-aspectos-ausentes#8-formación-y-change-management.md)
 
 **Acciones**:
 1. Desarrollar materiales de formación
@@ -305,7 +305,7 @@ Mejoras significativas pero pueden diferirse a Fase 2.
 ---
 
 ### M5. Herramienta de Auditoría
-**Documento**: [[106-problema-auditoria-trazabilidad]]
+**Documento**: [106-problema-auditoria-trazabilidad](106-problema-auditoria-trazabilidad.md)
 
 **Acciones**:
 1. Portal web para auditores
@@ -318,7 +318,7 @@ Mejoras significativas pero pueden diferirse a Fase 2.
 ---
 
 ### M6. Agente Solicita Más Contexto
-**Documento**: [[107-problema-contexto-agentes]]
+**Documento**: [107-problema-contexto-agentes](107-problema-contexto-agentes.md)
 
 **Acciones**:
 1. Implementar function calling para solicitar documentos
@@ -334,21 +334,21 @@ Mejoras significativas pero pueden diferirse a Fase 2.
 Deseables pero no urgentes. Fase 3+.
 
 ### B1. Internacionalización
-**Documento**: [[108-aspectos-ausentes#3-internacionalización]]
+**Documento**: [108-aspectos-ausentes#3-internacionalización](108-aspectos-ausentes#3-internacionalización.md)
 
 **Estimación**: 1 mes
 
 ---
 
 ### B2. A/B Testing de Prompts
-**Documento**: [[105-problema-configuracion-agentes]]
+**Documento**: [105-problema-configuracion-agentes](105-problema-configuracion-agentes.md)
 
 **Estimación**: 1.5 meses
 
 ---
 
 ### B3. Resúmenes Automáticos de Documentos
-**Documento**: [[107-problema-contexto-agentes]]
+**Documento**: [107-problema-contexto-agentes](107-problema-contexto-agentes.md)
 
 **Estimación**: 1 mes
 
@@ -487,5 +487,5 @@ El roadmap priorizado permite:
 
 ## Relaciones
 
-- Ver: [[100-problematica-general|Problemática general]]
-- Ver todos los documentos de problemas: [[101-problema-arquitectura-mcp|MCP]], [[102-problema-permisos-seguridad|Seguridad]], [[103-problema-enfoque-conservador|Conservador]], [[104-problema-integracion-bpmn|BPMN]], [[105-problema-configuracion-agentes|Config]], [[106-problema-auditoria-trazabilidad|Auditoría]], [[107-problema-contexto-agentes|Contexto]], [[108-aspectos-ausentes|Ausentes]]
+- Ver: [Problemática general](100-problematica-general.md)
+- Ver todos los documentos de problemas: [MCP](101-problema-arquitectura-mcp.md), [Seguridad](102-problema-permisos-seguridad.md), [Conservador](103-problema-enfoque-conservador.md), [BPMN](104-problema-integracion-bpmn.md), [Config](105-problema-configuracion-agentes.md), [Auditoría](106-problema-auditoria-trazabilidad.md), [Contexto](107-problema-contexto-agentes.md), [Ausentes](108-aspectos-ausentes.md)

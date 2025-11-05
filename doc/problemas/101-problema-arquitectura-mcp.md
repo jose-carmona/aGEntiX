@@ -4,7 +4,7 @@
 
 La propuesta actual define el uso de **Model Context Protocol (MCP)** como mecanismo de desacoplamiento entre agentes y GEX, siguiendo el flujo: `Agente → MCP → API de GEX`
 
-Ver: [[../042-acceso-mcp|Propuesta de acceso MCP]]
+Ver: [Propuesta de acceso MCP](../042-acceso-mcp.md)
 
 ## Fortalezas Identificadas
 
@@ -123,8 +123,8 @@ Ver: [[../042-acceso-mcp|Propuesta de acceso MCP]]
 
 ## Relaciones
 
-- Ver: [[100-problematica-general|Problemática general]]
-- Ver: [[../042-acceso-mcp|Propuesta actual de MCP]]
-- Ver: [[../040-criterios-diseño|Criterios de diseño]]
-- Ver: [[102-problema-permisos-seguridad|Propagación de permisos vía MCP]]
-- Ver: [[109-prioridades-mejora|Prioridades de mejora]]
+- Ver: [Problemática general](100-problematica-general.md)
+- Ver: [Propuesta actual de MCP](../042-acceso-mcp.md)
+- Ver: [Criterios de diseño](../040-criterios-diseño.md)
+- Ver: [Propagación de permisos vía MCP](102-problema-permisos-seguridad.md)
+- Ver: [Prioridades de mejora](109-prioridades-mejora.md)

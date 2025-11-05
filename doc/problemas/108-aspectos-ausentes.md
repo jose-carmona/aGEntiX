@@ -470,9 +470,9 @@ Sin gestión del cambio adecuada, el sistema puede ser rechazado o mal utilizado
 
 ## Relaciones
 
-- Ver: [[100-problematica-general|Problemática general]]
-- Ver: [[102-problema-permisos-seguridad|Seguridad]]
-- Ver: [[103-problema-enfoque-conservador|Sesgo en automatización]]
-- Ver: [[106-problema-auditoria-trazabilidad|Cumplimiento]]
-- Ver: [[107-problema-contexto-agentes|Multimodal]]
-- Ver: [[109-prioridades-mejora|Priorización]]
+- Ver: [Problemática general](100-problematica-general.md)
+- Ver: [Seguridad](102-problema-permisos-seguridad.md)
+- Ver: [Sesgo en automatización](103-problema-enfoque-conservador.md)
+- Ver: [Cumplimiento](106-problema-auditoria-trazabilidad.md)
+- Ver: [Multimodal](107-problema-contexto-agentes.md)
+- Ver: [Priorización](109-prioridades-mejora.md)

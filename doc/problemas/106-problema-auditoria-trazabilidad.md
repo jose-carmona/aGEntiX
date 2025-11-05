@@ -7,7 +7,7 @@ La propuesta actual establece que:
 - Propósitos: depuración, comprobación, auditoría, cumplimiento
 - La autoría usa el nombre del tipo de agente
 
-Ver: [[../033-auditoria-agente|Requisitos de auditoría]], [[../051-autoria-agente|Gestión de autoría]]
+Ver: [Requisitos de auditoría](../033-auditoria-agente.md), [Gestión de autoría](../051-autoria-agente.md)
 
 ## Fortalezas Identificadas
 
@@ -360,9 +360,9 @@ Ver: `examples/logging_implementation.py`
 
 ## Relaciones
 
-- Ver: [[100-problematica-general|Problemática general]]
-- Ver: [[../033-auditoria-agente|Requisitos actuales]]
-- Ver: [[../051-autoria-agente|Autoría de acciones]]
-- Ver: [[102-problema-permisos-seguridad|Protección de datos]]
-- Ver: [[108-aspectos-ausentes|Cumplimiento normativo]]
-- Ver: [[109-prioridades-mejora|Prioridades]]
+- Ver: [Problemática general](100-problematica-general.md)
+- Ver: [Requisitos actuales](../033-auditoria-agente.md)
+- Ver: [Autoría de acciones](../051-autoria-agente.md)
+- Ver: [Protección de datos](102-problema-permisos-seguridad.md)
+- Ver: [Cumplimiento normativo](108-aspectos-ausentes.md)
+- Ver: [Prioridades](109-prioridades-mejora.md)

@@ -7,7 +7,7 @@ La estrategia actual adopta un **enfoque conservador** donde:
 - IA puede automatizar extracción de información y generación de documentos
 - IA puede asistir (pero no decidir) en análisis
 
-Ver: [[../041-enfoque-conservador|Estrategia conservadora]], [[../013-tareas-ia-candidatas|Tareas candidatas para IA]]
+Ver: [Estrategia conservadora](../041-enfoque-conservador.md), [Tareas candidatas para IA](../013-tareas-ia-candidatas.md)
 
 ## Fortalezas Identificadas
 
@@ -197,10 +197,10 @@ auditoria:
 
 ## Relaciones
 
-- Ver: [[100-problematica-general|Problemática general]]
-- Ver: [[../041-enfoque-conservador|Estrategia actual]]
-- Ver: [[../013-tareas-ia-candidatas|Tareas candidatas]]
-- Ver: [[../012-tareas-humanas|Tareas que requieren humanos]]
-- Ver: [[106-problema-auditoria-trazabilidad|Auditoría de decisiones]]
-- Ver: [[108-aspectos-ausentes|Fairness y sesgo]]
-- Ver: [[109-prioridades-mejora|Prioridades]]
+- Ver: [Problemática general](100-problematica-general.md)
+- Ver: [Estrategia actual](../041-enfoque-conservador.md)
+- Ver: [Tareas candidatas](../013-tareas-ia-candidatas.md)
+- Ver: [Tareas que requieren humanos](../012-tareas-humanas.md)
+- Ver: [Auditoría de decisiones](106-problema-auditoria-trazabilidad.md)
+- Ver: [Fairness y sesgo](108-aspectos-ausentes.md)
+- Ver: [Prioridades](109-prioridades-mejora.md)

@@ -25,16 +25,16 @@ Existe una **brecha significativa entre conceptos elegantes y realidad compleja*
 
 Los problemas se han organizado por área temática:
 
-- [[101-problema-arquitectura-mcp|Arquitectura MCP]]
-- [[102-problema-permisos-seguridad|Permisos y Seguridad]]
-- [[103-problema-enfoque-conservador|Enfoque Conservador]]
-- [[104-problema-integracion-bpmn|Integración BPMN]]
-- [[105-problema-configuracion-agentes|Configuración de Agentes]]
-- [[106-problema-auditoria-trazabilidad|Auditoría y Trazabilidad]]
-- [[107-problema-contexto-agentes|Contexto de Agentes]]
-- [[108-aspectos-ausentes|Aspectos Ausentes]]
+- [Arquitectura MCP](101-problema-arquitectura-mcp.md)
+- [Permisos y Seguridad](102-problema-permisos-seguridad.md)
+- [Enfoque Conservador](103-problema-enfoque-conservador.md)
+- [Integración BPMN](104-problema-integracion-bpmn.md)
+- [Configuración de Agentes](105-problema-configuracion-agentes.md)
+- [Auditoría y Trazabilidad](106-problema-auditoria-trazabilidad.md)
+- [Contexto de Agentes](107-problema-contexto-agentes.md)
+- [Aspectos Ausentes](108-aspectos-ausentes.md)
 
-Ver también: [[109-prioridades-mejora|Prioridades de Mejora]]
+Ver también: [Prioridades de Mejora](109-prioridades-mejora.md)
 
 ## Objetivo del Análisis
 
@@ -55,6 +55,6 @@ Antes de implementar, se requiere crear documentos técnicos de nivel 2 que espe
 
 ## Relaciones
 
-- Ver: [[../040-criterios-diseño|Criterios de diseño actuales]]
-- Ver: [[../042-acceso-mcp|Propuesta de acceso MCP]]
-- Ver: [[109-prioridades-mejora|Priorización de problemas]]
+- Ver: [Criterios de diseño actuales](../040-criterios-diseño.md)
+- Ver: [Propuesta de acceso MCP](../042-acceso-mcp.md)
+- Ver: [Priorización de problemas](109-prioridades-mejora.md)

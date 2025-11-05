@@ -6,7 +6,7 @@ La propuesta actual define configuración de agentes en dos niveles:
 - **Configuración general del tipo**: nombre, system prompt, URL, modelo LLM
 - **Configuración específica de tarea**: prompt específico, herramientas disponibles
 
-Ver: [[../031-configuracion-agente|Configuración de agentes]]
+Ver: [Configuración de agentes](../031-configuracion-agente.md)
 
 ## Fortalezas Identificadas
 
@@ -317,9 +317,9 @@ Ver archivo aparte: `examples/agent_config_complete.yaml`
 
 ## Relaciones
 
-- Ver: [[100-problematica-general|Problemática general]]
-- Ver: [[../031-configuracion-agente|Configuración actual]]
-- Ver: [[101-problema-arquitectura-mcp|Versionado de MCP]]
-- Ver: [[104-problema-integracion-bpmn|Timeouts en workflows]]
-- Ver: [[106-problema-auditoria-trazabilidad|Logging y telemetría]]
-- Ver: [[109-prioridades-mejora|Prioridades]]
+- Ver: [Problemática general](100-problematica-general.md)
+- Ver: [Configuración actual](../031-configuracion-agente.md)
+- Ver: [Versionado de MCP](101-problema-arquitectura-mcp.md)
+- Ver: [Timeouts en workflows](104-problema-integracion-bpmn.md)
+- Ver: [Logging y telemetría](106-problema-auditoria-trazabilidad.md)
+- Ver: [Prioridades](109-prioridades-mejora.md)
