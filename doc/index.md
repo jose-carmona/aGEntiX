@@ -34,5 +34,17 @@
 - [Gestión de autoría en acciones de agentes](051-autoria-agente.md)
 - [Propagación de permisos: Agente → MCP → API](052-propagacion-permisos.md)
 
+## Análisis Crítico y Problemas Identificados
+- [Introducción a la problemática general](problemas/100-problematica-general.md)
+- [Problemas en la arquitectura MCP](problemas/101-problema-arquitectura-mcp.md)
+- [Problemas en el modelo de permisos y seguridad](problemas/102-problema-permisos-seguridad.md)
+- [Problemas con el enfoque conservador](problemas/103-problema-enfoque-conservador.md)
+- [Problemas en la integración BPMN](problemas/104-problema-integracion-bpmn.md)
+- [Problemas en la configuración de agentes](problemas/105-problema-configuracion-agentes.md)
+- [Problemas en auditoría y trazabilidad](problemas/106-problema-auditoria-trazabilidad.md)
+- [Problemas en el contexto de agentes](problemas/107-problema-contexto-agentes.md)
+- [Aspectos ausentes en la documentación](problemas/108-aspectos-ausentes.md)
+- [Prioridades de mejora y roadmap](problemas/109-prioridades-mejora.md)
+
 ## Meta
 - [Método de documentación utilizado](zettelkasten.md)
