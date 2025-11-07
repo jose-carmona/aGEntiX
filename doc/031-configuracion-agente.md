@@ -6,11 +6,11 @@
 - **System prompt**: Instrucciones base del agente
 - **URL**: Endpoint del servicio del agente
 - **Modelo LLM**: Modelo de lenguaje a utilizar
-
-## Configuración Específica para la Tarea
-
-- **Prompt**: Instrucciones específicas para la tarea
 - **Herramientas disponibles**: Capacidades que puede usar el agente
+
+## Configuración Específica para la acción GEX
+
+- **Prompt**: Instrucciones específicas para la acción
 
 ## Observaciones
 

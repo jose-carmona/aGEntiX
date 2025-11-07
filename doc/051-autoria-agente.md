@@ -14,7 +14,14 @@ El **nombre definido en el tipo de agente** se usa como autor de las acciones.
 
 ## Transparencia
 
-Es fundamental que quede claro en el sistema cuándo una acción fue realizada por un agente IA en lugar de por un humano.
+Es fundamental que quede claro en el sistema cuándo una acción fue realizada por un agente IA en lugar de por un humano. La traza quedará visible en el Expediente junto al resto de logs de tareas.
+
+## ¿Qué trazas?
+
+- Contexto
+- Prompts
+- Razonamientos del LLM
+- Respuestas
 
 ## Relaciones
 

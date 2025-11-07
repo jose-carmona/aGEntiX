@@ -33,6 +33,7 @@
 - [Sistema de permisos para agentes IA](050-permisos-agente.md)
 - [Gestión de autoría en acciones de agentes](051-autoria-agente.md)
 - [Propagación de permisos: Agente → MCP → API](052-propagacion-permisos.md)
+- [Mitigación de Prompt Injection](053-mitigacion-prompt-injection.md)
 
 ## Análisis Crítico y Problemas Identificados
 - [Introducción a la problemática general](problemas/100-problematica-general.md)

@@ -14,7 +14,7 @@ El acceso a la información y las herramientas se realiza mediante el **Model Co
 ## Flujo de Acceso
 
 ```
-Agente → MCP → API de GEX
+BPMN → Agente → MCP → API → GEX
 ```
 
 ## Relaciones
