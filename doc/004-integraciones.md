@@ -4,10 +4,16 @@ GEX se integra con varios sistemas externos:
 
 ## Sistemas Integrados
 
+- **Sede Electrónica**: Sistema de captura de solicitudes en sede electrónica
 - **Sistema de Firma**: Firma electrónica de documentos
+- **Registro de Entrada / Salida**: Registro de movimiento de documentos de la Entidad
 - **Sistema de Notificaciones**: Avisos y notificaciones electrónicas
-- **Sistema de Recaudación**: Gestión de cobros y deudas
+- **Libro de Resoluciones**: Registro de resoluciones administrativas de la Entidad
 - **Contabilidad**: Anotaciones contables
+- **Gestión Tributaria**: Censo y padrones cobratorios de Impuestos, tasas, precios públicos
+- **Recaudación**: Gestión y cobro de deudas, tanto en voluntaria como en ejecutiva
+- **Personal**: Gestión de personal y nóminas.
+- etc.
 
 ## Rol de GEX
 

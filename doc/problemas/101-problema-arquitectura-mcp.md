@@ -2,7 +2,7 @@
 
 ## Contexto
 
-La propuesta actual define el uso de **Model Context Protocol (MCP)** como mecanismo de desacoplamiento entre agentes y GEX, siguiendo el flujo: `Agente → MCP → API de GEX`
+La propuesta actual define el uso de **Model Context Protocol (MCP)** como mecanismo de desacoplamiento entre agentes y GEX, siguiendo el flujo: `BPMN → Agente → MCP → API de GEX`
 
 Ver: [Propuesta de acceso MCP](../042-acceso-mcp.md)
 

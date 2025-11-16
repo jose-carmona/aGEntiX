@@ -16,6 +16,7 @@ Tareas que actualmente GEX automatiza **sin necesidad de IA**:
 
 - Generación de documentos desde plantillas
 - Sustitución de tokens por valores en plantillas
+- Poner documentos a firma
 
 ## Características
 

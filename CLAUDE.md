@@ -10,7 +10,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 The project uses a **Zettelkasten** system for documentation located in the `/doc` directory:
 - Each note represents a single concept, requirement, or idea
-- Notes are interconnected via `[[note-name]]` references
+- Notes are interconnected via `[note-name](note-file.md)` references
 - Start with `/doc/index.md` for a complete overview of all topics
 - Detailed documentation covers: GEX system, BPMN workflows, agent configuration, architecture principles, and security/permissions
 
