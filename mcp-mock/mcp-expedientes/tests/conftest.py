@@ -7,6 +7,8 @@ que pueden ser usadas en todos los tests.
 
 import os
 import sys
+import shutil
+from pathlib import Path
 import pytest
 
 # Configurar path para imports
@@ -48,3 +50,33 @@ def exp_id_licencia():
 def exp_id_certificado():
     """ID del expediente de certificado"""
     return "EXP-2024-003"
+
+
+@pytest.fixture
+def restore_expediente_data():
+    """
+    Restaura los datos de expedientes desde archivos .backup.
+
+    Esta fixture debe usarse en tests que modifiquen datos (escritura),
+    para garantizar que cada test empiece con datos limpios.
+
+    Los archivos .backup contienen el estado original de los expedientes
+    y siempre deben existir en data/expedientes/*.json.backup
+
+    Uso:
+        @pytest.mark.usefixtures("restore_expediente_data")
+        async def test_modificar_datos():
+            # Test que modifica datos
+            pass
+    """
+    data_dir = Path(__file__).parent.parent / "data" / "expedientes"
+
+    # Restaurar todos los expedientes desde backup
+    for backup_file in data_dir.glob("*.json.backup"):
+        test_file = backup_file.with_suffix("")  # Elimina .backup
+        shutil.copy(backup_file, test_file)
+
+    yield
+
+    # Opcionalmente limpiar después del test
+    # (por ahora no hacemos nada, dejamos el estado final para debug)

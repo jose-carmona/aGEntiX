@@ -137,7 +137,7 @@ async def test_list_resources():
     assert len(resources) >= 9  # 3 expedientes × 3 resources
 
     # Verificar que hay resources del expediente de prueba
-    uris = [r.uri for r in resources]
+    uris = [str(r.uri) for r in resources]
     assert "expediente://EXP-2024-001" in uris
     assert "expediente://EXP-2024-001/documentos" in uris
     assert "expediente://EXP-2024-001/historial" in uris

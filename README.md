@@ -72,10 +72,36 @@ npm install -g @modelcontextprotocol/inspector
 pytest
 ```
 
-## Quick Start - Servidor MCP Mock
+## Ejecución de Tests
+
+El proyecto incluye un script para ejecutar los tests desde la raíz del proyecto:
 
 ```bash
-# Dentro del Dev Container o con dependencias instaladas
+# Ejecutar todos los tests
+./run-tests.sh
+
+# Ejecutar con output verbose
+./run-tests.sh -v
+
+# Ejecutar solo tests de autenticación
+./run-tests.sh -k auth
+
+# Ejecutar solo tests de tools
+./run-tests.sh -k tools
+
+# Detener en el primer error
+./run-tests.sh -x
+
+# Re-ejecutar solo tests fallidos
+./run-tests.sh --failed
+
+# Ver todas las opciones disponibles
+./run-tests.sh --help
+```
+
+### Alternativa: Ejecución manual desde el directorio de tests
+
+```bash
 cd mcp-mock/mcp-expedientes
 
 # Test rápido
@@ -83,6 +109,15 @@ cd mcp-mock/mcp-expedientes
 
 # Ejecutar tests completos
 pytest -v
+```
+
+**Nota:** Los tests utilizan archivos `.backup` para mantener datos limpios entre ejecuciones. Los archivos originales se restauran automáticamente antes de cada test que modifica datos.
+
+## Quick Start - Servidor MCP Mock
+
+```bash
+# Dentro del Dev Container o con dependencias instaladas
+cd mcp-mock/mcp-expedientes
 
 # Iniciar servidor HTTP
 python -m uvicorn server_http:app --reload --port 8000

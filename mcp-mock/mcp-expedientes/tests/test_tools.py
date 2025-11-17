@@ -105,6 +105,7 @@ async def test_tc_tool_001_consultar_expediente(exp_id_subvenciones):
 
 
 @pytest.mark.asyncio
+@pytest.mark.usefixtures("restore_expediente_data")
 async def test_tc_tool_002_listar_documentos(exp_id_subvenciones):
     """
     TC-TOOL-002: Listar Documentos
@@ -181,6 +182,7 @@ async def test_tc_tool_004_obtener_documento_not_found(exp_id_subvenciones):
 
 
 @pytest.mark.asyncio
+@pytest.mark.usefixtures("restore_expediente_data")
 async def test_tc_tool_005_añadir_documento(exp_id_subvenciones):
     """
     TC-TOOL-005: Añadir Documento
@@ -225,6 +227,7 @@ async def test_tc_tool_005_añadir_documento(exp_id_subvenciones):
 
 
 @pytest.mark.asyncio
+@pytest.mark.usefixtures("restore_expediente_data")
 async def test_tc_tool_006_actualizar_datos(exp_id_subvenciones):
     """
     TC-TOOL-006: Actualizar Datos
@@ -266,6 +269,7 @@ async def test_tc_tool_006_actualizar_datos(exp_id_subvenciones):
 
 
 @pytest.mark.asyncio
+@pytest.mark.usefixtures("restore_expediente_data")
 async def test_tc_tool_007_añadir_anotacion(exp_id_subvenciones):
     """
     TC-TOOL-007: Añadir Anotación

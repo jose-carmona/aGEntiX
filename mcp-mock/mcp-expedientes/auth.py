@@ -106,7 +106,8 @@ async def validate_jwt(
                 "verify_signature": True,
                 "verify_exp": True,
                 "verify_nbf": True,
-                "verify_iat": True
+                "verify_iat": True,
+                "verify_aud": False  # Validación manual con validate_audience()
             }
         )
 
