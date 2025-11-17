@@ -38,3 +38,53 @@ La documentación completa del proyecto está organizada en un sistema **Zettelk
 
 Cada nota representa un concepto individual e incluye referencias a notas relacionadas.
 
+## Getting Started
+
+### Opción Recomendada: Dev Container
+
+El proyecto está configurado para usar **Dev Containers** de VS Code, que proporciona un entorno de desarrollo completamente configurado:
+
+**Requisitos:**
+- Docker Desktop instalado y ejecutándose
+- Visual Studio Code con la extensión Dev Containers
+
+**Inicio rápido:**
+1. Abre el proyecto en VS Code
+2. Haz clic en "Reopen in Container" cuando aparezca la notificación
+3. Espera a que el container se construya (primera vez: ~5-10 min)
+4. ¡Listo! El entorno incluye Python, Node.js, herramientas MCP y todas las dependencias
+
+Ver [.devcontainer/README.md](.devcontainer/README.md) para documentación completa.
+
+### Opción Alternativa: Instalación Local
+
+Si prefieres trabajar sin Dev Containers:
+
+```bash
+# Instalar dependencias Python
+cd mcp-mock/mcp-expedientes
+pip install -r requirements.txt
+
+# Instalar herramientas MCP (opcional)
+npm install -g @modelcontextprotocol/inspector
+
+# Ejecutar tests
+pytest
+```
+
+## Quick Start - Servidor MCP Mock
+
+```bash
+# Dentro del Dev Container o con dependencias instaladas
+cd mcp-mock/mcp-expedientes
+
+# Test rápido
+./quick_test.sh
+
+# Ejecutar tests completos
+pytest -v
+
+# Iniciar servidor HTTP
+python -m uvicorn server_http:app --reload --port 8000
+```
+
