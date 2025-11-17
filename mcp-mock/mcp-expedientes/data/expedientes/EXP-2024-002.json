@@ -1,0 +1,121 @@
+{
+  "id": "EXP-2024-002",
+  "tipo": "LICENCIA_OBRA",
+  "estado": "PENDIENTE_DOCUMENTACION",
+  "fecha_inicio": "2024-02-10T09:15:00Z",
+  "datos": {
+    "solicitante": {
+      "nombre": "Juan Martínez Rodríguez",
+      "nif": "87654321B",
+      "direccion": "Avenida de la Libertad 45, 2º A, Córdoba",
+      "email": "juan.martinez@example.com",
+      "telefono": "+34 655987654"
+    },
+    "direccion_obra": "Calle Málaga 78, Córdoba",
+    "tipo_obra": "REFORMA_MENOR",
+    "presupuesto": 15000.00,
+    "arquitecto": "Pedro Sánchez Fernández",
+    "colegiado": "COA-12345",
+    "proyecto_tecnico_completo": false,
+    "licencia_vecinos_requerida": true,
+    "autorizacion_vecinos": null
+  },
+  "documentos": [
+    {
+      "id": "DOC-101",
+      "nombre": "solicitud_licencia.pdf",
+      "fecha": "2024-02-10T09:15:00Z",
+      "tipo": "SOLICITUD",
+      "ruta": "data/documentos/EXP-2024-002/solicitud_licencia.pdf",
+      "hash_sha256": "aaa111bbb222ccc333ddd444eee555fff666ggg777hhh888iii999jjj000",
+      "tamano_bytes": 189234,
+      "validado": true
+    },
+    {
+      "id": "DOC-102",
+      "nombre": "proyecto_basico.pdf",
+      "fecha": "2024-02-10T09:15:00Z",
+      "tipo": "PROYECTO",
+      "ruta": "data/documentos/EXP-2024-002/proyecto_basico.pdf",
+      "hash_sha256": "bbb222ccc333ddd444eee555fff666ggg777hhh888iii999jjj000kkk111",
+      "tamano_bytes": 1456789,
+      "validado": false
+    }
+  ],
+  "historial": [
+    {
+      "id": "HIST-101",
+      "fecha": "2024-02-10T09:15:00Z",
+      "usuario": "Sistema",
+      "tipo": "SISTEMA",
+      "accion": "INICIAR_EXPEDIENTE",
+      "detalles": "Expediente de licencia de obra iniciado"
+    },
+    {
+      "id": "HIST-102",
+      "fecha": "2024-02-10T11:00:00Z",
+      "usuario": "Automático",
+      "tipo": "AGENTE",
+      "accion": "VALIDAR_DOCUMENTACION",
+      "detalles": "Validación automática: Falta proyecto técnico completo"
+    },
+    {
+      "id": "HIST-103",
+      "fecha": "2024-02-10T11:02:00Z",
+      "usuario": "Sistema",
+      "tipo": "SISTEMA",
+      "accion": "REQUERIR_DOCUMENTACION",
+      "detalles": "Requerimiento enviado al solicitante: Presentar proyecto técnico completo"
+    }
+  ],
+  "metadatos": {
+    "flujo_bpmn": {
+      "id": "LICENCIAS_OBRA_v2.1",
+      "nombre": "Tramitación de Licencias de Obra",
+      "version": "2.1",
+      "fecha_inicio_flujo": "2024-02-10T09:15:00Z"
+    },
+    "tarea_actual": {
+      "id": "TAREA-ESPERAR-DOC-001",
+      "nombre": "ESPERAR_DOCUMENTACION",
+      "tipo": "system",
+      "fecha_inicio": "2024-02-10T11:02:00Z",
+      "fecha_limite": "2024-03-10T11:02:00Z",
+      "estado": "EN_EJECUCION",
+      "intentos": 1,
+      "responsable": "Sistema"
+    },
+    "tareas_completadas": [
+      {
+        "id": "TAREA-INICIO-101",
+        "nombre": "INICIAR_EXPEDIENTE",
+        "fecha_inicio": "2024-02-10T09:15:00Z",
+        "fecha_fin": "2024-02-10T09:16:00Z",
+        "responsable": "Sistema",
+        "resultado": "COMPLETADO"
+      },
+      {
+        "id": "TAREA-VALIDAR-001",
+        "nombre": "VALIDAR_DOCUMENTACION_INICIAL",
+        "fecha_inicio": "2024-02-10T11:00:00Z",
+        "fecha_fin": "2024-02-10T11:02:00Z",
+        "responsable": "Automático",
+        "resultado": "DOCUMENTACION_INCOMPLETA"
+      }
+    ],
+    "siguiente_tarea": {
+      "candidatos": [
+        {
+          "id": "TAREA-VALIDAR-COMPLETA-001",
+          "nombre": "VALIDAR_DOCUMENTACION_COMPLETA",
+          "condicion": "datos.proyecto_tecnico_completo == true"
+        },
+        {
+          "id": "TAREA-TIMEOUT-001",
+          "nombre": "ARCHIVAR_POR_TIMEOUT",
+          "condicion": "fecha_actual > tarea_actual.fecha_limite"
+        }
+      ]
+    }
+  }
+}

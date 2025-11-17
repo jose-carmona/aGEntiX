@@ -1,0 +1,111 @@
+{
+  "id": "EXP-2024-001",
+  "tipo": "SUBVENCIONES",
+  "estado": "EN_TRAMITE",
+  "fecha_inicio": "2024-01-15T08:30:00Z",
+  "datos": {
+    "solicitante": {
+      "nombre": "María García López",
+      "nif": "12345678A",
+      "direccion": "Calle Mayor 123, Córdoba",
+      "email": "maria.garcia@example.com",
+      "telefono": "+34 600123456"
+    },
+    "importe_solicitado": 5000.00,
+    "concepto": "Ayuda para mejora de local comercial",
+    "cuenta_bancaria": "ES79 2100 0813 4501 2345 6789",
+    "documentacion_valida": null
+  },
+  "documentos": [
+    {
+      "id": "DOC-001",
+      "nombre": "solicitud.pdf",
+      "fecha": "2024-01-15T08:30:00Z",
+      "tipo": "SOLICITUD",
+      "ruta": "data/documentos/EXP-2024-001/solicitud.pdf",
+      "hash_sha256": "abc123def456789012345678901234567890123456789012345678901234",
+      "tamano_bytes": 245678,
+      "validado": null
+    },
+    {
+      "id": "DOC-002",
+      "nombre": "dni.pdf",
+      "fecha": "2024-01-15T08:30:00Z",
+      "tipo": "IDENTIFICACION",
+      "ruta": "data/documentos/EXP-2024-001/dni.pdf",
+      "hash_sha256": "def456789012345678901234567890123456789012345678901234567890",
+      "tamano_bytes": 123456,
+      "validado": null
+    },
+    {
+      "id": "DOC-003",
+      "nombre": "justificante_bancario.pdf",
+      "fecha": "2024-01-15T08:30:00Z",
+      "tipo": "BANCARIO",
+      "ruta": "data/documentos/EXP-2024-001/justificante.pdf",
+      "hash_sha256": "ghi789012345678901234567890123456789012345678901234567890123",
+      "tamano_bytes": 98765,
+      "validado": null
+    }
+  ],
+  "historial": [
+    {
+      "id": "HIST-001",
+      "fecha": "2024-01-15T08:30:00Z",
+      "usuario": "Sistema",
+      "tipo": "SISTEMA",
+      "accion": "INICIAR_EXPEDIENTE",
+      "detalles": "Expediente iniciado desde portal ciudadano"
+    },
+    {
+      "id": "HIST-002",
+      "fecha": "2024-01-15T10:30:00Z",
+      "usuario": "Automático",
+      "tipo": "AGENTE",
+      "accion": "INICIAR_VALIDACION",
+      "detalles": "Agente iniciado para validar documentación"
+    }
+  ],
+  "metadatos": {
+    "flujo_bpmn": {
+      "id": "SUBVENCIONES_v1.2",
+      "nombre": "Tramitación de Subvenciones",
+      "version": "1.2",
+      "fecha_inicio_flujo": "2024-01-15T08:30:00Z"
+    },
+    "tarea_actual": {
+      "id": "TAREA-VALIDAR-DOC-001",
+      "nombre": "VALIDAR_DOCUMENTACION",
+      "tipo": "agent",
+      "fecha_inicio": "2024-01-15T10:30:00Z",
+      "fecha_limite": "2024-01-17T10:30:00Z",
+      "estado": "EN_EJECUCION",
+      "intentos": 1,
+      "responsable": "Automático"
+    },
+    "tareas_completadas": [
+      {
+        "id": "TAREA-INICIO-001",
+        "nombre": "INICIAR_EXPEDIENTE",
+        "fecha_inicio": "2024-01-15T08:30:00Z",
+        "fecha_fin": "2024-01-15T08:31:00Z",
+        "responsable": "Sistema",
+        "resultado": "COMPLETADO"
+      }
+    ],
+    "siguiente_tarea": {
+      "candidatos": [
+        {
+          "id": "TAREA-RESOLVER-001",
+          "nombre": "RESOLVER_SUBVENCION",
+          "condicion": "datos.documentacion_valida == true"
+        },
+        {
+          "id": "TAREA-REQUERIR-DOC-001",
+          "nombre": "REQUERIR_DOCUMENTACION",
+          "condicion": "datos.documentacion_valida == false"
+        }
+      ]
+    }
+  }
+}

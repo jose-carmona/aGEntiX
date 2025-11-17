@@ -1,0 +1,165 @@
+{
+  "id": "EXP-2024-003",
+  "tipo": "CERTIFICADO_EMPADRONAMIENTO",
+  "estado": "ARCHIVADO",
+  "fecha_inicio": "2024-01-05T10:00:00Z",
+  "datos": {
+    "solicitante": {
+      "nombre": "Ana López Martín",
+      "nif": "45678912C",
+      "direccion": "Plaza de España 12, 3º B, Córdoba",
+      "email": "ana.lopez@example.com",
+      "telefono": "+34 612345678"
+    },
+    "tipo_certificado": "RESIDENCIA",
+    "finalidad": "TRAMITES_BANCARIOS",
+    "numero_ejemplares": 1,
+    "certificado_generado": true,
+    "certificado_id": "CERT-2024-001"
+  },
+  "documentos": [
+    {
+      "id": "DOC-201",
+      "nombre": "solicitud_certificado.pdf",
+      "fecha": "2024-01-05T10:00:00Z",
+      "tipo": "SOLICITUD",
+      "ruta": "data/documentos/EXP-2024-003/solicitud_certificado.pdf",
+      "hash_sha256": "zzz999yyy888xxx777www666vvv555uuu444ttt333sss222rrr111qqq000",
+      "tamano_bytes": 98234,
+      "validado": true
+    },
+    {
+      "id": "DOC-202",
+      "nombre": "dni_solicitante.pdf",
+      "fecha": "2024-01-05T10:00:00Z",
+      "tipo": "IDENTIFICACION",
+      "ruta": "data/documentos/EXP-2024-003/dni_solicitante.pdf",
+      "hash_sha256": "yyy888xxx777www666vvv555uuu444ttt333sss222rrr111qqq000ppp999",
+      "tamano_bytes": 145678,
+      "validado": true
+    },
+    {
+      "id": "DOC-203",
+      "nombre": "certificado_empadronamiento.pdf",
+      "fecha": "2024-01-05T11:30:00Z",
+      "tipo": "CERTIFICADO",
+      "ruta": "data/documentos/EXP-2024-003/certificado_empadronamiento.pdf",
+      "hash_sha256": "xxx777www666vvv555uuu444ttt333sss222rrr111qqq000ppp999ooo888",
+      "tamano_bytes": 234567,
+      "validado": true
+    }
+  ],
+  "historial": [
+    {
+      "id": "HIST-201",
+      "fecha": "2024-01-05T10:00:00Z",
+      "usuario": "Sistema",
+      "tipo": "SISTEMA",
+      "accion": "INICIAR_EXPEDIENTE",
+      "detalles": "Solicitud de certificado de empadronamiento recibida"
+    },
+    {
+      "id": "HIST-202",
+      "fecha": "2024-01-05T10:05:00Z",
+      "usuario": "Automático",
+      "tipo": "AGENTE",
+      "accion": "VALIDAR_IDENTIDAD",
+      "detalles": "Identidad validada mediante DNI"
+    },
+    {
+      "id": "HIST-203",
+      "fecha": "2024-01-05T10:10:00Z",
+      "usuario": "Automático",
+      "tipo": "AGENTE",
+      "accion": "VERIFICAR_EMPADRONAMIENTO",
+      "detalles": "Verificación exitosa en base de datos de padrón"
+    },
+    {
+      "id": "HIST-204",
+      "fecha": "2024-01-05T11:30:00Z",
+      "usuario": "Automático",
+      "tipo": "AGENTE",
+      "accion": "GENERAR_CERTIFICADO",
+      "detalles": "Certificado generado con ID: CERT-2024-001"
+    },
+    {
+      "id": "HIST-205",
+      "fecha": "2024-01-05T11:31:00Z",
+      "usuario": "Sistema",
+      "tipo": "SISTEMA",
+      "accion": "NOTIFICAR_CIUDADANO",
+      "detalles": "Notificación enviada a ana.lopez@example.com"
+    },
+    {
+      "id": "HIST-206",
+      "fecha": "2024-01-05T11:32:00Z",
+      "usuario": "Sistema",
+      "tipo": "SISTEMA",
+      "accion": "CERRAR_EXPEDIENTE",
+      "detalles": "Expediente completado y archivado"
+    }
+  ],
+  "metadatos": {
+    "flujo_bpmn": {
+      "id": "CERTIFICADOS_v1.0",
+      "nombre": "Emisión de Certificados",
+      "version": "1.0",
+      "fecha_inicio_flujo": "2024-01-05T10:00:00Z"
+    },
+    "tarea_actual": {
+      "id": "TAREA-FIN-001",
+      "nombre": "EXPEDIENTE_COMPLETADO",
+      "tipo": "system",
+      "fecha_inicio": "2024-01-05T11:32:00Z",
+      "fecha_limite": "2024-01-05T11:32:00Z",
+      "estado": "COMPLETADA",
+      "intentos": 1,
+      "responsable": "Sistema"
+    },
+    "tareas_completadas": [
+      {
+        "id": "TAREA-INICIO-201",
+        "nombre": "INICIAR_EXPEDIENTE",
+        "fecha_inicio": "2024-01-05T10:00:00Z",
+        "fecha_fin": "2024-01-05T10:01:00Z",
+        "responsable": "Sistema",
+        "resultado": "COMPLETADO"
+      },
+      {
+        "id": "TAREA-VALIDAR-201",
+        "nombre": "VALIDAR_IDENTIDAD",
+        "fecha_inicio": "2024-01-05T10:05:00Z",
+        "fecha_fin": "2024-01-05T10:06:00Z",
+        "responsable": "Automático",
+        "resultado": "IDENTIDAD_VALIDA"
+      },
+      {
+        "id": "TAREA-VERIFICAR-201",
+        "nombre": "VERIFICAR_EMPADRONAMIENTO",
+        "fecha_inicio": "2024-01-05T10:10:00Z",
+        "fecha_fin": "2024-01-05T10:15:00Z",
+        "responsable": "Automático",
+        "resultado": "EMPADRONADO"
+      },
+      {
+        "id": "TAREA-GENERAR-201",
+        "nombre": "GENERAR_CERTIFICADO",
+        "fecha_inicio": "2024-01-05T11:30:00Z",
+        "fecha_fin": "2024-01-05T11:30:30Z",
+        "responsable": "Automático",
+        "resultado": "CERTIFICADO_GENERADO"
+      },
+      {
+        "id": "TAREA-NOTIFICAR-201",
+        "nombre": "NOTIFICAR_CIUDADANO",
+        "fecha_inicio": "2024-01-05T11:31:00Z",
+        "fecha_fin": "2024-01-05T11:31:30Z",
+        "responsable": "Sistema",
+        "resultado": "NOTIFICADO"
+      }
+    ],
+    "siguiente_tarea": {
+      "candidatos": []
+    }
+  }
+}

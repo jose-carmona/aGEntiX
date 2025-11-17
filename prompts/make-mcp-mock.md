@@ -1,43 +1,38 @@
-# Mejoras Propuestas para Servicios MCP Mock
+# Construcción de Servicios MCP Mock para aGEntiX
 
-**Documento**: Revisión de especificación `make-mcp-mock.md`
-**Fecha**: 2025-11-16
-**Objetivo**: Mejorar la especificación técnica para mayor alineación con la arquitectura del proyecto
+## Contexto
 
----
+El proyecto se centra en la ejecución de agentes IA.
 
-## Resumen Ejecutivo
+Los agentes interactúan con GEX mediante MCP (Model Context Protocol).
 
-Este documento identifica 7 áreas de mejora en la especificación original del servidor MCP Mock de Expedientes, basándose en el análisis cruzado con la documentación de arquitectura del proyecto (docs 042, 050, 052, 032).
+Para construir dichos agentes necesitamos servicios MCP.
 
-**Nota importante**: Este servidor MCP Mock de Expedientes es uno de varios servidores MCP que se construirán para el sistema aGEntiX. La arquitectura contempla múltiples servidores MCP especializados que los agentes podrán utilizar según sus necesidades.
+Vamos a construir una serie de servicios mock en los que nos apoyaremos más adelante en la construcción de los agentes y en las pruebas.
 
----
+## Tecnologías
 
-## 1. Alineación con la Arquitectura Real
+Para la construcción de los servicios MCP mock nos vamos a basar en **Python**.
 
-### Problema Identificado
+Simularemos los expedientes mediante **ficheros JSON**.
 
-La especificación no refleja completamente el flujo de la arquitectura documentada en `/doc/052-propagacion-permisos.md`:
+El MCP implementará el protocolo oficial usando el SDK de Python, con soporte para múltiples transportes (stdio y HTTP/SSE).
 
-```
-BPMN → Agente → MCP → API → GEX
-```
+## Objetivos
 
-El mock actualmente propuesto simula únicamente la capa MCP+API+GEX, pero no queda explícito:
-1. Qué componentes se simulan y cuáles no
-2. Que este es uno de varios servidores MCP en la arquitectura
+Crear un servidor MCP mock que:
 
-### Propuesta de Mejora
+1. **Simule el acceso a GEX** sin necesidad de conectar con el sistema real
+2. **Permita pruebas** de agentes IA durante el desarrollo
+3. **Implemente el modelo de permisos** basado en JWT
+4. **Proporcione herramientas (tools)** de lectura y escritura sobre expedientes
+5. **Valide la propagación de permisos** según la arquitectura del sistema
 
-**Añadir sección**: "Alcance de la Simulación"
-
-```markdown
 ## Alcance de la Simulación
 
 ### Posición en la Arquitectura Multi-MCP
 
-Este servidor **MCP Mock de Expedientes** es uno de varios servidores MCP especializados que conformarán el sistema aGEntiX (ver sección 8 de este documento para detalles sobre otros MCP servers).
+Este servidor **MCP Mock de Expedientes** es uno de varios servidores MCP especializados que conformarán el sistema aGEntiX (ver sección "Arquitectura Multi-MCP" más adelante para detalles sobre otros MCP servers).
 
 ### Componentes Simulados
 
@@ -63,269 +58,71 @@ Test Script (simula BPMN) → [JWT] → MCP Mock Expedientes → JSON Storage
                                             ↓
                             (Puede usar otros MCP Servers)
 ```
+
+## Arquitectura
+
+### Flujo Básico
+
+```
+BPMN (simulado) → Agente → MCP Mock → Datos JSON
 ```
 
-### Impacto
+El MCP Mock debe:
+- Validar tokens JWT con claims completos (usuario "Automático", ID de expediente, contexto BPMN)
+- Verificar permisos antes de cada operación
+- Exponer resources y tools según la especificación MCP
+- Mantener el estado en ficheros JSON
 
-- **Claridad**: Los desarrolladores comprenden exactamente qué construir
-- **Testing**: Define claramente qué componentes deben simularse en tests
-- **Alcance**: Delimita el servidor de Expedientes del resto de MCP servers
+### Arquitectura Multi-MCP
 
----
+El sistema aGEntiX contempla una arquitectura con **múltiples servidores MCP especializados** que proporcionan diferentes capacidades a los agentes IA.
 
-## 2. Sistema de Permisos - JWT Claims Completo
-
-### Problema Identificado
-
-Los claims JWT propuestos son demasiado simples y no reflejan un token JWT estándar ni el contexto completo del flujo BPMN.
-
-**Actual**:
-```json
-{
-  "sub": "Automático",
-  "exp_id": "EXP-2024-001",
-  "permisos": ["consulta"]
-}
+```
+                    ┌─────────────────┐
+                    │  Motor BPMN     │
+                    └────────┬────────┘
+                             │ (JWT)
+                    ┌────────▼────────┐
+                    │  Agente IA      │
+                    └────────┬────────┘
+                             │
+            ┌────────────────┼────────────────┐
+            │                │                │
+    ┌───────▼──────┐  ┌──────▼──────┐  ┌─────▼──────┐
+    │ MCP          │  │ MCP         │  │ MCP        │
+    │ Expedientes  │  │ Normativa   │  │ Documentos │
+    └───────┬──────┘  └──────┬──────┘  └─────┬──────┘
+            │                │                │
+    ┌───────▼──────┐  ┌──────▼──────┐  ┌─────▼──────┐
+    │ JSON Store   │  │ JSON Store  │  │ Plantillas │
+    └──────────────┘  └─────────────┘  └────────────┘
 ```
 
-### Propuesta de Mejora
+#### Otros Servidores MCP Previstos
 
-**Claims JWT completos**:
+**MCP de Normativa**
+- **Propósito**: Acceso a normativa de referencia (BOE, BOJA, ordenanzas)
+- **Resources**: `normativa://BOE/{año}/{numero}`, `normativa://BOJA/{año}/{numero}`, etc.
+- **Tools**: `buscar_normativa`, `obtener_articulo`, `validar_vigencia`
 
-```json
-{
-  "sub": "Automático",
-  "iat": 1700000000,
-  "exp": 1700003600,
-  "nbf": 1700000000,
-  "iss": "agentix-bpmn",
-  "aud": ["agentix-mcp-expedientes", "agentix-mcp-normativa"],
-  "jti": "uuid-v4-token-id",
-  "exp_id": "EXP-2024-001",
-  "exp_tipo": "SUBVENCIONES",
-  "tarea_id": "TAREA-VALIDAR-DOC-001",
-  "tarea_nombre": "VALIDAR_DOCUMENTACION",
-  "permisos": ["consulta", "gestion"]
-}
-```
+**MCP de Generación de Documentos**
+- **Propósito**: Generar documentos PDF desde plantillas
+- **Resources**: `plantilla://{tipo_expediente}/{nombre_plantilla}`
+- **Tools**: `listar_plantillas`, `generar_documento`, `previsualizar_documento`
 
-**Nota**: En este ejemplo, el token autoriza al agente a usar tanto el MCP de Expedientes como el de Normativa.
+#### Estrategia de Implementación
 
-**Claims customizados** (namespace `agx:`):
-- `exp_id`: ID del expediente autorizado
-- `exp_tipo`: Tipo de expediente (para validaciones adicionales)
-- `tarea_id`: ID de la tarea BPMN actual
-- `tarea_nombre`: Nombre legible de la tarea
-- `permisos`: Array de permisos (`["consulta"]` o `["consulta", "gestion"]`)
+**Fase 1**: MCP de Expedientes (este documento)
+**Fase 2**: MCP de Normativa
+**Fase 3**: MCP de Generación de Documentos
 
-**Claims estándar JWT**:
-- `sub`: Usuario "Automático"
-- `iat`: Timestamp de emisión
-- `exp`: Timestamp de expiración (sugerido: 1 hora)
-- `nbf`: Not Before timestamp
-- `iss`: Emisor del token (BPMN engine)
-- `aud`: Audiencia (puede ser un array para múltiples MCP servers: `["agentix-mcp-expedientes", "agentix-mcp-normativa"]`)
-- `jti`: ID único del token (para revocación)
+Todos usarán persistencia en JSON para simplicidad, transparencia y facilidad de testing.
 
-**Nota sobre Multi-MCP**: En un entorno con múltiples servidores MCP, el claim `aud` puede ser un array que liste todos los MCP servers a los que el agente tiene acceso. Cada servidor MCP validará que su identificador está presente en el array.
+## Modelo de Datos
 
-### Actualización en `generate_token.py`
+Cada expediente será un fichero JSON que contenga:
 
-```python
-import jwt
-import uuid
-from datetime import datetime, timedelta
-
-def generate_test_token(
-    exp_id: str,
-    exp_tipo: str,
-    tarea_id: str,
-    tarea_nombre: str,
-    permisos: list[str],
-    mcp_servers: list[str] = None,
-    secret: str = "test-secret-key",
-    exp_hours: int = 1
-) -> str:
-    """
-    Genera un JWT de prueba válido para testing.
-
-    Args:
-        exp_id: ID del expediente (ej: "EXP-2024-001")
-        exp_tipo: Tipo de expediente (ej: "SUBVENCIONES")
-        tarea_id: ID de la tarea BPMN
-        tarea_nombre: Nombre de la tarea
-        permisos: Lista de permisos (ej: ["consulta"] o ["consulta", "gestion"])
-        mcp_servers: Lista de MCP servers autorizados (default: solo expedientes)
-        secret: Clave secreta para firma (default: test-secret-key)
-        exp_hours: Horas hasta expiración (default: 1)
-
-    Returns:
-        Token JWT firmado
-    """
-    if mcp_servers is None:
-        mcp_servers = ["agentix-mcp-expedientes"]
-
-    now = datetime.utcnow()
-    payload = {
-        "sub": "Automático",
-        "iat": int(now.timestamp()),
-        "exp": int((now + timedelta(hours=exp_hours)).timestamp()),
-        "nbf": int(now.timestamp()),
-        "iss": "agentix-bpmn",
-        "aud": mcp_servers,
-        "jti": str(uuid.uuid4()),
-        "exp_id": exp_id,
-        "exp_tipo": exp_tipo,
-        "tarea_id": tarea_id,
-        "tarea_nombre": tarea_nombre,
-        "permisos": permisos
-    }
-    return jwt.encode(payload, secret, algorithm="HS256")
-```
-
-**Ejemplo de uso**:
-
-```python
-# Token solo para MCP de Expedientes
-token_solo_exp = generate_test_token(
-    exp_id="EXP-2024-001",
-    exp_tipo="SUBVENCIONES",
-    tarea_id="TAREA-VALIDAR-DOC-001",
-    tarea_nombre="VALIDAR_DOCUMENTACION",
-    permisos=["consulta", "gestion"]
-)
-
-# Token para múltiples MCP servers
-token_multi = generate_test_token(
-    exp_id="EXP-2024-001",
-    exp_tipo="SUBVENCIONES",
-    tarea_id="TAREA-GENERAR-RESOLUCION-001",
-    tarea_nombre="GENERAR_RESOLUCION",
-    permisos=["consulta", "gestion"],
-    mcp_servers=["agentix-mcp-expedientes", "agentix-mcp-normativa", "agentix-mcp-documentos"]
-)
-```
-
-### Validaciones del Servidor
-
-El servidor MCP de Expedientes debe validar:
-
-1. **Firma JWT**: Token firmado correctamente con la clave secreta
-2. **Expiración**: `exp` > tiempo actual
-3. **Not Before**: `nbf` <= tiempo actual
-4. **Audiencia**: `"agentix-mcp-expedientes"` está presente en el array `aud`
-5. **Subject**: `sub` == "Automático"
-6. **Expediente**: Recurso solicitado coincide con `exp_id`
-7. **Permisos**: Operación requerida está en array `permisos`
-
-**Ejemplo de validación de audiencia en Python**:
-
-```python
-def validate_audience(token_payload: dict, server_id: str = "agentix-mcp-expedientes") -> bool:
-    """
-    Valida que el servidor esté autorizado en el token.
-    Soporta tanto string como array en el claim 'aud'.
-    """
-    aud = token_payload.get("aud")
-
-    if isinstance(aud, str):
-        return aud == server_id
-    elif isinstance(aud, list):
-        return server_id in aud
-    else:
-        return False
-```
-
-### Impacto
-
-- **Seguridad**: Tokens más robustos con validaciones estándar
-- **Trazabilidad**: `jti` permite rastrear tokens específicos
-- **Contexto**: Información completa de la tarea BPMN
-- **Producción**: Estructura más cercana a JWT reales
-
----
-
-## 3. Modelo de Datos - Contexto BPMN Completo
-
-### Problema Identificado
-
-El modelo de expediente propuesto tiene metadatos muy simples que no reflejan el contexto completo del flujo BPMN.
-
-**Actual**:
-```json
-"metadatos": {
-  "tarea_actual": "VALIDAR_DOCUMENTACION",
-  "responsable": "Automático"
-}
-```
-
-### Propuesta de Mejora
-
-**Metadatos enriquecidos**:
-
-```json
-"metadatos": {
-  "flujo_bpmn": {
-    "id": "SUBVENCIONES_v1.2",
-    "nombre": "Tramitación de Subvenciones",
-    "version": "1.2",
-    "fecha_inicio_flujo": "2024-01-15T08:30:00Z"
-  },
-  "tarea_actual": {
-    "id": "TAREA-VALIDAR-DOC-001",
-    "nombre": "VALIDAR_DOCUMENTACION",
-    "tipo": "agent",
-    "fecha_inicio": "2024-01-15T10:30:00Z",
-    "fecha_limite": "2024-01-17T10:30:00Z",
-    "estado": "EN_EJECUCION",
-    "intentos": 1,
-    "responsable": "Automático"
-  },
-  "tareas_completadas": [
-    {
-      "id": "TAREA-INICIO-001",
-      "nombre": "INICIAR_EXPEDIENTE",
-      "fecha_inicio": "2024-01-15T08:30:00Z",
-      "fecha_fin": "2024-01-15T08:31:00Z",
-      "responsable": "Sistema",
-      "resultado": "COMPLETADO"
-    }
-  ],
-  "siguiente_tarea": {
-    "candidatos": [
-      {
-        "id": "TAREA-RESOLVER-001",
-        "nombre": "RESOLVER_SUBVENCION",
-        "condicion": "documentacion_valida == true"
-      },
-      {
-        "id": "TAREA-REQUERIR-DOC-001",
-        "nombre": "REQUERIR_DOCUMENTACION",
-        "condicion": "documentacion_valida == false"
-      }
-    ]
-  }
-}
-```
-
-### Campos Nuevos Explicados
-
-- **flujo_bpmn**: Información del proceso BPMN completo
-  - `id`: Identificador único del flujo
-  - `version`: Control de versiones del flujo
-
-- **tarea_actual**: Información detallada de la tarea en curso
-  - `fecha_limite`: Para simular timeouts
-  - `intentos`: Para simular reintentos
-  - `estado`: EN_EJECUCION | COMPLETADA | FALLIDA | TIMEOUT
-
-- **tareas_completadas**: Historial de tareas del flujo
-
-- **siguiente_tarea**: Define las posibles transiciones
-  - `candidatos`: Array de posibles siguientes tareas
-  - `condicion`: Expresión que determina la transición
-
-### Actualización del Modelo Completo
+### Estructura Completa del Expediente
 
 ```json
 {
@@ -441,29 +238,222 @@ El modelo de expediente propuesto tiene metadatos muy simples que no reflejan el
 }
 ```
 
-### Impacto
+### Campos Adicionales Explicados
 
-- **Realismo**: Modelo más cercano al flujo BPMN real
-- **Testing**: Permite probar transiciones y estados
-- **Depuración**: Mayor información para análisis de problemas
+**flujo_bpmn**: Información del proceso BPMN completo
+- `id`: Identificador único del flujo
+- `version`: Control de versiones del flujo
 
----
+**tarea_actual**: Información detallada de la tarea en curso
+- `fecha_limite`: Para simular timeouts
+- `intentos`: Para simular reintentos
+- `estado`: EN_EJECUCION | COMPLETADA | FALLIDA | TIMEOUT
 
-## 4. Protocolo MCP - Especificación Técnica
+**tareas_completadas**: Historial de tareas del flujo
 
-### Problema Identificado
+**siguiente_tarea**: Define las posibles transiciones
+- `candidatos`: Array de posibles siguientes tareas
+- `condicion`: Expresión que determina la transición
 
-La especificación menciona "implementar el protocolo MCP" pero no define:
-- ¿Qué librería Python usar?
-- ¿Qué transporte (HTTP, stdio, SSE)?
-- ¿Qué versión del protocolo?
-- ¿Cómo elegir entre las diferentes opciones de transporte?
+## Diseño Conceptual: Resources vs Tools
 
-### Propuesta de Mejora
+### Resources (Recursos)
 
-**Añadir sección**: "Implementación del Protocolo MCP"
+**Propósito**: Exponer información que el agente puede **leer pasivamente**.
 
-```markdown
+**Características**:
+- Operaciones idempotentes (sin efectos secundarios)
+- El agente "pull" información cuando la necesita
+- Formato URI estándar
+- Cacheable
+
+**Uso en el agente**:
+El LLM puede pedir al runtime "dame el recurso X" para añadirlo a su contexto.
+
+**Ejemplo**:
+```
+URI: expediente://EXP-2024-001
+Retorna: JSON completo del expediente
+
+URI: expediente://EXP-2024-001/documentos
+Retorna: Lista de documentos
+
+URI: expediente://EXP-2024-001/documento/DOC-001
+Retorna: Metadata del documento DOC-001
+```
+
+### Tools (Herramientas)
+
+**Propósito**: Exponer **acciones** que el agente puede ejecutar.
+
+**Características**:
+- Pueden tener efectos secundarios (escribir, modificar)
+- El agente las invoca activamente con parámetros
+- Definición de schema de entrada
+- Respuesta estructurada
+
+**Uso en el agente**:
+El LLM decide "voy a ejecutar la tool X con parámetros Y".
+
+**Ejemplo**:
+```
+Tool: añadir_documento
+Input: {expediente_id, nombre, tipo, contenido}
+Output: {success: true, documento_id: "DOC-004"}
+
+Tool: actualizar_datos
+Input: {expediente_id, campo, valor}
+Output: {success: true, valor_anterior: "..."}
+```
+
+### Decisión de Diseño
+
+**Para este mock**:
+
+- **Resources**: Información completa del expediente (para contexto del LLM)
+- **Tools**: Todas las operaciones (lectura y escritura)
+
+**Justificación**:
+- Resources permiten al agente obtener contexto completo
+- Tools proporcionan control fino sobre permisos
+- Separación clara: contexto vs acciones
+
+### Mapeo
+
+| Concepto | Implementación |
+|----------|----------------|
+| Consultar expediente completo | Resource: `expediente://{id}` |
+| Leer historial | Resource: `expediente://{id}/historial` |
+| Listar documentos | Tool: `listar_documentos` |
+| Obtener documento específico | Tool: `obtener_documento` |
+| Añadir documento | Tool: `añadir_documento` |
+| Actualizar datos | Tool: `actualizar_datos` |
+| Añadir anotación | Tool: `añadir_anotacion` |
+
+**Nota**: `listar_documentos` y `obtener_documento` son Tools (no Resources) para aplicar validación de permisos explícita.
+
+## Recursos MCP (Resources)
+
+El servidor MCP debe exponer:
+
+1. **expediente://{id}** - Información completa del expediente
+2. **expediente://{id}/documentos** - Lista de documentos
+3. **expediente://{id}/documento/{doc_id}** - Documento específico
+4. **expediente://{id}/historial** - Historial de acciones
+
+## Herramientas MCP (Tools)
+
+### Herramientas de Lectura
+
+1. **consultar_expediente(expediente_id)**
+   - Retorna toda la información del expediente
+   - Requiere: permiso de consulta
+
+2. **obtener_documento(expediente_id, documento_id)**
+   - Retorna un documento específico
+   - Requiere: permiso de consulta
+
+3. **listar_documentos(expediente_id)**
+   - Lista todos los documentos del expediente
+   - Requiere: permiso de consulta
+
+### Herramientas de Escritura
+
+1. **añadir_documento(expediente_id, nombre, tipo, contenido)**
+   - Añade un nuevo documento al expediente
+   - Requiere: permiso de gestión
+   - Registra en historial
+
+2. **actualizar_datos(expediente_id, campo, valor)**
+   - Actualiza un campo de datos del expediente
+   - Requiere: permiso de gestión
+   - Registra en historial
+
+3. **añadir_anotacion(expediente_id, texto)**
+   - Añade una anotación al historial
+   - Requiere: permiso de gestión
+   - Registra en historial
+
+## Sistema de Permisos
+
+### JWT Claims Requeridos
+
+**Claims completos**:
+
+```json
+{
+  "sub": "Automático",
+  "iat": 1700000000,
+  "exp": 1700003600,
+  "nbf": 1700000000,
+  "iss": "agentix-bpmn",
+  "aud": ["agentix-mcp-expedientes", "agentix-mcp-normativa"],
+  "jti": "uuid-v4-token-id",
+  "exp_id": "EXP-2024-001",
+  "exp_tipo": "SUBVENCIONES",
+  "tarea_id": "TAREA-VALIDAR-DOC-001",
+  "tarea_nombre": "VALIDAR_DOCUMENTACION",
+  "permisos": ["consulta", "gestion"]
+}
+```
+
+**Nota**: En este ejemplo, el token autoriza al agente a usar tanto el MCP de Expedientes como el de Normativa.
+
+**Claims customizados**:
+- `exp_id`: ID del expediente autorizado
+- `exp_tipo`: Tipo de expediente (para validaciones adicionales)
+- `tarea_id`: ID de la tarea BPMN actual
+- `tarea_nombre`: Nombre legible de la tarea
+- `permisos`: Array de permisos (`["consulta"]` o `["consulta", "gestion"]`)
+
+**Claims estándar JWT**:
+- `sub`: Usuario "Automático"
+- `iat`: Timestamp de emisión
+- `exp`: Timestamp de expiración (sugerido: 1 hora)
+- `nbf`: Not Before timestamp
+- `iss`: Emisor del token (BPMN engine)
+- `aud`: Audiencia (puede ser un array para múltiples MCP servers)
+- `jti`: ID único del token (para revocación)
+
+**Nota sobre Multi-MCP**: En un entorno con múltiples servidores MCP, el claim `aud` puede ser un array que liste todos los MCP servers a los que el agente tiene acceso. Cada servidor MCP validará que su identificador está presente en el array.
+
+### Validación
+
+El servidor MCP de Expedientes debe validar:
+
+1. **Firma JWT**: Token firmado correctamente con la clave secreta
+2. **Expiración**: `exp` > tiempo actual
+3. **Not Before**: `nbf` <= tiempo actual
+4. **Audiencia**: `"agentix-mcp-expedientes"` está presente en el array `aud`
+5. **Subject**: `sub` == "Automático"
+6. **Expediente**: Recurso solicitado coincide con `exp_id`
+7. **Permisos**: Operación requerida está en array `permisos`
+
+**Ejemplo de validación de audiencia en Python**:
+
+```python
+def validate_audience(token_payload: dict, server_id: str = "agentix-mcp-expedientes") -> bool:
+    """
+    Valida que el servidor esté autorizado en el token.
+    Soporta tanto string como array en el claim 'aud'.
+    """
+    aud = token_payload.get("aud")
+
+    if isinstance(aud, str):
+        return aud == server_id
+    elif isinstance(aud, list):
+        return server_id in aud
+    else:
+        return False
+```
+
+### Respuestas de Error
+
+- **401**: Token inválido o expirado
+- **403**: Permiso insuficiente
+- **404**: Expediente o documento no encontrado
+- **422**: Operación no válida en el estado actual
+
 ## Implementación del Protocolo MCP
 
 ### Librería Oficial
@@ -479,8 +469,6 @@ Repositorio: https://github.com/modelcontextprotocol/python-sdk
 ### Versión del Protocolo
 
 Implementar **MCP 1.0** (versión estable actual)
-
----
 
 ### Opciones de Transporte
 
@@ -529,36 +517,16 @@ El protocolo MCP soporta múltiples transportes. A continuación se analizan las
 - Testing manual con herramientas HTTP
 - Servicios desplegados en la nube
 
-#### Opción 3: REST puro (No estándar MCP)
-
-**Cómo funciona**: API REST tradicional que no sigue el protocolo JSON-RPC de MCP.
-
-**Ventajas**:
-- ✅ Extremadamente familiar para desarrolladores
-- ✅ Herramientas de testing estándar
-- ✅ Fácil documentación (OpenAPI/Swagger)
-
-**Desventajas**:
-- ❌ NO compatible con estándar MCP oficial
-- ❌ No funciona con Claude Desktop
-- ❌ Requiere protocolo customizado
-
-**Cuándo usar**:
-- Solo si NO necesitas compatibilidad MCP
-- Testing interno sin agentes reales
-
 #### Comparativa de Transportes
 
-| Característica | stdio | SSE/HTTP | REST puro |
-|---------------|-------|----------|-----------|
-| **Compatibilidad MCP** | ✅ Total | ✅ Total | ❌ No |
-| **Múltiples clientes** | ❌ No | ✅ Sí | ✅ Sí |
-| **Testing manual** | ❌ Difícil | ✅ Fácil | ✅ Fácil |
-| **Complejidad impl.** | ✅ Baja | ⚠️ Media | ✅ Baja |
-| **Claude Desktop** | ✅ Sí | ✅ Sí | ❌ No |
-| **Familiaridad web** | ❌ Baja | ✅ Alta | ✅ Alta |
-
----
+| Característica | stdio | SSE/HTTP |
+|---------------|-------|----------|
+| **Compatibilidad MCP** | ✅ Total | ✅ Total |
+| **Múltiples clientes** | ❌ No | ✅ Sí |
+| **Testing manual** | ❌ Difícil | ✅ Fácil |
+| **Complejidad impl.** | ✅ Baja | ⚠️ Media |
+| **Claude Desktop** | ✅ Sí | ✅ Sí |
+| **Familiaridad web** | ❌ Baja | ✅ Alta |
 
 ### Recomendación: Implementación Híbrida (stdio + HTTP/SSE)
 
@@ -758,8 +726,6 @@ curl -X POST http://localhost:8000/sse \
   }'
 ```
 
----
-
 ### Decisión para el Mock
 
 **Implementar ambos transportes** (stdio + HTTP/SSE):
@@ -780,8 +746,6 @@ curl -X POST http://localhost:8000/sse \
 - ✅ Consistencia entre transportes
 - ✅ Fácil añadir nuevos transportes
 
----
-
 ### Dependencias Actualizadas
 
 ```txt
@@ -796,8 +760,6 @@ starlette>=0.27.0       # Framework ASGI
 uvicorn>=0.23.0         # Servidor ASGI
 ```
 
----
-
 ### Testing con MCP Inspector
 
 El SDK proporciona una herramienta de inspección:
@@ -808,8 +770,6 @@ npx @modelcontextprotocol/inspector python server_stdio.py
 
 # Esto abre una UI web en http://localhost:5173 para interactuar con el servidor
 ```
-
----
 
 ### Ejemplo de Uso Completo
 
@@ -861,154 +821,88 @@ Añadir a `~/.config/Claude/claude_desktop_config.json`:
 }
 ```
 
----
+## Generación de Tokens de Prueba
 
-### Paso del JWT en Cada Transporte
+Crear un script `generate_token.py` con funcionalidad completa:
 
-#### stdio
 ```python
-# El JWT se pasa como variable de entorno
-import os
-token = os.environ.get("MCP_JWT_TOKEN")
+import jwt
+import uuid
+from datetime import datetime, timedelta
+
+def generate_test_token(
+    exp_id: str,
+    exp_tipo: str,
+    tarea_id: str,
+    tarea_nombre: str,
+    permisos: list[str],
+    mcp_servers: list[str] = None,
+    secret: str = "test-secret-key",
+    exp_hours: int = 1
+) -> str:
+    """
+    Genera un JWT de prueba válido para testing.
+
+    Args:
+        exp_id: ID del expediente (ej: "EXP-2024-001")
+        exp_tipo: Tipo de expediente (ej: "SUBVENCIONES")
+        tarea_id: ID de la tarea BPMN
+        tarea_nombre: Nombre de la tarea
+        permisos: Lista de permisos (ej: ["consulta"] o ["consulta", "gestion"])
+        mcp_servers: Lista de MCP servers autorizados (default: solo expedientes)
+        secret: Clave secreta para firma (default: test-secret-key)
+        exp_hours: Horas hasta expiración (default: 1)
+
+    Returns:
+        Token JWT firmado
+    """
+    if mcp_servers is None:
+        mcp_servers = ["agentix-mcp-expedientes"]
+
+    now = datetime.utcnow()
+    payload = {
+        "sub": "Automático",
+        "iat": int(now.timestamp()),
+        "exp": int((now + timedelta(hours=exp_hours)).timestamp()),
+        "nbf": int(now.timestamp()),
+        "iss": "agentix-bpmn",
+        "aud": mcp_servers,
+        "jti": str(uuid.uuid4()),
+        "exp_id": exp_id,
+        "exp_tipo": exp_tipo,
+        "tarea_id": tarea_id,
+        "tarea_nombre": tarea_nombre,
+        "permisos": permisos
+    }
+    return jwt.encode(payload, secret, algorithm="HS256")
 ```
 
-#### HTTP/SSE
+**Ejemplo de uso**:
+
 ```python
-# El JWT se pasa en el header Authorization
-# El servidor lo extrae y lo inyecta en el entorno
-auth_header = request.headers.get("Authorization", "")
-if auth_header.startswith("Bearer "):
-    token = auth_header[7:]
+# Token solo para MCP de Expedientes
+token_solo_exp = generate_test_token(
+    exp_id="EXP-2024-001",
+    exp_tipo="SUBVENCIONES",
+    tarea_id="TAREA-VALIDAR-DOC-001",
+    tarea_nombre="VALIDAR_DOCUMENTACION",
+    permisos=["consulta", "gestion"]
+)
+
+# Token para múltiples MCP servers
+token_multi = generate_test_token(
+    exp_id="EXP-2024-001",
+    exp_tipo="SUBVENCIONES",
+    tarea_id="TAREA-GENERAR-RESOLUCION-001",
+    tarea_nombre="GENERAR_RESOLUCION",
+    permisos=["consulta", "gestion"],
+    mcp_servers=["agentix-mcp-expedientes", "agentix-mcp-normativa", "agentix-mcp-documentos"]
+)
 ```
 
----
+## Simulación del Iniciador BPMN
 
-### Ventajas de la Implementación Híbrida
-
-1. **Desarrollo ágil**: stdio para iteración rápida
-2. **Testing flexible**: HTTP para pruebas manuales
-3. **Compatibilidad total**: Funciona con todas las herramientas MCP
-4. **Sin duplicación**: Lógica compartida entre transportes
-5. **Escalabilidad**: HTTP permite múltiples clientes
-6. **Debugging**: HTTP facilita inspección con herramientas estándar
-
-```
-
-### Impacto
-
-- **Flexibilidad**: Soporta múltiples casos de uso (desarrollo, testing, producción)
-- **Compatibilidad**: Total con estándar MCP oficial
-- **Escalabilidad**: Preparado para crecer según necesidades
-- **Developer Experience**: Herramientas familiares para testing
-- **Sin compromiso**: Mantiene todas las ventajas de stdio para desarrollo
-
----
-
-## 5. Resources vs Tools - Clarificación Conceptual
-
-### Problema Identificado
-
-No está clara la distinción entre Resources y Tools, ni cuándo usar uno u otro.
-
-### Propuesta de Mejora
-
-**Añadir sección**: "Diseño Conceptual: Resources vs Tools"
-
-```markdown
-## Diseño Conceptual: Resources vs Tools
-
-### Resources (Recursos)
-
-**Propósito**: Exponer información que el agente puede **leer pasivamente**.
-
-**Características**:
-- Operaciones idempotentes (sin efectos secundarios)
-- El agente "pull" información cuando la necesita
-- Formato URI estándar
-- Cacheable
-
-**Uso en el agente**:
-El LLM puede pedir al runtime "dame el recurso X" para añadirlo a su contexto.
-
-**Ejemplo**:
-```
-URI: expediente://EXP-2024-001
-Retorna: JSON completo del expediente
-
-URI: expediente://EXP-2024-001/documentos
-Retorna: Lista de documentos
-
-URI: expediente://EXP-2024-001/documento/DOC-001
-Retorna: Metadata del documento DOC-001
-```
-
-### Tools (Herramientas)
-
-**Propósito**: Exponer **acciones** que el agente puede ejecutar.
-
-**Características**:
-- Pueden tener efectos secundarios (escribir, modificar)
-- El agente las invoca activamente con parámetros
-- Definición de schema de entrada
-- Respuesta estructurada
-
-**Uso en el agente**:
-El LLM decide "voy a ejecutar la tool X con parámetros Y".
-
-**Ejemplo**:
-```
-Tool: añadir_documento
-Input: {expediente_id, nombre, tipo, contenido}
-Output: {success: true, documento_id: "DOC-004"}
-
-Tool: actualizar_datos
-Input: {expediente_id, campo, valor}
-Output: {success: true, valor_anterior: "..."}
-```
-
-### Decisión de Diseño
-
-**Para este mock**:
-
-- **Resources**: Información completa del expediente (para contexto del LLM)
-- **Tools**: Todas las operaciones (lectura y escritura)
-
-**Justificación**:
-- Resources permiten al agente obtener contexto completo
-- Tools proporcionan control fino sobre permisos
-- Separación clara: contexto vs acciones
-
-### Mapeo
-
-| Concepto | Implementación |
-|----------|----------------|
-| Consultar expediente completo | Resource: `expediente://{id}` |
-| Leer historial | Resource: `expediente://{id}/historial` |
-| Listar documentos | Tool: `listar_documentos` |
-| Obtener documento específico | Tool: `obtener_documento` |
-| Añadir documento | Tool: `añadir_documento` |
-| Actualizar datos | Tool: `actualizar_datos` |
-| Añadir anotación | Tool: `añadir_anotacion` |
-
-**Nota**: `listar_documentos` y `obtener_documento` son Tools (no Resources) para aplicar validación de permisos explícita.
-```
-
-### Impacto
-
-- **Claridad conceptual**: Distinción clara entre lectura pasiva y acciones
-- **Diseño correcto**: Uso apropiado de cada primitiva MCP
-
----
-
-## 6. Simulación del Iniciador BPMN
-
-### Problema Identificado
-
-La especificación no incluye cómo simular la invocación desde el motor BPMN.
-
-### Propuesta de Mejora
-
-**Añadir**: Script `simulate_bpmn.py`
+Crear un script `simulate_bpmn.py` que simule la invocación desde el motor BPMN:
 
 ```python
 """
@@ -1157,25 +1051,21 @@ if __name__ == "__main__":
     main()
 ```
 
-### Impacto
+## Datos de Prueba
 
-- **Testing end-to-end**: Permite probar el flujo completo
-- **Documentación por ejemplo**: Código ejecutable que muestra el uso
-- **Base para tests**: Fundamento para suite de tests
+Crear al menos 3 expedientes de ejemplo:
 
----
+1. **EXP-2024-001**: Expediente de subvenciones (estado: en trámite)
+2. **EXP-2024-002**: Expediente de licencia (estado: pendiente documentación)
+3. **EXP-2024-003**: Expediente completado (estado: archivado)
 
-## 7. Casos de Prueba Especificados
+Cada uno con:
+- Datos completos (según el modelo enriquecido con metadatos BPMN)
+- Al menos 3 documentos
+- Historial de acciones con tipos (SISTEMA, AGENTE, HUMANO)
+- Diferentes tipos de datos para probar extracción
+- Metadatos completos de flujo BPMN y tareas
 
-### Problema Identificado
-
-Los criterios de aceptación son genéricos. No hay escenarios de prueba concretos definidos.
-
-### Propuesta de Mejora
-
-**Añadir sección**: "Suite de Tests Funcionales"
-
-```markdown
 ## Suite de Tests Funcionales
 
 ### Organización de Tests
@@ -1432,14 +1322,6 @@ def test_historial_registro():
     """
 ```
 
-### Cobertura de Código
-
-**Objetivo mínimo**: 80% de cobertura
-
-```bash
-pytest --cov=. --cov-report=html --cov-report=term
-```
-
 ### Tests de Integración
 
 Incluir al menos un test que ejecute el flujo completo:
@@ -1459,208 +1341,31 @@ def test_flujo_completo_validacion():
     7. Verificar historial completo
     """
 ```
-```
 
-### Impacto
+## Criterios de Aceptación
 
-- **Calidad**: Suite de tests bien definida
-- **Cobertura**: Todos los casos críticos cubiertos
-- **Documentación**: Los tests sirven como ejemplos de uso
+El MCP mock debe:
 
----
-
-## 8. Arquitectura Multi-MCP
-
-### Contexto
-
-El sistema aGEntiX contempla una arquitectura con **múltiples servidores MCP especializados** que proporcionan diferentes capacidades a los agentes IA.
-
-El servidor MCP Mock de Expedientes especificado en `make-mcp-mock.md` es uno de varios servidores MCP que se construirán.
-
-### Otros Servidores MCP Previstos
-
-#### MCP de Normativa
-
-**Propósito**: Proporcionar acceso a la normativa de referencia para la tramitación de expedientes.
-
-**Resources**:
-- `normativa://BOE/{año}/{numero}` - Acceso a normativa del BOE
-- `normativa://BOJA/{año}/{numero}` - Acceso a normativa del BOJA
-- `normativa://ordenanza/{municipio}/{año}/{id}` - Ordenanzas municipales
-
-**Tools**:
-- `buscar_normativa(texto, ambito, fecha_desde, fecha_hasta)` - Búsqueda de normativa relevante
-- `obtener_articulo(referencia_normativa, articulo)` - Obtención de artículo específico
-- `validar_vigencia(referencia_normativa, fecha)` - Comprobación de vigencia
-
-**Datos Mock**:
-- Normativa relacionada con subvenciones
-- Ordenanzas municipales de ejemplo
-- Referencias BOE/BOJA simuladas
-
-#### MCP de Generación de Documentos
-
-**Propósito**: Generar documentos PDF a partir de plantillas incorporando texto dinámico.
-
-**Resources**:
-- `plantilla://{tipo_expediente}/{nombre_plantilla}` - Acceso a plantillas disponibles
-- `plantilla://{tipo_expediente}/lista` - Lista de plantillas para un tipo de expediente
-
-**Tools**:
-- `listar_plantillas(tipo_expediente)` - Lista plantillas disponibles
-- `generar_documento(plantilla_id, datos, formato)` - Genera documento desde plantilla
-- `previsualizar_documento(plantilla_id, datos)` - Previsualización sin persistir
-- `validar_plantilla(plantilla_id, datos)` - Validación de datos contra schema de plantilla
-
-**Datos Mock**:
-- Plantillas de resoluciones de subvenciones
-- Plantillas de requerimientos
-- Plantillas de notificaciones
-- Datos de ejemplo para cada plantilla
-
-### Arquitectura de Interacción Multi-MCP
-
-```
-                    ┌─────────────────┐
-                    │  Motor BPMN     │
-                    └────────┬────────┘
-                             │ (JWT)
-                    ┌────────▼────────┐
-                    │  Agente IA      │
-                    └────────┬────────┘
-                             │
-            ┌────────────────┼────────────────┐
-            │                │                │
-    ┌───────▼──────┐  ┌──────▼──────┐  ┌─────▼──────┐
-    │ MCP          │  │ MCP         │  │ MCP        │
-    │ Expedientes  │  │ Normativa   │  │ Documentos │
-    └───────┬──────┘  └──────┬──────┘  └─────┬──────┘
-            │                │                │
-    ┌───────▼──────┐  ┌──────▼──────┐  ┌─────▼──────┐
-    │ JSON Store   │  │ JSON Store  │  │ Plantillas │
-    └──────────────┘  └─────────────┘  └────────────┘
-```
-
-### Consideraciones de Diseño
-
-**Autenticación compartida**:
-- Todos los MCP servers comparten el mismo mecanismo de autenticación JWT
-- El mismo token debe ser válido para todos los servidores
-- Cada servidor valida los claims relevantes para su dominio
-
-**Permisos por servidor**:
-- Los permisos pueden ser diferentes para cada MCP server
-- Ejemplo: `"permisos_expedientes": ["consulta", "gestion"]`, `"permisos_normativa": ["consulta"]`
-
-**Configuración del agente**:
-Los agentes declaran qué MCP servers necesitan:
-
-```json
-{
-  "agente_id": "validar_documentacion",
-  "nombre": "Validador de Documentación",
-  "mcp_servers": [
-    "gex-expedientes",
-    "normativa"
-  ],
-  "tools_disponibles": [
-    "consultar_expediente",
-    "buscar_normativa",
-    "actualizar_datos"
-  ]
-}
-```
-
-### Estrategia de Implementación
-
-**Fase 1**: MCP de Expedientes (especificado en `make-mcp-mock.md`)
-- Base fundamental del sistema
-- Proporciona acceso a datos de expedientes
-
-**Fase 2**: MCP de Normativa
-- Añade capacidad de consulta legal
-- Permite a agentes validar contra normativa
-
-**Fase 3**: MCP de Generación de Documentos
-- Automatiza creación de documentos oficiales
-- Integra con datos de expedientes
-
-### Decisión de Almacenamiento
-
-**Para todos los MCP Mock se usará persistencia en JSON** por las siguientes razones:
-
-- **Sencillez**: Fácil inspección y modificación manual para testing
-- **Transparencia**: Los datos son visibles y editables sin herramientas especiales
-- **Propósito**: Son mocks para desarrollo y testing, no producción
-- **Portabilidad**: Fácil compartir datos de prueba entre desarrolladores
-- **No requiere concurrencia**: Los tests típicamente no tienen accesos concurrentes significativos
-
-**Estructura de directorios**:
-```
-mcp-mock/
-├── mcp-expedientes/
-│   ├── server.py
-│   ├── data/
-│   │   └── expedientes/
-│   │       ├── EXP-2024-001.json
-│   │       └── EXP-2024-002.json
-│   └── tests/
-├── mcp-normativa/
-│   ├── server.py
-│   ├── data/
-│   │   ├── boe/
-│   │   ├── boja/
-│   │   └── ordenanzas/
-│   └── tests/
-└── mcp-documentos/
-    ├── server.py
-    ├── data/
-    │   └── plantillas/
-    │       ├── resolucion_subvencion.html
-    │       └── requerimiento_docs.html
-    └── tests/
-```
-
-### Impacto
-
-- **Extensibilidad**: Arquitectura preparada para múltiples dominios
-- **Especialización**: Cada MCP se centra en un dominio específico
-- **Realismo**: Refleja arquitectura de producción con servicios especializados
-- **Testing**: Permite probar agentes con múltiples fuentes de datos
-
----
-
-## Resumen de Cambios Propuestos
-
-| # | Área | Prioridad | Esfuerzo | Impacto |
-|---|------|-----------|----------|---------|
-| 1 | Alcance de simulación | Media | Bajo | Documentación |
-| 2 | JWT Claims completos | Alta | Medio | Seguridad + Realismo |
-| 3 | Modelo datos BPMN | Alta | Medio | Realismo |
-| 4 | Especificación MCP | Alta | Alto | Implementación |
-| 5 | Resources vs Tools | Media | Bajo | Claridad |
-| 6 | Simulador BPMN | Alta | Medio | Testing |
-| 7 | Suite de tests | Alta | Alto | Calidad |
-| 8 | Arquitectura Multi-MCP | Alta | Bajo | Planificación + Extensibilidad |
-
-## Próximos Pasos Recomendados
-
-1. **Revisar y aprobar** las mejoras propuestas
-2. **Actualizar** `make-mcp-mock.md` con los cambios aprobados para el MCP de Expedientes
-3. **Priorizar** implementación (sugerencia: empezar por #4, #2, #6)
-4. **Implementar** iterativamente el MCP de Expedientes con persistencia en JSON
-5. **Validar** con tests (#7)
-6. **Planificar** los siguientes MCP servers (Normativa y Documentos) siguiendo el mismo patrón (#8)
-
----
+- [ ] Implementar la especificación MCP correctamente
+- [ ] Soportar transportes stdio y HTTP/SSE
+- [ ] Validar tokens JWT en cada petición (con claims completos)
+- [ ] Exponer todos los resources definidos
+- [ ] Implementar todas las tools (lectura y escritura)
+- [ ] Rechazar accesos a expedientes no autorizados
+- [ ] Validar audiencia en tokens para soporte multi-MCP
+- [ ] Registrar todas las acciones en el historial
+- [ ] Incluir tests funcionales completos
+- [ ] Proporcionar documentación de uso
+- [ ] Incluir script de generación de tokens
+- [ ] Incluir script de simulación BPMN
+- [ ] Mantener persistencia en JSON entre reinicios
+- [ ] Soportar modelo de datos enriquecido con contexto BPMN
 
 ## Referencias
 
-- Especificación original: `make-mcp-mock.md`
-- Documentación de arquitectura:
-  - `/doc/042-acceso-mcp.md`
-  - `/doc/050-permisos-agente.md`
-  - `/doc/052-propagacion-permisos.md`
-  - `/doc/032-contexto-agente.md`
-- MCP Protocol: https://modelcontextprotocol.io/
-- MCP Python SDK: https://github.com/modelcontextprotocol/python-sdk
+- [Especificación MCP](https://modelcontextprotocol.io/)
+- [MCP Python SDK](https://github.com/modelcontextprotocol/python-sdk)
+- [Acceso vía MCP](../doc/042-acceso-mcp.md)
+- [Permisos de agente](../doc/050-permisos-agente.md)
+- [Propagación de permisos](../doc/052-propagacion-permisos.md)
+- [Contexto del agente](../doc/032-contexto-agente.md)
