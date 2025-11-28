@@ -1,4 +1,5 @@
 # aGEntiX
+
 Sistema de Agentes IA para GEX
 
 ## Descripción
@@ -10,6 +11,7 @@ GEX es el sistema de Gestión de Expedientes de Eprinsa, utilizado en la provinc
 ## Propuesta
 
 La propuesta de aGEntiX introduce **acciones de tipo Agente** en el modelo BPMN de GEX, permitiendo que agentes IA:
+
 - Automaticen tareas actualmente manuales (extracción de información, generación de documentos)
 - Asistan en análisis de información (la toma de decisiones legales permanece exclusivamente humana)
 
@@ -45,10 +47,12 @@ Cada nota representa un concepto individual e incluye referencias a notas relaci
 El proyecto está configurado para usar **Dev Containers** de VS Code, que proporciona un entorno de desarrollo completamente configurado:
 
 **Requisitos:**
+
 - Docker Desktop instalado y ejecutándose
 - Visual Studio Code con la extensión Dev Containers
 
 **Inicio rápido:**
+
 1. Abre el proyecto en VS Code
 2. Haz clic en "Reopen in Container" cuando aparezca la notificación
 3. Espera a que el container se construya (primera vez: ~5-10 min)
@@ -122,4 +126,3 @@ cd mcp-mock/mcp-expedientes
 # Iniciar servidor HTTP
 python -m uvicorn server_http:app --reload --port 8000
 ```
-
