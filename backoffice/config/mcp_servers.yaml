@@ -1,0 +1,37 @@
+# Configuración de servidores MCP
+# Solo el MCP de Expedientes estará habilitado en Paso 1
+
+mcp_servers:
+  - id: expedientes
+    name: "MCP Expedientes"
+    description: "Gestión de expedientes y documentos"
+    url: http://localhost:8000
+    type: http
+    auth:
+      type: jwt
+      audience: agentix-mcp-expedientes
+    timeout: 30
+    enabled: true  # Solo este estará activo en Paso 1
+
+  # Futuros MCPs (deshabilitados en Paso 1)
+  - id: firma
+    name: "MCP Firma Electrónica"
+    description: "Firma y validación de documentos"
+    url: http://mcp-firma:8001
+    type: http
+    auth:
+      type: jwt
+      audience: agentix-mcp-firma
+    timeout: 60
+    enabled: false  # Deshabilitado en Paso 1
+
+  - id: notificaciones
+    name: "MCP Notificaciones"
+    description: "Envío de notificaciones electrónicas"
+    url: http://mcp-notificaciones:8002
+    type: http
+    auth:
+      type: jwt
+      audience: agentix-mcp-notificaciones
+    timeout: 30
+    enabled: false  # Deshabilitado en Paso 1

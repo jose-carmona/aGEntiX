@@ -10,6 +10,7 @@ Este mock funcional permitirá:
 - Probar la integración con BPMN
 - Verificar el flujo de permisos
 - Establecer las interfaces que luego implementará el sistema real
+- **Preparar arquitectura plug-and-play multi-MCP** (usaremos solo MCP Expedientes en este paso)
 
 ## Contexto del Sistema
 
@@ -26,12 +27,14 @@ Ya disponemos de:
 ### Arquitectura del Sistema
 
 ```text
-BPMN (GEX) → [API REST - Paso 2] → Back-Office (a crear) → MCP → API (futuro) → GEX
-                                    ├─ Validación JWT
-                                    ├─ Configuración Agente
-                                    ├─ Mock de Ejecución
+BPMN (GEX) → [API REST - Paso 2] → Back-Office (a crear) → MCP Registry → MCP Expedientes
+                                    ├─ Validación JWT           │
+                                    ├─ Configuración Agente     └─ (Futuros MCPs: Firma,
+                                    ├─ Mock de Ejecución            Notificaciones, etc.)
                                     └─ Logging/Auditoría
 ```
+
+> **Nota arquitectónica:** Aunque en el Paso 1 solo usaremos el MCP de Expedientes, el sistema se diseñará con **arquitectura plug-and-play multi-MCP** para facilitar la adición de nuevos servidores MCP en el futuro (ej: MCP Firma, MCP Notificaciones, MCP Recaudación, etc.) mediante configuración, sin cambios en el código.
 
 ## Requisitos Funcionales
 
@@ -166,7 +169,109 @@ Ver implementación existente en:
 
 **IMPORTANTE:** El back-office debe usar **exactamente la misma estructura de claims** que el servidor MCP existente para garantizar compatibilidad.
 
-### 3. Mock de Ejecución de Agente
+### 3. Arquitectura Multi-MCP Plug-and-Play
+
+**Principio de diseño:**
+
+El sistema debe estar preparado arquitectónicamente para soportar múltiples servidores MCP (Expedientes, Firma, Notificaciones, Recaudación, etc.) que se puedan añadir mediante **configuración**, sin cambios en el código.
+
+**En el Paso 1:**
+- Solo se usará el MCP de Expedientes
+- Pero la arquitectura debe permitir añadir nuevos MCPs editando solo archivos de configuración
+
+#### Catálogo de Servidores MCP Configurable
+
+```yaml
+# backoffice/config/mcp_servers.yaml
+
+mcp_servers:
+  - id: expedientes
+    name: "MCP Expedientes"
+    description: "Gestión de expedientes y documentos"
+    url: http://localhost:8000
+    type: http
+    auth:
+      type: jwt
+      audience: agentix-mcp-expedientes
+    timeout: 30
+    enabled: true  # Solo este estará activo en Paso 1
+
+  # Futuros MCPs (deshabilitados en Paso 1)
+  - id: firma
+    name: "MCP Firma Electrónica"
+    description: "Firma y validación de documentos"
+    url: http://mcp-firma:8001
+    type: http
+    auth:
+      type: jwt
+      audience: agentix-mcp-firma
+    timeout: 60
+    enabled: false  # Deshabilitado en Paso 1
+
+  - id: notificaciones
+    name: "MCP Notificaciones"
+    description: "Envío de notificaciones electrónicas"
+    url: http://mcp-notificaciones:8002
+    type: http
+    auth:
+      type: jwt
+      audience: agentix-mcp-notificaciones
+    timeout: 30
+    enabled: false  # Deshabilitado en Paso 1
+```
+
+**Nota:** En el Paso 1, solo el MCP `expedientes` tendrá `enabled: true`. Los demás son especificaciones para el futuro.
+
+#### Componente MCPClientRegistry
+
+**Responsabilidad central del sistema multi-MCP:**
+
+```python
+# backoffice/mcp/registry.py
+
+class MCPClientRegistry:
+    """
+    Registro de clientes MCP con routing automático.
+
+    Permite añadir nuevos MCPs mediante configuración sin cambiar código.
+    """
+
+    async def initialize(self):
+        """
+        Carga configuración de MCPs y crea clientes solo para MCPs habilitados.
+
+        En Paso 1: solo crea cliente para 'expedientes'
+        En futuro: creará clientes para todos los MCPs con enabled=true
+        """
+        pass
+
+    async def call_tool(self, tool_name: str, arguments: dict) -> dict:
+        """
+        Ejecuta una tool con routing automático al MCP correcto.
+
+        El registry descubre qué MCP tiene la tool solicitada.
+        En Paso 1: todas las tools van al MCP expedientes.
+        En futuro: routing automático entre múltiples MCPs.
+        """
+        pass
+```
+
+**Flujo de routing:**
+
+```
+Agente.execute()
+  └─> registry.call_tool("consultar_expediente", {...})
+       └─> registry descubre que "consultar_expediente" está en MCP "expedientes"
+            └─> client_expedientes.call_tool("consultar_expediente", {...})
+                 └─> POST http://localhost:8000/sse con JSON-RPC 2.0
+```
+
+**Ventaja:** Cuando en el futuro se añada MCP Firma:
+1. Editar `mcp_servers.yaml`: poner `enabled: true` en el servidor firma
+2. El agente puede llamar `registry.call_tool("firmar_documento", {})` sin cambios
+3. El registry automáticamente hace routing al nuevo MCP
+
+### 4. Mock de Ejecución de Agente
 
 Dado que en este paso **NO** implementamos agentes reales (LangGraph/CrewAI), el mock debe:
 
@@ -177,15 +282,21 @@ Dado que en este paso **NO** implementamos agentes reales (LangGraph/CrewAI), el
 
 #### Ejemplo: Agente "ValidadorDocumental"
 
+> **Nota:** El agente usa `mcp_registry.call_tool()` en vez de llamar directamente a un cliente MCP específico. Esto prepara el código para multi-MCP futuro sin cambios.
+
 ```python
-async def mock_validador_documental(expediente_id: str, mcp_client: MCPClient, logger: Logger):
+async def mock_validador_documental(
+    expediente_id: str,
+    mcp_registry: MCPClientRegistry,  # ⬅️ Usa registry en vez de client directo
+    logger: AuditLogger
+):
     """Mock del agente ValidadorDocumental"""
 
     logger.log("Iniciando validación de documentos...")
 
-    # 1. Consultar expediente (llamada real a MCP)
+    # 1. Consultar expediente (llamada real a MCP vía registry)
     logger.log(f"Consultando expediente {expediente_id}...")
-    expediente = await mcp_client.call_tool("consultar_expediente", {
+    expediente = await mcp_registry.call_tool("consultar_expediente", {
         "expediente_id": expediente_id
     })
 
@@ -202,18 +313,18 @@ async def mock_validador_documental(expediente_id: str, mcp_client: MCPClient, l
     else:
         logger.log(f"Faltan documentos: {set(documentos_requeridos) - set(documentos_presentes)}")
 
-    # 3. Actualizar expediente (llamada real a MCP)
+    # 3. Actualizar expediente (llamada real a MCP vía registry)
     logger.log(f"Actualizando campo datos.documentacion_valida = {validacion_ok}")
-    await mcp_client.call_tool("actualizar_datos", {
+    await mcp_registry.call_tool("actualizar_datos", {
         "expediente_id": expediente_id,
         "campo": "datos.documentacion_valida",
         "valor": validacion_ok
     })
 
-    # 4. Añadir anotación (llamada real a MCP)
+    # 4. Añadir anotación (llamada real a MCP vía registry)
     mensaje = "Documentación validada correctamente" if validacion_ok else "Documentación incompleta"
     logger.log(f"Añadiendo anotación al historial: {mensaje}")
-    await mcp_client.call_tool("añadir_anotacion", {
+    await mcp_registry.call_tool("añadir_anotacion", {
         "expediente_id": expediente_id,
         "texto": mensaje
     })
@@ -227,9 +338,24 @@ async def mock_validador_documental(expediente_id: str, mcp_client: MCPClient, l
     }
 ```
 
-### 4. Cliente MCP - Especificación Técnica
+### 5. Cliente MCP - Especificación Técnica
 
 El back-office debe incluir un cliente MCP HTTP que se comunique con el servidor MCP mock.
+
+#### Arquitectura de Clientes MCP
+
+El sistema tendrá dos niveles de abstracción:
+
+1. **MCPClient**: Cliente para un servidor MCP específico (bajo nivel)
+2. **MCPClientRegistry**: Registro que maneja múltiples MCPClients y hace routing (alto nivel)
+
+```
+AgentExecutor
+  └─> MCPClientRegistry (maneja catálogo de MCPs)
+       ├─> MCPClient(expedientes) → http://localhost:8000
+       ├─> MCPClient(firma) → (deshabilitado en Paso 1)
+       └─> MCPClient(notificaciones) → (deshabilitado en Paso 1)
+```
 
 #### Principios de Diseño
 
@@ -246,12 +372,58 @@ El back-office debe incluir un cliente MCP HTTP que se comunique con el servidor
 mcp>=1.0.0          # SDK oficial MCP (para tipos y protocolo)
 httpx>=0.25.0       # Cliente HTTP asíncrono
 pydantic>=2.0       # Validación de datos
+pyyaml>=6.0         # Para leer mcp_servers.yaml
 ```
 
 **Justificación:**
 - `mcp`: Proporciona tipos correctos (`types.Tool`, `types.TextContent`, etc.)
 - `httpx`: Cliente HTTP asíncrono con control fino de timeouts y headers
+- `pyyaml`: Para cargar configuración de MCPs desde YAML
 - NO usar `tenacity` ni bibliotecas de reintentos (responsabilidad del BPMN)
+
+#### Modelo de Configuración
+
+```python
+# backoffice/config/models.py
+
+from pydantic import BaseModel, HttpUrl
+from typing import List, Literal
+from pathlib import Path
+import yaml
+
+class MCPAuthConfig(BaseModel):
+    """Configuración de autenticación para un MCP"""
+    type: Literal["jwt", "api_key", "none"] = "jwt"
+    audience: str
+
+class MCPServerConfig(BaseModel):
+    """Configuración de un servidor MCP"""
+    id: str
+    name: str
+    description: str
+    url: HttpUrl
+    type: Literal["http", "stdio"] = "http"
+    auth: MCPAuthConfig
+    timeout: int = 30
+    enabled: bool = True  # Permite habilitar/deshabilitar MCPs
+
+class MCPServersConfig(BaseModel):
+    """Catálogo completo de servidores MCP"""
+    mcp_servers: List[MCPServerConfig]
+
+    @classmethod
+    def load_from_file(cls, path: str) -> "MCPServersConfig":
+        """Carga configuración desde archivo YAML"""
+        config_path = Path(path)
+        with open(config_path, "r", encoding="utf-8") as f:
+            data = yaml.safe_load(f)
+
+        return cls(**data)
+
+    def get_enabled_servers(self) -> List[MCPServerConfig]:
+        """Retorna solo los servidores MCP habilitados"""
+        return [s for s in self.mcp_servers if s.enabled]
+```
 
 #### Estructura de Requests (JSON-RPC 2.0)
 
@@ -339,7 +511,7 @@ if auth_header.startswith("Bearer "):
     context.set_token(token)
 ```
 
-#### Implementación del Cliente
+#### Implementación del Cliente (bajo nivel)
 
 ```python
 # backoffice/mcp/client.py
@@ -347,6 +519,7 @@ if auth_header.startswith("Bearer "):
 import httpx
 from typing import Dict, Any, List
 from mcp import types
+from backoffice.config.models import MCPServerConfig
 
 class MCPClient:
     """
@@ -355,23 +528,24 @@ class MCPClient:
     NO implementa reintentos complejos - esa responsabilidad es del BPMN.
     """
 
-    def __init__(self, base_url: str, token: str):
+    def __init__(self, server_config: MCPServerConfig, token: str):
         """
         Inicializa el cliente MCP.
 
         Args:
-            base_url: URL base del servidor MCP (ej: http://localhost:8000)
+            server_config: Configuración del servidor MCP
             token: Token JWT completo
         """
-        self.base_url = base_url
+        self.server_config = server_config
+        self.server_id = server_config.id
         self.token = token
         self._request_id = 0
 
-        # Cliente HTTP con timeout único
+        # Cliente HTTP con timeout configurado
         # El BPMN tiene timeouts de tarea más sofisticados
         self.client = httpx.AsyncClient(
-            base_url=base_url,
-            timeout=30.0,  # 30 segundos para cualquier operación
+            base_url=str(server_config.url),
+            timeout=float(server_config.timeout),
             headers={
                 "Authorization": f"Bearer {token}",
                 "Content-Type": "application/json"
@@ -439,14 +613,14 @@ class MCPClient:
         except httpx.TimeoutException as e:
             raise MCPConnectionError(
                 codigo="MCP_TIMEOUT",
-                mensaje=f"Timeout al ejecutar tool '{name}' (>30s)",
+                mensaje=f"Timeout al ejecutar tool '{name}' en MCP '{self.server_id}' (>{self.server_config.timeout}s)",
                 detalle=str(e)
             )
 
         except httpx.ConnectError as e:
             raise MCPConnectionError(
                 codigo="MCP_CONNECTION_ERROR",
-                mensaje=f"No se puede conectar al servidor MCP: {self.base_url}",
+                mensaje=f"No se puede conectar al servidor MCP '{self.server_id}': {self.server_config.url}",
                 detalle=str(e)
             )
 
@@ -646,12 +820,134 @@ class MCPAuthError(MCPError):
     pass
 ```
 
+#### Implementación de MCPClientRegistry (alto nivel)
+
+**Maneja múltiples MCPClients y hace routing:**
+
+```python
+# backoffice/mcp/registry.py
+
+from typing import Dict, List, Any
+from .client import MCPClient
+from .exceptions import MCPError, MCPToolError
+from backoffice.config.models import MCPServersConfig
+import asyncio
+
+class MCPClientRegistry:
+    """
+    Registro de clientes MCP con routing automático.
+
+    Permite arquitectura plug-and-play: añadir MCPs mediante configuración.
+    """
+
+    def __init__(self, config: MCPServersConfig, token: str):
+        """
+        Inicializa el registro de clientes MCP.
+
+        Args:
+            config: Configuración de servidores MCP
+            token: Token JWT con audiencias para los MCPs
+        """
+        self.config = config
+        self.token = token
+
+        # MCPClient por ID de servidor
+        self._clients: Dict[str, MCPClient] = {}
+
+        # Cache: tool_name → server_id
+        self._tool_routing: Dict[str, str] = {}
+
+        # Flag de inicialización
+        self._initialized = False
+
+    async def initialize(self):
+        """
+        Inicializa clientes MCP para servidores habilitados y descubre tools.
+
+        En Paso 1: solo crea cliente para MCP Expedientes.
+        En futuro: creará clientes para todos los MCPs con enabled=true.
+        """
+        if not self._initialized:
+            # 1. Crear cliente solo para MCPs habilitados
+            enabled_servers = self.config.get_enabled_servers()
+
+            for server_config in enabled_servers:
+                client = MCPClient(
+                    server_config=server_config,
+                    token=self.token
+                )
+                self._clients[server_config.id] = client
+
+            # 2. Descubrir tools de cada MCP (en paralelo)
+            tasks = [
+                self._discover_tools(server_id)
+                for server_id in self._clients.keys()
+            ]
+            await asyncio.gather(*tasks, return_exceptions=True)
+
+            self._initialized = True
+
+    async def _discover_tools(self, server_id: str):
+        """Descubre las tools disponibles en un servidor MCP."""
+        client = self._clients[server_id]
+
+        try:
+            tools_response = await client.list_tools()
+            tools = tools_response.get("tools", [])
+            tool_names = [tool["name"] for tool in tools]
+
+            # Actualizar routing: cada tool → su servidor
+            for tool_name in tool_names:
+                self._tool_routing[tool_name] = server_id
+
+        except Exception as e:
+            print(f"⚠️ Warning: No se pudieron descubrir tools de MCP '{server_id}': {e}")
+
+    async def call_tool(
+        self,
+        tool_name: str,
+        arguments: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """
+        Ejecuta una tool con routing automático al MCP correcto.
+        """
+        if not self._initialized:
+            await self.initialize()
+
+        # Routing: buscar qué servidor tiene esta tool
+        server_id = self._tool_routing.get(tool_name)
+
+        if not server_id:
+            available_tools = list(self._tool_routing.keys())
+            raise MCPToolError(
+                codigo="MCP_TOOL_NOT_FOUND",
+                mensaje=f"Tool '{tool_name}' no encontrada en ningún servidor MCP configurado",
+                detalle=f"Tools disponibles: {available_tools}"
+            )
+
+        # Delegar al cliente correcto
+        client = self._clients[server_id]
+        return await client.call_tool(tool_name, arguments)
+
+    def get_available_tools(self) -> Dict[str, str]:
+        """Retorna mapping de tools disponibles por servidor."""
+        return self._tool_routing.copy()
+
+    async def close(self):
+        """Cierra todos los clientes HTTP"""
+        tasks = [client.close() for client in self._clients.values()]
+        await asyncio.gather(*tasks)
+```
+
 #### Propagación de Errores al AgentExecutor
 
 El `AgentExecutor` debe capturar excepciones del cliente MCP y convertirlas en `AgentError`:
 
 ```python
 # backoffice/executor.py
+
+from backoffice.config.models import MCPServersConfig
+from backoffice.mcp.registry import MCPClientRegistry
 
 class AgentExecutor:
     async def execute(
@@ -663,30 +959,52 @@ class AgentExecutor:
     ) -> AgentExecutionResult:
         """Ejecuta un agente y maneja errores del cliente MCP"""
 
-        mcp_client = None
+        mcp_registry = None
+        logger = None
 
         try:
-            # Crear cliente MCP
-            mcp_client = MCPClient(
-                base_url=config.MCP_SERVER_URL,
+            # 1. Cargar configuración de MCPs
+            mcp_config = MCPServersConfig.load_from_file(config.MCP_CONFIG_PATH)
+
+            # 2. Crear registry de clientes MCP
+            mcp_registry = MCPClientRegistry(
+                config=mcp_config,
                 token=token
             )
 
-            # Crear y ejecutar agente mock
+            # 3. Inicializar (crea clientes para MCPs habilitados y descubre tools)
+            await mcp_registry.initialize()
+
+            # 4. Crear logger
+            agent_run_id = f"RUN-{datetime.now().strftime('%Y%m%d-%H%M%S')}"
+            logger = AuditLogger(
+                expediente_id=expediente_id,
+                agent_run_id=agent_run_id,
+                log_dir=Path(config.LOG_DIR)
+            )
+
+            logger.log(f"Iniciando ejecución de agente {agent_config.nombre}")
+
+            # Logear qué MCPs están disponibles
+            enabled_mcps = [s.id for s in mcp_config.get_enabled_servers()]
+            logger.log(f"MCPs habilitados: {enabled_mcps}")  # En Paso 1: ['expedientes']
+
+            # 5. Crear y ejecutar agente mock
             agent = self._create_agent(
                 agent_config=agent_config,
                 expediente_id=expediente_id,
                 tarea_id=tarea_id,
-                mcp_client=mcp_client
+                mcp_registry=mcp_registry,  # ⬅️ Pasa registry, no client directo
+                logger=logger
             )
 
             resultado = await agent.execute()
 
             return AgentExecutionResult(
                 success=True,
-                agent_run_id=agent.run_id,
+                agent_run_id=agent_run_id,
                 resultado=resultado,
-                log_auditoria=agent.logger.get_log_entries(),
+                log_auditoria=logger.get_log_entries(),
                 herramientas_usadas=agent.get_tools_used()
             )
 
@@ -736,9 +1054,9 @@ class AgentExecutor:
             )
 
         finally:
-            # Cerrar cliente MCP
-            if mcp_client:
-                await mcp_client.close()
+            # Cerrar registry de clientes MCP
+            if mcp_registry:
+                await mcp_registry.close()
 ```
 
 #### Gestión de Errores: Responsabilidad del BPMN
@@ -1339,9 +1657,14 @@ Todos los errores deben:
 │   ├── validador_documental.py
 │   ├── analizador_subvencion.py
 │   └── generador_informe.py
+├── config/                     # ⬅️ NUEVO
+│   ├── __init__.py
+│   ├── models.py               # Modelos de configuración MCP (MCPServerConfig, etc.)
+│   └── mcp_servers.yaml        # Catálogo de servidores MCP
 ├── mcp/
 │   ├── __init__.py
-│   ├── client.py               # Cliente MCP HTTP
+│   ├── client.py               # Cliente MCP HTTP (bajo nivel)
+│   ├── registry.py             # MCPClientRegistry (alto nivel, routing)  ⬅️ NUEVO
 │   └── exceptions.py           # Excepciones del cliente MCP
 ├── logging/
 │   ├── __init__.py
@@ -1355,6 +1678,7 @@ Todos los errores deben:
     ├── test_auth.py
     ├── test_agents.py
     ├── test_mcp_client.py
+    ├── test_mcp_registry.py    # Tests del registry  ⬅️ NUEVO
     └── test_logging.py         # Tests de redacción PII (OBLIGATORIO)
 
 /.env                           # Variables de entorno
@@ -1369,9 +1693,8 @@ Todos los errores deben:
 JWT_SECRET=tu-clave-secreta-super-segura
 JWT_ALGORITHM=HS256
 
-# MCP Server
-MCP_SERVER_URL=http://localhost:8000
-MCP_SERVER_TYPE=http  # http o stdio
+# MCP Configuration
+MCP_CONFIG_PATH=backoffice/config/mcp_servers.yaml
 
 # Logging
 LOG_LEVEL=INFO
@@ -1386,6 +1709,12 @@ Para considerar completado el Paso 1, el sistema debe:
 
 ✅ Clase `AgentExecutor` funcional con método `execute()`
 ✅ Validar JWT con claims correctos (10 claims obligatorios: iss, sub, aud, exp, iat, nbf, jti, exp_id, permisos)
+✅ **Arquitectura multi-MCP plug-and-play implementada:**
+  - Catálogo de MCPs configurable en YAML (`mcp_servers.yaml`)
+  - `MCPClientRegistry` con routing automático
+  - Añadir nuevo MCP requiere solo editar configuración
+  - Solo MCP Expedientes habilitado en Paso 1
+✅ Agentes usan `MCPClientRegistry` (no cliente directo)
 ✅ Conectarse al MCP mock server vía HTTP con JSON-RPC 2.0
 ✅ Cliente MCP con propagación de errores estructurados (NO reintentos)
 ✅ Ejecutar al menos 2 agentes mock diferentes
@@ -1397,10 +1726,13 @@ Para considerar completado el Paso 1, el sistema debe:
 ✅ Manejar errores con excepciones apropiadas y códigos semánticos
 ✅ Incluir tests automatizados (>80% cobertura)
 ✅ Tests obligatorios de `test_logging.py` pasando
+✅ Tests de `MCPClientRegistry` verifican routing correcto
 ✅ Documentación README con:
   - Cómo importar y usar la clase AgentExecutor
   - Cómo ejecutar tests
   - Estructura del proyecto
+  - Cómo configurar nuevos MCPs (editar mcp_servers.yaml)
+  - Arquitectura plug-and-play multi-MCP
   - Cumplimiento GDPR/LOPD/ENS
   - Próximos pasos (Paso 2: envolver en API REST)
 
@@ -1472,10 +1804,39 @@ Comprobar que:
 
 - `resultado.success == True`
 - Logs de auditoría muestran cada paso
+- Logs muestran "MCPs habilitados: ['expedientes']"
 - El expediente se actualizó en `/mcp-mock/mcp-expedientes/data/expedientes/EXP-2024-001.json`
 - El historial del expediente tiene nueva entrada
 
-### 4. Ejecutar Tests
+### 4. Añadir un Nuevo MCP (Ejemplo Futuro)
+
+**Para añadir MCP de Firma en el futuro:**
+
+1. Editar `backoffice/config/mcp_servers.yaml`:
+
+```yaml
+  - id: firma
+    name: "MCP Firma Electrónica"
+    description: "Firma y validación de documentos"
+    url: http://mcp-firma:8001
+    type: http
+    auth:
+      type: jwt
+      audience: agentix-mcp-firma
+    timeout: 60
+    enabled: true  # ⬅️ Cambiar a true cuando esté disponible
+```
+
+2. Reiniciar el servicio (NO cambios en código)
+
+3. El agente puede ahora usar tools de firma:
+
+```python
+await mcp_registry.call_tool("firmar_documento", {...})
+# El registry automáticamente hace routing al MCP firma
+```
+
+### 5. Ejecutar Tests
 
 ```bash
 cd backoffice
@@ -1501,6 +1862,11 @@ pytest tests/ -v --cov=. --cov-report=term-missing
    - El JWT recibido de BPMN debe pasarse sin modificar al MCP
    - El MCP lo validará y aplicará permisos
 
+5. **Arquitectura Plug-and-Play**:
+   - Nuevos MCPs se añaden mediante configuración
+   - NO cambiar código para añadir integraciones
+   - Usar `MCPClientRegistry` para routing automático
+
 ### Limitaciones del Mock
 
 En este paso, el agente **NO**:
@@ -1518,7 +1884,22 @@ El agente **SÍ**:
 - Registra auditoría completa
 - Simula diferentes comportamientos según tipo de agente
 
+### Alcance del Paso 1 vs. Futuro
+
+**En el Paso 1:**
+- Solo MCP Expedientes habilitado (`enabled: true`)
+- MCPs de Firma y Notificaciones especificados pero deshabilitados (`enabled: false`)
+- Arquitectura multi-MCP completamente funcional
+- Routing automático implementado
+
+**En el futuro:**
+- Habilitar MCPs adicionales editando solo `mcp_servers.yaml`
+- Sin cambios en código del back-office
+- Agentes pueden usar tools de múltiples MCPs transparentemente
+
 ## Referencias
+
+- Análisis arquitectura multi-MCP: `/prompts/mcp-client-architecture.md`
 
 - Documentación del proyecto: `/doc/index.md`
 - Servidor MCP Mock: `/mcp-mock/mcp-expedientes/`
@@ -1544,6 +1925,7 @@ El **Paso 3** reemplazará los agentes mock por agentes reales:
 - LLMs reales (Anthropic Claude)
 - Razonamiento dinámico basado en los prompts de configuración
 - Sistema de agentes multi-paso
+- Los agentes reales seguirán usando `MCPClientRegistry` para multi-MCP
 - La interfaz `AgentExecutor` se mantiene sin cambios (solo cambia la implementación interna)
 
 El **Paso 4** añadirá escalabilidad horizontal:
