@@ -66,7 +66,7 @@ class MCPClient:
         """
         try:
             response = await self.client.post(
-                "/sse",
+                self.server_config.endpoint,
                 json={
                     "jsonrpc": "2.0",
                     "id": self._next_request_id(),
@@ -171,7 +171,7 @@ class MCPClient:
         """
         try:
             response = await self.client.post(
-                "/sse",
+                self.server_config.endpoint,
                 json={
                     "jsonrpc": "2.0",
                     "id": self._next_request_id(),
@@ -214,7 +214,7 @@ class MCPClient:
         """
         try:
             response = await self.client.post(
-                "/sse",
+                self.server_config.endpoint,
                 json={
                     "jsonrpc": "2.0",
                     "id": self._next_request_id(),
