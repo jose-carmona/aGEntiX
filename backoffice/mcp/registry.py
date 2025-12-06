@@ -5,6 +5,9 @@ from .client import MCPClient
 from .exceptions import MCPError, MCPToolError
 from backoffice.config.models import MCPServersConfig
 import asyncio
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class MCPClientRegistry:
@@ -77,7 +80,7 @@ class MCPClientRegistry:
         except Exception as e:
             # No fallar si un MCP no responde en discovery
             # El sistema seguirá funcionando con los MCPs disponibles
-            print(f"⚠️  Warning: No se pudieron descubrir tools de MCP '{server_id}': {e}")
+            logger.warning(f"No se pudieron descubrir tools de MCP '{server_id}': {e}")
 
     async def call_tool(
         self,
