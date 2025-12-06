@@ -63,6 +63,7 @@ def validate_jwt(
                 "verify_exp": True,
                 "verify_nbf": True,
                 "verify_iat": True,
+                "verify_aud": False,  # Validamos audiencia manualmente después
             }
         )
 
