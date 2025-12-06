@@ -159,8 +159,9 @@ backoffice/
 │   └── audit_logger.py         # Logger auditoría
 └── tests/
     ├── conftest.py
-    ├── test_jwt_validator.py   # Tests JWT (19 tests)
-    └── test_logging.py         # Tests PII (10 tests)
+    ├── test_jwt_validator.py     # Tests JWT (19 tests)
+    ├── test_mcp_integration.py   # Tests MCP (15 tests)
+    └── test_logging.py           # Tests PII (10 tests)
 ```
 
 ## Tests
@@ -181,7 +182,7 @@ backoffice/
 pytest backoffice/tests/ -v
 ```
 
-**Suite actual:** 29 tests (19 JWT + 10 PII)
+**Suite actual:** 44 tests (19 JWT + 15 MCP + 10 PII)
 
 ### Tests de Validación JWT (19 tests)
 
@@ -198,6 +199,25 @@ Verifican:
 - ✅ Expediente autorizado coincide
 - ✅ Permisos suficientes para herramientas
 - ✅ Mapeo correcto de herramientas a permisos
+
+### Tests de Integración MCP (15 tests)
+
+Tests de integración con servidores MCP:
+
+```bash
+pytest backoffice/tests/test_mcp_integration.py -v
+```
+
+Verifican:
+- ✅ Conexión exitosa al servidor MCP
+- ✅ Timeout handling (timeouts, connection errors)
+- ✅ Autenticación (401, 403 errors)
+- ✅ Errores de tool (404, 502, JSON-RPC errors)
+- ✅ Registry initialization y discovery de tools
+- ✅ Routing automático de tools a servidores
+- ✅ Múltiples servidores MCP simultáneos
+- ✅ Graceful degradation en fallos de discovery
+- ✅ Propagación correcta de headers JWT
 
 ### Tests Obligatorios de PII (10 tests)
 
