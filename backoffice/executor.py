@@ -1,6 +1,6 @@
 # backoffice/executor.py
 
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
 
@@ -56,7 +56,7 @@ class AgentExecutor:
         """
         mcp_registry: Optional[MCPClientRegistry] = None
         logger: Optional[AuditLogger] = None
-        agent_run_id = f"RUN-{datetime.now().strftime('%Y%m%d-%H%M%S')}"
+        agent_run_id = f"RUN-{datetime.now(timezone.utc).strftime('%Y%m%d-%H%M%S-%f')}"
 
         try:
             # 0. Crear logger temprano para capturar todos los eventos
