@@ -159,7 +159,8 @@ backoffice/
 │   └── audit_logger.py         # Logger auditoría
 └── tests/
     ├── conftest.py
-    └── test_logging.py         # Tests PII (OBLIGATORIOS)
+    ├── test_jwt_validator.py   # Tests JWT (19 tests)
+    └── test_logging.py         # Tests PII (10 tests)
 ```
 
 ## Tests
@@ -167,10 +168,38 @@ backoffice/
 ### Ejecutar Tests
 
 ```bash
+# Todos los tests del proyecto
+./run-tests.sh
+
+# Solo tests de Back-Office
+./run-tests.sh --backoffice-only
+
+# Tests con verbose
+./run-tests.sh -v
+
+# Tests específicos
 pytest backoffice/tests/ -v
 ```
 
-### Tests Obligatorios de PII
+**Suite actual:** 29 tests (19 JWT + 10 PII)
+
+### Tests de Validación JWT (19 tests)
+
+Tests de seguridad para autenticación y permisos:
+
+```bash
+pytest backoffice/tests/test_jwt_validator.py -v
+```
+
+Verifican:
+- ✅ Token expirado/inválido/mal formado rechazados
+- ✅ Firma inválida rechazada
+- ✅ Issuer, subject, audiencia correctos
+- ✅ Expediente autorizado coincide
+- ✅ Permisos suficientes para herramientas
+- ✅ Mapeo correcto de herramientas a permisos
+
+### Tests Obligatorios de PII (10 tests)
 
 Los tests en `test_logging.py` son **CRÍTICOS** para cumplimiento normativo:
 
@@ -178,7 +207,7 @@ Los tests en `test_logging.py` son **CRÍTICOS** para cumplimiento normativo:
 pytest backoffice/tests/test_logging.py -v
 ```
 
-Estos tests verifican que:
+Verifican que:
 - ✅ DNIs, emails, IBANs, teléfonos se redactan automáticamente
 - ✅ La metadata también se redacta
 - ✅ Múltiples PIIs en un mensaje se redactan correctamente
