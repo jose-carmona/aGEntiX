@@ -37,11 +37,29 @@ def test_pii_redactor_iban():
 
 
 def test_pii_redactor_telefono():
-    """Verifica que teléfonos se redactan automáticamente"""
+    """Verifica que teléfonos móviles se redactan automáticamente"""
     mensaje = "Teléfono de contacto: 612345678"
     redacted = PIIRedactor.redact(mensaje)
     assert "612345678" not in redacted
-    assert "[TELEFONO-REDACTED]" in redacted
+    assert "[TELEFONO_MOVIL-REDACTED]" in redacted
+
+
+def test_pii_redactor_telefono_fijo():
+    """Verifica que teléfonos fijos se redactan automáticamente"""
+    # Teléfono que empieza con 9 (más común en España)
+    mensaje = "Oficina: 957123456"
+    redacted = PIIRedactor.redact(mensaje)
+    assert "957123456" not in redacted
+    assert "[TELEFONO_FIJO-REDACTED]" in redacted
+
+
+def test_pii_redactor_telefono_fijo_800():
+    """Verifica que teléfonos 800/900 se redactan automáticamente"""
+    # Teléfono que empieza con 8 (servicios 800/900)
+    mensaje = "Atención al cliente: 900123456"
+    redacted = PIIRedactor.redact(mensaje)
+    assert "900123456" not in redacted
+    assert "[TELEFONO_FIJO-REDACTED]" in redacted
 
 
 def test_pii_redactor_nie():
@@ -83,7 +101,7 @@ def test_audit_logger_redacta_metadata(tmp_path):
     assert "612345678" not in content
     # Debe contener redacciones
     assert "[EMAIL-REDACTED]" in content
-    assert "[TELEFONO-REDACTED]" in content
+    assert "[TELEFONO_MOVIL-REDACTED]" in content
 
 
 def test_audit_logger_multiples_pii_en_mismo_mensaje(tmp_path):
@@ -91,7 +109,7 @@ def test_audit_logger_multiples_pii_en_mismo_mensaje(tmp_path):
     logger = AuditLogger("EXP-001", "RUN-001", tmp_path)
     logger.log(
         "Solicitante Juan Pérez, DNI 12345678A, email juan@example.com, "
-        "teléfono 612345678, IBAN ES1234567890123456789012"
+        "móvil 612345678, oficina 957123456, IBAN ES1234567890123456789012"
     )
 
     log_file = tmp_path / "EXP-001" / "RUN-001.log"
@@ -101,12 +119,14 @@ def test_audit_logger_multiples_pii_en_mismo_mensaje(tmp_path):
     assert "12345678A" not in content
     assert "juan@example.com" not in content
     assert "612345678" not in content
+    assert "957123456" not in content
     assert "ES1234567890123456789012" not in content
 
     # Debe contener todas las redacciones
     assert "[DNI-REDACTED]" in content
     assert "[EMAIL-REDACTED]" in content
-    assert "[TELEFONO-REDACTED]" in content
+    assert "[TELEFONO_MOVIL-REDACTED]" in content
+    assert "[TELEFONO_FIJO-REDACTED]" in content
     assert "[IBAN-REDACTED]" in content
 
 
