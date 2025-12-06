@@ -2,7 +2,7 @@
 
 import jwt
 from datetime import datetime, timezone
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 from pydantic import BaseModel
 from typing import List
 
@@ -34,7 +34,10 @@ def validate_jwt(
     secret: str,
     algorithm: str,
     expected_expediente_id: str,
-    required_permissions: List[str] = None
+    required_permissions: List[str] = None,
+    expected_issuer: Optional[str] = None,
+    expected_subject: Optional[str] = None,
+    required_audience: Optional[str] = None
 ) -> JWTClaims:
     """
     Valida un token JWT completo con todos los claims obligatorios.
@@ -45,6 +48,9 @@ def validate_jwt(
         algorithm: Algoritmo de firma (ej: HS256)
         expected_expediente_id: ID del expediente que debe coincidir con exp_id
         required_permissions: Permisos requeridos (opcional)
+        expected_issuer: Emisor esperado (usa config si no se proporciona)
+        expected_subject: Subject esperado (usa config si no se proporciona)
+        required_audience: Audiencia requerida (usa config si no se proporciona)
 
     Returns:
         JWTClaims validados
@@ -52,6 +58,16 @@ def validate_jwt(
     Raises:
         JWTValidationError: Si el token es inválido o no cumple requisitos
     """
+    # Importar configuración
+    from backoffice.settings import settings
+
+    # Usar configuración si no se proporcionan valores
+    if expected_issuer is None:
+        expected_issuer = settings.JWT_EXPECTED_ISSUER
+    if expected_subject is None:
+        expected_subject = settings.JWT_EXPECTED_SUBJECT
+    if required_audience is None:
+        required_audience = settings.JWT_REQUIRED_AUDIENCE
     try:
         # 1. Decodificar y verificar firma
         payload = jwt.decode(
@@ -99,27 +115,27 @@ def validate_jwt(
         )
 
     # 3. Validar emisor (iss)
-    if claims.iss != "agentix-bpmn":
+    if claims.iss != expected_issuer:
         raise JWTValidationError(
             codigo="AUTH_PERMISSION_DENIED",
-            mensaje=f"Emisor incorrecto: esperado 'agentix-bpmn', recibido '{claims.iss}'",
+            mensaje=f"Emisor incorrecto: esperado '{expected_issuer}', recibido '{claims.iss}'",
             detalle="El token no fue emitido por el sistema BPMN autorizado"
         )
 
     # 4. Validar subject (sub)
-    if claims.sub != "Automático":
+    if claims.sub != expected_subject:
         raise JWTValidationError(
             codigo="AUTH_PERMISSION_DENIED",
-            mensaje=f"Subject incorrecto: esperado 'Automático', recibido '{claims.sub}'",
+            mensaje=f"Subject incorrecto: esperado '{expected_subject}', recibido '{claims.sub}'",
             detalle="El token no es para ejecución automática"
         )
 
     # 5. Validar audiencia (aud)
     audiences = claims.aud if isinstance(claims.aud, list) else [claims.aud]
-    if "agentix-mcp-expedientes" not in audiences:
+    if required_audience not in audiences:
         raise JWTValidationError(
             codigo="AUTH_PERMISSION_DENIED",
-            mensaje="Audiencia incorrecta: debe incluir 'agentix-mcp-expedientes'",
+            mensaje=f"Audiencia incorrecta: debe incluir '{required_audience}'",
             detalle=f"Audiencias recibidas: {audiences}"
         )
 
