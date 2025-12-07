@@ -14,6 +14,12 @@ code-review/
 │   ├── metricas.md         # Métricas de calidad y estadísticas
 │   └── plan-mejoras.md     # Plan de acción con mejoras priorizadas
 │
+├── <ClaseNombre>/          # Carpeta por clase específica (ej: AgentExecutor)
+│   ├── index.md            # Índice y navegación
+│   ├── resumen-ejecutivo.md # Resumen para decisores (5 min)
+│   ├── README.md           # Análisis detallado (20-30 min)
+│   └── plan-mejoras.md     # Plan de implementación completo
+│
 └── fix-<descripcion>/      # Carpetas alternativas para fixes específicos
     └── *.md                # Documentación del análisis
 ```
@@ -34,6 +40,34 @@ Contiene:
 ### [fix-mcp-http-jwt-validation](./fix-mcp-http-jwt-validation/)
 **Fecha:** 2025-12-01
 **Descripción:** Validación fail-fast de JWT en servidor MCP HTTP
+
+---
+
+## Reviews por Clase
+
+### [AgentExecutor](./AgentExecutor/) - Clase Central de aGEntiX
+**Fecha:** 2024-12-07
+**Estado:** 🔴 CRÍTICO - Requiere acción inmediata (P0)
+**Calificación:** ⭐⭐⭐☆☆ (3/5)
+
+**Problemas identificados:**
+- 🔴 0% cobertura de tests unitarios (clase central sin tests)
+- 🔴 Acoplamiento alto - sin inyección de dependencias
+- 🟡 Sin validación de entrada/salida
+- ✅ Excelente manejo de errores y código limpio
+
+**Plan de acción:**
+- **Fase 1 (P0 - CRÍTICA):** Tests + DI [14-21h]
+- **Fase 2 (P1 - ALTA):** Validaciones [5-8h]
+- **Fase 3 (P2-P3 - OPCIONAL):** Mejoras [7-10h]
+
+**Recomendación:** Completar Fase 1 ANTES de continuar con Paso 2 (API REST)
+
+Contiene:
+- [Índice de navegación](./AgentExecutor/index.md)
+- [Resumen ejecutivo](./AgentExecutor/resumen-ejecutivo.md) (5 min)
+- [Análisis detallado](./AgentExecutor/README.md) (20-30 min)
+- [Plan de mejoras completo](./AgentExecutor/plan-mejoras.md) con código
 
 ---
 
