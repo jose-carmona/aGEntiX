@@ -984,16 +984,16 @@ La clase funciona bien en el "happy path", pero:
 #### Fase 1: Tests Unitarios y Dependency Injection (P0 - CRÍTICA)
 
 **P0.1 - Crear Abstracciones (Protocols)**
-- [ ] Crear archivo `backoffice/protocols.py`
-- [ ] Definir `JWTValidatorProtocol` con método `validate()`
-- [ ] Definir `ConfigLoaderProtocol` con método `load()`
-- [ ] Definir `MCPRegistryFactoryProtocol` con método `create()`
-- [ ] Definir `AuditLoggerFactoryProtocol` con método `create()`
-- [ ] Definir `AgentRegistryProtocol` con método `get()`
-- [ ] Verificar que todos los protocols importan sin errores
-- [ ] Ejecutar MyPy para validar tipos
+- [x] Crear archivo `backoffice/protocols.py`
+- [x] Definir `JWTValidatorProtocol` con método `validate()`
+- [x] Definir `ConfigLoaderProtocol` con método `load()`
+- [x] Definir `MCPRegistryFactoryProtocol` con método `create()`
+- [x] Definir `AuditLoggerFactoryProtocol` con método `create()`
+- [x] Definir `AgentRegistryProtocol` con método `get()`
+- [x] Verificar que todos los protocols importan sin errores
+- [x] Ejecutar MyPy para validar tipos
 
-**Estimación:** 2-3 horas | **Estado:** ❌ Pendiente
+**Estimación:** 2-3 horas | **Estado:** ✅ COMPLETADA (commit f80a3fa)
 
 ---
 
@@ -1170,21 +1170,21 @@ La clase funciona bien en el "happy path", pero:
 
 | Fase | Tareas | Completadas | Pendientes | Progreso |
 |------|--------|-------------|------------|----------|
-| **Fase 1 (P0)** | 8 | 0 | 8 | ⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜ 0% |
+| **Fase 1 (P0)** | 8 | 1 | 7 | ⬛⬜⬜⬜⬜⬜⬜⬜⬜⬜ 12.5% |
 | **Fase 2 (P1)** | 3 | 0 | 3 | ⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜ 0% |
 | **Fase 3 (P2-P3)** | 3 | 0 | 3 | ⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜ 0% |
-| **TOTAL** | **14** | **0** | **14** | **⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜ 0%** |
+| **TOTAL** | **14** | **1** | **13** | **⬛⬜⬜⬜⬜⬜⬜⬜⬜⬜ 7%** |
 
 ### Métricas de Calidad
 
-| Métrica | Actual | Post-Fase 1 | Post-Fase 2 | Post-Fase 3 | Objetivo |
-|---------|--------|-------------|-------------|-------------|----------|
-| Tests unitarios | 0 | 30 | 38 | 38 | 30+ |
-| Cobertura | 0% | >80% | >85% | >85% | >80% |
-| Acoplamiento | Alto | Bajo | Bajo | Bajo | Bajo |
-| Validaciones | 0 | 0 | 2 | 2 | 2 |
-| Líneas execute() | 196 | ~180 | ~210 | ~40 | <50 |
-| Complejidad execute() | ~15 | ~15 | ~17 | ~8 | <10 |
+| Métrica | Inicial | Actual (P0.1) | Post-Fase 1 | Post-Fase 2 | Post-Fase 3 | Objetivo |
+|---------|---------|---------------|-------------|-------------|-------------|----------|
+| Tests unitarios | 0 | 7 protocols | 30 | 38 | 38 | 30+ |
+| Cobertura | 0% | 0% executor | >80% | >85% | >85% | >80% |
+| Acoplamiento | Alto | Alto | Bajo | Bajo | Bajo | Bajo |
+| Validaciones | 0 | 0 | 0 | 2 | 2 | 2 |
+| Líneas execute() | 196 | 196 | ~180 | ~210 | ~40 | <50 |
+| Complejidad execute() | ~15 | ~15 | ~15 | ~17 | ~8 | <10 |
 
 ### Próximos Pasos
 
