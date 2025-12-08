@@ -9,8 +9,14 @@ from .config.models import MCPServersConfig
 from .mcp.registry import MCPClientRegistry
 from .mcp.exceptions import MCPConnectionError, MCPToolError, MCPAuthError
 from .logging.audit_logger import AuditLogger
-from .auth.jwt_validator import validate_jwt, get_required_permissions_for_tools, JWTValidationError
-from .agents.registry import get_agent_class
+from .auth.jwt_validator import get_required_permissions_for_tools, JWTValidationError
+from .protocols import (
+    JWTValidatorProtocol,
+    ConfigLoaderProtocol,
+    MCPRegistryFactoryProtocol,
+    AuditLoggerFactoryProtocol,
+    AgentRegistryProtocol
+)
 
 
 class AgentExecutor:
@@ -18,20 +24,40 @@ class AgentExecutor:
     Ejecutor principal de agentes.
 
     Orquesta la validación JWT, configuración MCP, logging y ejecución de agentes.
+
+    Ahora con inyección de dependencias para facilitar testing unitario.
     """
 
-    def __init__(self, mcp_config_path: str, log_dir: str, jwt_secret: str, jwt_algorithm: str = "HS256"):
+    def __init__(
+        self,
+        jwt_validator: JWTValidatorProtocol,
+        config_loader: ConfigLoaderProtocol,
+        registry_factory: MCPRegistryFactoryProtocol,
+        logger_factory: AuditLoggerFactoryProtocol,
+        agent_registry: AgentRegistryProtocol,
+        mcp_config_path: str,
+        jwt_secret: str,
+        jwt_algorithm: str = "HS256"
+    ):
         """
-        Inicializa el executor.
+        Inicializa el executor con dependencias inyectadas.
 
         Args:
+            jwt_validator: Validador de tokens JWT
+            config_loader: Cargador de configuración MCP
+            registry_factory: Factory para crear MCPClientRegistry
+            logger_factory: Factory para crear AuditLogger
+            agent_registry: Registro de agentes disponibles
             mcp_config_path: Ruta al archivo de configuración de MCPs
-            log_dir: Directorio para logs
             jwt_secret: Clave secreta para validar JWT
             jwt_algorithm: Algoritmo JWT (default: HS256)
         """
+        self.jwt_validator = jwt_validator
+        self.config_loader = config_loader
+        self.registry_factory = registry_factory
+        self.logger_factory = logger_factory
+        self.agent_registry = agent_registry
         self.mcp_config_path = mcp_config_path
-        self.log_dir = Path(log_dir)
         self.jwt_secret = jwt_secret
         self.jwt_algorithm = jwt_algorithm
 
@@ -60,10 +86,10 @@ class AgentExecutor:
 
         try:
             # 0. Crear logger temprano para capturar todos los eventos
-            logger = AuditLogger(
+            logger = self.logger_factory.create(
                 expediente_id=expediente_id,
                 agent_run_id=agent_run_id,
-                log_dir=self.log_dir
+                log_dir=str(self.mcp_config_path.rsplit('/', 2)[0] + "/logs/agent_runs")
             )
 
             logger.log(f"Iniciando ejecución de agente {agent_config.nombre}")
@@ -73,7 +99,7 @@ class AgentExecutor:
             logger.log("Validando token JWT...")
             try:
                 required_permissions = get_required_permissions_for_tools(agent_config.herramientas)
-                claims = validate_jwt(
+                claims = self.jwt_validator.validate(
                     token=token,
                     secret=self.jwt_secret,
                     algorithm=self.jwt_algorithm,
@@ -100,18 +126,11 @@ class AgentExecutor:
 
             # 2. Cargar configuración de MCPs
             logger.log(f"Cargando configuración de MCPs desde {self.mcp_config_path}...")
-            mcp_config = MCPServersConfig.load_from_file(self.mcp_config_path)
+            mcp_config = self.config_loader.load(self.mcp_config_path)
 
             # 3. Crear registry de clientes MCP
             logger.log("Creando registry de clientes MCP...")
-            mcp_registry = MCPClientRegistry(
-                config=mcp_config,
-                token=token
-            )
-
-            # 4. Inicializar (crea clientes para MCPs habilitados y descubre tools)
-            logger.log("Inicializando registry (descubriendo tools)...")
-            await mcp_registry.initialize()
+            mcp_registry = await self.registry_factory.create(mcp_config, token)
 
             # Logear qué MCPs están disponibles
             enabled_mcps = [s.id for s in mcp_config.get_enabled_servers()]
@@ -120,10 +139,10 @@ class AgentExecutor:
             available_tools = mcp_registry.get_available_tools()
             logger.log(f"Tools disponibles: {len(available_tools)}")
 
-            # 5. Crear y ejecutar agente mock
+            # 4. Crear y ejecutar agente mock
             logger.log(f"Creando agente {agent_config.nombre}...")
             try:
-                agent_class = get_agent_class(agent_config.nombre)
+                agent_class = self.agent_registry.get(agent_config.nombre)
                 agent = agent_class(
                     expediente_id=expediente_id,
                     tarea_id=tarea_id,

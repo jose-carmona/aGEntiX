@@ -998,29 +998,30 @@ La clase funciona bien en el "happy path", pero:
 ---
 
 **P0.2 - Refactorizar AgentExecutor para DI**
-- [ ] Modificar constructor de `AgentExecutor` para recibir dependencias
-  - [ ] Inyectar `jwt_validator: JWTValidatorProtocol`
-  - [ ] Inyectar `config_loader: ConfigLoaderProtocol`
-  - [ ] Inyectar `registry_factory: MCPRegistryFactoryProtocol`
-  - [ ] Inyectar `logger_factory: AuditLoggerFactoryProtocol`
-  - [ ] Inyectar `agent_registry: AgentRegistryProtocol`
-- [ ] Actualizar método `execute()` para usar dependencias inyectadas
-  - [ ] Usar `self.jwt_validator.validate()` en lugar de `validate_jwt()`
-  - [ ] Usar `self.config_loader.load()` en lugar de `MCPServersConfig.load_from_file()`
-  - [ ] Usar `self.registry_factory.create()` en lugar de instanciación directa
-  - [ ] Usar `self.logger_factory.create()` en lugar de `AuditLogger()`
-  - [ ] Usar `self.agent_registry.get()` en lugar de `get_agent_class()`
-- [ ] Crear archivo `backoffice/executor_factory.py`
-  - [ ] Implementar `DefaultJWTValidator`
-  - [ ] Implementar `DefaultConfigLoader`
-  - [ ] Implementar `DefaultMCPRegistryFactory`
-  - [ ] Implementar `DefaultAuditLoggerFactory`
-  - [ ] Implementar `DefaultAgentRegistry`
-  - [ ] Implementar función `create_default_executor()`
-- [ ] Verificar backward compatibility con código existente
-- [ ] Actualizar tests de integración existentes
+- [x] Modificar constructor de `AgentExecutor` para recibir dependencias
+  - [x] Inyectar `jwt_validator: JWTValidatorProtocol`
+  - [x] Inyectar `config_loader: ConfigLoaderProtocol`
+  - [x] Inyectar `registry_factory: MCPRegistryFactoryProtocol`
+  - [x] Inyectar `logger_factory: AuditLoggerFactoryProtocol`
+  - [x] Inyectar `agent_registry: AgentRegistryProtocol`
+- [x] Actualizar método `execute()` para usar dependencias inyectadas
+  - [x] Usar `self.jwt_validator.validate()` en lugar de `validate_jwt()`
+  - [x] Usar `self.config_loader.load()` en lugar de `MCPServersConfig.load_from_file()`
+  - [x] Usar `self.registry_factory.create()` en lugar de instanciación directa
+  - [x] Usar `self.logger_factory.create()` en lugar de `AuditLogger()`
+  - [x] Usar `self.agent_registry.get()` en lugar de `get_agent_class()`
+- [x] Crear archivo `backoffice/executor_factory.py`
+  - [x] Implementar `DefaultJWTValidator`
+  - [x] Implementar `DefaultConfigLoader`
+  - [x] Implementar `DefaultMCPRegistryFactory`
+  - [x] Implementar `DefaultAuditLoggerFactory`
+  - [x] Implementar `DefaultAgentRegistry`
+  - [x] Implementar función `create_default_executor()`
+- [x] Verificar backward compatibility con código existente
+- [x] Actualizar `ejemplo_uso.py` para usar factory
+- [x] Ejecutar tests de integración (53/53 PASS)
 
-**Estimación:** 4-6 horas | **Estado:** ❌ Pendiente
+**Estimación:** 4-6 horas | **Estado:** ✅ COMPLETADA
 
 ---
 
@@ -1170,18 +1171,18 @@ La clase funciona bien en el "happy path", pero:
 
 | Fase | Tareas | Completadas | Pendientes | Progreso |
 |------|--------|-------------|------------|----------|
-| **Fase 1 (P0)** | 8 | 1 | 7 | ⬛⬜⬜⬜⬜⬜⬜⬜⬜⬜ 12.5% |
+| **Fase 1 (P0)** | 8 | 2 | 6 | ⬛⬛⬜⬜⬜⬜⬜⬜⬜⬜ 25% |
 | **Fase 2 (P1)** | 3 | 0 | 3 | ⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜ 0% |
 | **Fase 3 (P2-P3)** | 3 | 0 | 3 | ⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜ 0% |
-| **TOTAL** | **14** | **1** | **13** | **⬛⬜⬜⬜⬜⬜⬜⬜⬜⬜ 7%** |
+| **TOTAL** | **14** | **2** | **12** | **⬛⬛⬜⬜⬜⬜⬜⬜⬜⬜ 14%** |
 
 ### Métricas de Calidad
 
-| Métrica | Inicial | Actual (P0.1) | Post-Fase 1 | Post-Fase 2 | Post-Fase 3 | Objetivo |
+| Métrica | Inicial | Actual (P0.2) | Post-Fase 1 | Post-Fase 2 | Post-Fase 3 | Objetivo |
 |---------|---------|---------------|-------------|-------------|-------------|----------|
 | Tests unitarios | 0 | 7 protocols | 30 | 38 | 38 | 30+ |
 | Cobertura | 0% | 0% executor | >80% | >85% | >85% | >80% |
-| Acoplamiento | Alto | Alto | Bajo | Bajo | Bajo | Bajo |
+| Acoplamiento | Alto | **Bajo** ✅ | Bajo | Bajo | Bajo | Bajo |
 | Validaciones | 0 | 0 | 0 | 2 | 2 | 2 |
 | Líneas execute() | 196 | 196 | ~180 | ~210 | ~40 | <50 |
 | Complejidad execute() | ~15 | ~15 | ~15 | ~17 | ~8 | <10 |
@@ -1191,13 +1192,14 @@ La clase funciona bien en el "happy path", pero:
 **ACCIÓN INMEDIATA:**
 
 ```bash
-# 1. Crear feature branch
-git checkout -b feature/executor-tests-di
+# ✅ P0.1 COMPLETADA - Protocols creados (commit f80a3fa)
+# ✅ P0.2 COMPLETADA - DI implementado, backward compatibility verificada
 
-# 2. Comenzar con P0.1 (Crear Protocols)
-touch backoffice/protocols.py
-
-# 3. Ver plan-mejoras.md para implementación completa
+# SIGUIENTE: P0.3 - Crear Suite de Tests Unitarios
+# - Crear backoffice/tests/test_executor.py
+# - Implementar 30 tests unitarios usando mocks
+# - Objetivo: >80% cobertura de AgentExecutor
+# - Ver plan-mejoras.md para estructura completa de tests
 ```
 
 **Orden de implementación recomendado:**

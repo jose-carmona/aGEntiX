@@ -12,7 +12,7 @@ IMPORTANTE: Antes de ejecutar este script:
 """
 
 import asyncio
-from backoffice.executor import AgentExecutor
+from backoffice.executor_factory import create_default_executor
 from backoffice.models import AgentConfig
 from backoffice.config import settings
 
@@ -24,9 +24,8 @@ async def ejemplo_validador_documental():
     print("=" * 60)
 
     # 1. Crear executor
-    executor = AgentExecutor(
+    executor = create_default_executor(
         mcp_config_path=settings.MCP_CONFIG_PATH,
-        log_dir=settings.LOG_DIR,
         jwt_secret=settings.JWT_SECRET
     )
 
@@ -100,9 +99,8 @@ async def ejemplo_analizador_subvencion():
     print("EJEMPLO: AnalizadorSubvencion")
     print("=" * 60)
 
-    executor = AgentExecutor(
+    executor = create_default_executor(
         mcp_config_path=settings.MCP_CONFIG_PATH,
-        log_dir=settings.LOG_DIR,
         jwt_secret=settings.JWT_SECRET
     )
 
@@ -140,9 +138,8 @@ async def ejemplo_generador_informe():
     print("EJEMPLO: GeneradorInforme")
     print("=" * 60)
 
-    executor = AgentExecutor(
+    executor = create_default_executor(
         mcp_config_path=settings.MCP_CONFIG_PATH,
-        log_dir=settings.LOG_DIR,
         jwt_secret=settings.JWT_SECRET
     )
 
