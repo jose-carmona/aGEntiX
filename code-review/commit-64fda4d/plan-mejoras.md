@@ -10,7 +10,7 @@
 
 | ID | Título | Prioridad | Esfuerzo | Estado |
 |----|--------|-----------|----------|--------|
-| P1.1 | Migrar on_event → lifespan | Alta | 15 min | ⬜ Pendiente |
+| P1.1 | Migrar on_event → lifespan | Alta | 15 min | ✅ Completado |
 | P1.2 | Webhook retry con backoff exponencial | Alta | 45 min | ⬜ Pendiente |
 | P1.3 | Prevenir colisión run_id | Alta | 30 min | ⬜ Pendiente |
 | P2.1 | Validar webhook_url (SSRF) | Media | 30 min | ⬜ Pendiente |
@@ -91,14 +91,14 @@ app = FastAPI(
 
 #### Checklist
 
-- [ ] Importar `asynccontextmanager` de `contextlib`
-- [ ] Definir función `lifespan` con decorador `@asynccontextmanager`
-- [ ] Mover lógica startup antes del `yield`
-- [ ] Mover lógica shutdown después del `yield`
-- [ ] Añadir parámetro `lifespan=lifespan` a `FastAPI()`
-- [ ] Eliminar `@app.on_event("startup")` y `@app.on_event("shutdown")`
-- [ ] Ejecutar tests → verificar 0 warnings
-- [ ] Commit: "Migrar on_event → lifespan (FastAPI best practice)"
+- [x] Importar `asynccontextmanager` de `contextlib`
+- [x] Definir función `lifespan` con decorador `@asynccontextmanager`
+- [x] Mover lógica startup antes del `yield`
+- [x] Mover lógica shutdown después del `yield`
+- [x] Añadir parámetro `lifespan=lifespan` a `FastAPI()`
+- [x] Eliminar `@app.on_event("startup")` y `@app.on_event("shutdown")`
+- [x] Ejecutar tests → verificar 0 warnings (0 on_event warnings, 96/96 tests PASS)
+- [x] Commit: "Implementar P1.1: Migrar on_event → lifespan (FastAPI best practice)"
 
 ---
 

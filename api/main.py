@@ -11,6 +11,7 @@ FastAPI app que expone endpoints para:
 """
 
 import logging
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from prometheus_fastapi_instrumentator import Instrumentator
@@ -26,11 +27,36 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """
+    Gestiona el ciclo de vida de la aplicación.
+
+    Startup: Inicialización y configuración
+    Shutdown: Limpieza de recursos
+    """
+    # Startup
+    logger.info("=" * 60)
+    logger.info("aGEntiX API iniciando...")
+    logger.info(f"Versión: 1.0.0")
+    logger.info(f"MCP Config: {settings.MCP_CONFIG_PATH}")
+    logger.info(f"Log Level: {settings.LOG_LEVEL}")
+    logger.info(f"CORS Origins: {settings.CORS_ORIGINS}")
+    logger.info("=" * 60)
+
+    yield
+
+    # Shutdown
+    logger.info("aGEntiX API cerrando...")
+
+
 # Crear app FastAPI
 app = FastAPI(
     title="aGEntiX API",
     description="API REST para ejecución de agentes IA en GEX",
     version="1.0.0",
+    lifespan=lifespan,
     docs_url="/docs",
     redoc_url="/redoc",
     openapi_url="/openapi.json"
@@ -63,24 +89,6 @@ app.include_router(
 # Configurar Prometheus
 logger.info("Configurando métricas Prometheus")
 Instrumentator().instrument(app).expose(app, endpoint="/metrics")
-
-
-@app.on_event("startup")
-async def startup_event():
-    """Evento de inicio de la aplicación"""
-    logger.info("=" * 60)
-    logger.info("aGEntiX API iniciando...")
-    logger.info(f"Versión: 1.0.0")
-    logger.info(f"MCP Config: {settings.MCP_CONFIG_PATH}")
-    logger.info(f"Log Level: {settings.LOG_LEVEL}")
-    logger.info(f"CORS Origins: {settings.CORS_ORIGINS}")
-    logger.info("=" * 60)
-
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    """Evento de cierre de la aplicación"""
-    logger.info("aGEntiX API cerrando...")
 
 
 @app.get(
