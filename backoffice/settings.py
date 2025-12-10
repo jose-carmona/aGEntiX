@@ -24,6 +24,15 @@ class Settings(BaseSettings):
     LOG_LEVEL: str = "INFO"
     LOG_DIR: str = "logs/agent_runs"
 
+    # API Configuration (Paso 2)
+    API_HOST: str = "0.0.0.0"
+    API_PORT: int = 8080
+    API_WORKERS: int = 4
+    API_RELOAD: bool = False
+
+    # CORS
+    CORS_ORIGINS: str = "http://localhost:3000,http://localhost:8080"
+
     class Config:
         env_file = ".env"
         case_sensitive = True
