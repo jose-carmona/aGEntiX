@@ -7,8 +7,12 @@ Define los schemas de request/response para todos los endpoints,
 con validación automática y documentación OpenAPI.
 """
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator, HttpUrl
 from typing import List, Dict, Any, Optional
+import ipaddress
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class AgentConfigRequest(BaseModel):
@@ -58,7 +62,7 @@ class ExecuteAgentRequest(BaseModel):
         ...,
         description="Configuración del agente"
     )
-    webhook_url: str = Field(
+    webhook_url: HttpUrl = Field(
         ...,
         example="https://bpmn.example.com/api/v1/tasks/callback",
         description="URL donde enviar el resultado cuando termine"
@@ -69,6 +73,80 @@ class ExecuteAgentRequest(BaseModel):
         le=600,
         description="Timeout máximo de ejecución en segundos (10-600)"
     )
+
+    @field_validator('webhook_url')
+    @classmethod
+    def validate_webhook_url(cls, v: HttpUrl) -> HttpUrl:
+        """
+        Valida webhook_url para prevenir SSRF (Server-Side Request Forgery).
+
+        Restricciones de seguridad:
+        - Solo HTTPS en producción (HTTP permitido en desarrollo)
+        - No localhost/127.0.0.1/::1/0.0.0.0
+        - No IPs privadas (10.x, 172.16-31.x, 192.168.x)
+        - Puertos no estándar generan warning
+
+        Args:
+            v: HttpUrl a validar
+
+        Returns:
+            HttpUrl validado
+
+        Raises:
+            ValueError: Si la URL no cumple restricciones de seguridad
+        """
+        from backoffice.settings import settings
+
+        # Extraer hostname (remover corchetes de IPv6 si existen)
+        hostname = v.host
+        if hostname.startswith('[') and hostname.endswith(']'):
+            hostname = hostname[1:-1]
+
+        # 1. Prevenir localhost (PRIORIDAD ALTA)
+        localhost_variants = ["localhost", "127.0.0.1", "::1", "0.0.0.0"]
+        if hostname in localhost_variants:
+            raise ValueError(
+                f"webhook_url no puede apuntar a localhost ({hostname}). "
+                "Esto podría ser un intento de SSRF (Server-Side Request Forgery)."
+            )
+
+        # 2. Prevenir IPs privadas y loopback (PRIORIDAD ALTA)
+        try:
+            ip = ipaddress.ip_address(hostname)
+            if ip.is_loopback:
+                raise ValueError(
+                    f"webhook_url no puede apuntar a loopback: {hostname}. "
+                    "Direcciones loopback no están permitidas por seguridad (SSRF)."
+                )
+            if ip.is_private:
+                raise ValueError(
+                    f"webhook_url no puede apuntar a IP privada: {hostname}. "
+                    "IPs privadas (10.x, 172.16-31.x, 192.168.x) no están permitidas "
+                    "por seguridad (SSRF)."
+                )
+        except ValueError as e:
+            # Si no es una IP válida, es un hostname (OK)
+            # Pero re-raise si es un error de validación que lanzamos nosotros
+            if "webhook_url no puede" in str(e):
+                raise
+
+        # 3. Validar scheme (HTTPS en producción) - después de localhost/private
+        if settings.LOG_LEVEL == "INFO":  # Producción
+            if v.scheme != "https":
+                raise ValueError(
+                    "webhook_url debe usar HTTPS en producción. "
+                    "HTTP solo permitido en desarrollo (LOG_LEVEL=DEBUG)."
+                )
+
+        # 4. Validar puerto (opcional - solo warning)
+        standard_ports = [80, 443, 8080, 8443]
+        if v.port and v.port not in standard_ports:
+            logger.warning(
+                f"webhook_url usa puerto no estándar: {v.port}. "
+                f"Puertos estándar: {standard_ports}"
+            )
+
+        return v
 
 
 class ExecuteAgentResponse(BaseModel):

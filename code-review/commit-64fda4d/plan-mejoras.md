@@ -13,7 +13,7 @@
 | P1.1 | Migrar on_event → lifespan | Alta | 15 min | ✅ Completado |
 | P1.2 | Webhook retry con backoff exponencial | Alta | 45 min | ⬜ Pendiente |
 | P1.3 | Prevenir colisión run_id | Alta | 30 min | ⬜ Pendiente |
-| P2.1 | Validar webhook_url (SSRF) | Media | 30 min | ⬜ Pendiente |
+| P2.1 | Validar webhook_url (SSRF) | Media | 30 min | ✅ Completado |
 | P2.2 | Cleanup automático TaskTracker | Media | 1h | ⬜ Pendiente |
 | P2.3 | Health check → MCP connectivity | Media | 45 min | ⬜ Pendiente |
 | P2.4 | CORS hardening producción | Media | 15 min | ⬜ Pendiente |
@@ -678,12 +678,13 @@ def test_webhook_url_accepts_valid_https():
 
 #### Checklist
 
-- [ ] Cambiar `webhook_url: str` → `webhook_url: HttpUrl`
-- [ ] Implementar `@field_validator` (elegir Opción 1 o 2)
-- [ ] Añadir tests validación
-- [ ] Ejecutar tests → verificar PASS
-- [ ] Verificar error 422 en request inválido
-- [ ] Commit: "Validar webhook_url para prevenir SSRF"
+- [x] Cambiar `webhook_url: str` → `webhook_url: HttpUrl`
+- [x] Implementar `@field_validator` (Opción 1 - validación completa SSRF)
+- [x] Añadir tests validación (12 tests PASS)
+- [x] Ejecutar tests → verificar PASS (108 tests totales, 100%)
+- [x] Verificar error 422 en request inválido (ValidationError)
+- [x] Actualizar tests existentes a HTTPS
+- [x] Commit: "Implementar P2.1: Validar webhook_url para prevenir SSRF"
 
 ---
 

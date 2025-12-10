@@ -112,7 +112,7 @@ async def execute_agent(
         tarea_id=request.tarea_id,
         agent_config=agent_config,
         agent_run_id=agent_run_id,
-        webhook_url=request.webhook_url,
+        webhook_url=str(request.webhook_url),  # Convertir HttpUrl a str
         timeout_seconds=request.timeout_seconds
     )
 
@@ -120,7 +120,7 @@ async def execute_agent(
     return ExecuteAgentResponse(
         agent_run_id=agent_run_id,
         message="Ejecución de agente iniciada",
-        webhook_url=request.webhook_url
+        webhook_url=str(request.webhook_url)  # Convertir HttpUrl a str
     )
 
 

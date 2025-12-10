@@ -25,7 +25,7 @@ def test_execute_agent_without_token_returns_401():
             "prompt_tarea": "Test task",
             "herramientas": ["consultar_expediente"]
         },
-        "webhook_url": "http://example.com/callback",
+        "webhook_url": "https://example.com/callback",  # HTTPS requerido en producción
         "timeout_seconds": 300
     })
 
@@ -74,7 +74,7 @@ def test_execute_agent_with_valid_token_returns_202(mock_executor):
                 "prompt_tarea": "Test task",
                 "herramientas": ["consultar_expediente"]
             },
-            "webhook_url": "http://example.com/callback",
+            "webhook_url": "https://example.com/callback",
             "timeout_seconds": 300
         },
         headers={"Authorization": "Bearer test-token"}
@@ -85,7 +85,7 @@ def test_execute_agent_with_valid_token_returns_202(mock_executor):
     assert data["status"] == "accepted"
     assert "agent_run_id" in data
     assert data["agent_run_id"].startswith("RUN-")
-    assert data["webhook_url"] == "http://example.com/callback"
+    assert data["webhook_url"] == "https://example.com/callback"
 
 
 def test_get_agent_status_not_found_returns_404():
@@ -124,7 +124,7 @@ def test_execute_then_get_status_returns_valid_status(mock_executor):
                 "prompt_tarea": "Test task",
                 "herramientas": ["consultar_expediente"]
             },
-            "webhook_url": "http://example.com/callback",
+            "webhook_url": "https://example.com/callback",
             "timeout_seconds": 300
         },
         headers={"Authorization": "Bearer test-token"}
@@ -160,7 +160,7 @@ def test_execute_with_timeout_out_of_range_returns_422():
                 "prompt_tarea": "Test task",
                 "herramientas": ["consultar_expediente"]
             },
-            "webhook_url": "http://example.com/callback",
+            "webhook_url": "https://example.com/callback",
             "timeout_seconds": 5  # Menos de 10
         },
         headers={"Authorization": "Bearer test-token"}
@@ -181,7 +181,7 @@ def test_execute_with_timeout_out_of_range_returns_422():
                 "prompt_tarea": "Test task",
                 "herramientas": ["consultar_expediente"]
             },
-            "webhook_url": "http://example.com/callback",
+            "webhook_url": "https://example.com/callback",
             "timeout_seconds": 700  # Más de 600
         },
         headers={"Authorization": "Bearer test-token"}
