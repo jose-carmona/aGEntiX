@@ -10,11 +10,13 @@ GEX es la aplicación central de gestión administrativa desarrollada por Eprins
 
 ## Estado del Proyecto
 
-**Fase actual:** Paso 1 - Back-Office Mock con Arquitectura Multi-MCP ✅
+**Fase actual:** Paso 2 - API REST con FastAPI ✅ COMPLETADO
 
-### Implementado (Paso 1)
+### Implementado
 
-Este paso implementa un sistema funcional con agentes mock que demuestra la arquitectura completa:
+#### Paso 1: Back-Office Mock ✅
+
+Sistema funcional con agentes mock que demuestra la arquitectura completa:
 
 - ✅ **Validación JWT completa** con 10 claims obligatorios (issuer, subject, audience, exp_id, permisos)
 - ✅ **Arquitectura multi-MCP plug-and-play** (solo MCP Expedientes habilitado, otros por configuración)
@@ -24,18 +26,37 @@ Este paso implementa un sistema funcional con agentes mock que demuestra la arqu
 - ✅ **Redacción automática de PII** en logs (8 tipos: DNI, NIE, email, teléfonos, IBAN, tarjetas, CCC)
 - ✅ **Auditoría completa** con logs estructurados JSON lines
 - ✅ **3 agentes mock funcionales** (validador documental, analizador subvención, generador informe)
-- ✅ **Suite de 46 tests** (19 JWT + 15 MCP + 12 PII) - 100% PASS
+- ✅ **Suite de 86 tests** (19 JWT + 15 MCP + 12 PII + 33 unitarios) - 100% PASS
 - ✅ **Configuración externalizada** (.env para secrets, YAML para MCPs)
+
+Ver [code-review/commit-c039abe](code-review/commit-c039abe/) para análisis detallado.
+
+#### Paso 2: API REST con FastAPI ✅
+
+API REST profesional para ejecución asíncrona de agentes:
+
+- ✅ **6 endpoints RESTful** (execute, status, health, info, metrics, docs)
+- ✅ **Ejecución asíncrona** con FastAPI BackgroundTasks y timeouts configurables
+- ✅ **Webhooks automáticos** para notificar a BPMN al completar
+- ✅ **Seguridad JWT** con validación completa en endpoints de agentes
+- ✅ **Protección SSRF** en webhook_url (previene localhost, IPs privadas, require HTTPS en producción)
+- ✅ **Métricas Prometheus** para observabilidad
+- ✅ **Documentación OpenAPI** interactiva con Swagger UI
+- ✅ **Task tracking** en memoria thread-safe con cleanup automático
+- ✅ **Patrón lifespan moderno** (migrado de `on_event` deprecado)
+- ✅ **Configuración flexible** vía variables de entorno
+- ✅ **Suite de 22 tests** de API (health, agent endpoints, webhook validation) - 100% PASS
+
+Ver [code-review/commit-64fda4d](code-review/commit-64fda4d/) para análisis detallado y plan de mejoras (2/11 implementadas: P1.1 y P2.1).
 
 ### Calidad del Código
 
-- **Tests:** 46/46 PASS (100%)
+- **Tests:** 108/108 PASS (100%) - 86 backoffice + 22 API
 - **Cobertura PII:** 8 tipos de datos personales redactados
 - **Vulnerabilidades:** 0
+- **Seguridad:** OWASP A10:2021 (SSRF) mitigado
 - **Cumplimiento:** GDPR Art. 32, LOPD, ENS
-- **Calidad promedio:** 4.6/5 ⭐⭐⭐⭐⭐
-
-Ver [code-review/commit-c039abe](code-review/commit-c039abe/) para análisis detallado.
+- **Calidad promedio:** 4.7/5 ⭐⭐⭐⭐⭐
 
 ## Concepto Central
 
@@ -187,12 +208,18 @@ El proyecto incluye un script unificado para ejecutar todos los tests:
 
 ### Suite de Tests Actual
 
-**Total: 79 tests (100% PASS)**
+**Total: 96 tests (100% PASS)**
 
-#### Back-Office (46 tests)
+#### Back-Office (86 tests)
 - **19 tests JWT** - Validación de seguridad y autenticación
 - **15 tests MCP** - Integración con servidores MCP
 - **12 tests PII** - Cumplimiento normativo GDPR/LOPD/ENS
+- **33 tests Executor** - Tests unitarios del AgentExecutor
+- **7 tests Protocols** - Interfaces y abstracciones
+
+#### API REST (10 tests)
+- **4 tests Health** - Health check, metrics, docs
+- **6 tests Agent Endpoints** - Execute, status, validaciones
 
 #### MCP Mock Expedientes (33 tests)
 - **10 tests Auth** - Validación JWT en servidor MCP
@@ -202,14 +229,79 @@ El proyecto incluye un script unificado para ejecutar todos los tests:
 
 ## Uso del Sistema
 
-### 1. Iniciar Servidor MCP Expedientes
+### Opción A: API REST (Recomendado)
+
+La forma más simple de usar aGEntiX es mediante la API REST:
+
+#### 1. Iniciar Servidor MCP Expedientes
 
 ```bash
 cd mcp-mock/mcp-expedientes
 python -m uvicorn mcp_expedientes.server_http:app --reload --port 8000
 ```
 
-### 2. Ejecutar un Agente
+#### 2. Lanzar API REST
+
+```bash
+# Desarrollo con auto-reload
+API_RELOAD=true ./run-api.sh
+
+# Producción con múltiples workers
+API_WORKERS=8 ./run-api.sh
+```
+
+La API estará disponible en `http://localhost:8080` con documentación interactiva en `http://localhost:8080/docs`.
+
+#### 3. Ejecutar Agente vía API
+
+```bash
+# Generar token JWT válido
+cd mcp-mock/mcp-expedientes
+python -m mcp_expedientes.generate_token EXP-2024-001
+
+# Ejecutar agente (reemplazar <TOKEN> con el token generado)
+curl -X POST http://localhost:8080/api/v1/agent/execute \
+  -H "Authorization: Bearer <TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "expediente_id": "EXP-2024-001",
+    "tarea_id": "TAREA-001",
+    "agent_config": {
+      "nombre": "ValidadorDocumental",
+      "system_prompt": "Eres un validador de documentación administrativa",
+      "modelo": "claude-3-5-sonnet",
+      "prompt_tarea": "Valida que todos los documentos requeridos estén presentes",
+      "herramientas": ["consultar_expediente"]
+    },
+    "webhook_url": "http://example.com/callback",
+    "timeout_seconds": 300
+  }'
+
+# Consultar estado (reemplazar <RUN_ID> con el ID retornado)
+curl http://localhost:8080/api/v1/agent/status/<RUN_ID>
+```
+
+#### Endpoints Disponibles
+
+- **POST** `/api/v1/agent/execute` - Ejecutar agente asíncronamente
+- **GET** `/api/v1/agent/status/{run_id}` - Consultar estado de ejecución
+- **GET** `/health` - Health check
+- **GET** `/metrics` - Métricas Prometheus
+- **GET** `/docs` - Documentación Swagger interactiva
+- **GET** `/` - Info de la API
+
+### Opción B: Uso Programático (Back-Office Directo)
+
+Para integración avanzada o testing, puedes usar el back-office directamente:
+
+#### 1. Iniciar Servidor MCP Expedientes
+
+```bash
+cd mcp-mock/mcp-expedientes
+python -m uvicorn mcp_expedientes.server_http:app --reload --port 8000
+```
+
+#### 2. Ejecutar un Agente
 
 ```python
 import asyncio
