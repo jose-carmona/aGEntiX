@@ -10,9 +10,9 @@ import uuid
 from datetime import datetime
 from typing import List, Any, Dict
 from mcp import types
-from models import Documento, EntradaHistorial
-from resources import load_expediente, save_expediente
-from auth import AuthError
+from .models import Documento, EntradaHistorial
+from .resources import load_expediente, save_expediente
+from .auth import AuthError
 
 
 def generate_id(prefix: str) -> str:

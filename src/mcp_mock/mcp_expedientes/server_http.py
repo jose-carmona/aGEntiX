@@ -67,8 +67,8 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 from starlette.exceptions import HTTPException
 from mcp.server.sse import SseServerTransport
-from server import create_server, get_server_info
-from auth import validate_jwt, AuthError
+from .server import create_server, get_server_info
+from .auth import validate_jwt, AuthError
 
 # Configurar logging
 logging.basicConfig(

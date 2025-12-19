@@ -20,8 +20,8 @@ NC='\033[0m' # No Color
 
 # Directorio raíz del proyecto
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-MCP_DIR="${PROJECT_ROOT}/mcp-mock/mcp-expedientes"
-BACKOFFICE_DIR="${PROJECT_ROOT}/backoffice"
+MCP_DIR="${PROJECT_ROOT}/src/mcp_mock/mcp_expedientes"
+BACKOFFICE_DIR="${PROJECT_ROOT}/tests/test_backoffice"
 
 # Función para mostrar ayuda
 show_help() {
@@ -97,15 +97,15 @@ echo -e "${BLUE}═════════════════════�
 echo ""
 
 # Verificar que existen los directorios de tests
-if [ "$RUN_MCP" = true ] && [ ! -d "${MCP_DIR}/tests" ]; then
+if [ "$RUN_MCP" = true ] && [ ! -d "${PROJECT_ROOT}/tests/test_mcp" ]; then
     echo -e "${RED}✗ Error: No se encuentra el directorio de tests de MCP${NC}"
-    echo -e "  Esperado en: ${MCP_DIR}/tests"
+    echo -e "  Esperado en: ${PROJECT_ROOT}/tests/test_mcp"
     exit 1
 fi
 
-if [ "$RUN_BACKOFFICE" = true ] && [ ! -d "${BACKOFFICE_DIR}/tests" ]; then
+if [ "$RUN_BACKOFFICE" = true ] && [ ! -d "${BACKOFFICE_DIR}" ]; then
     echo -e "${RED}✗ Error: No se encuentra el directorio de tests de Back-Office${NC}"
-    echo -e "  Esperado en: ${BACKOFFICE_DIR}/tests"
+    echo -e "  Esperado en: ${BACKOFFICE_DIR}"
     exit 1
 fi
 
@@ -126,15 +126,15 @@ if [ "$RUN_MCP" = true ]; then
     echo -e "${BLUE}═══════════════════════════════════════════════════════════════${NC}"
     echo -e "${YELLOW}📦 Tests de MCP Mock${NC}"
     echo -e "${BLUE}═══════════════════════════════════════════════════════════════${NC}"
-    echo -e "${YELLOW}📂 Directorio:${NC} ${MCP_DIR}"
+    echo -e "${YELLOW}📂 Directorio:${NC} ${PROJECT_ROOT}/tests/test_mcp"
     echo ""
 
-    # Configurar PYTHONPATH
-    export PYTHONPATH="${MCP_DIR}/tests:${PYTHONPATH}"
+    # Configurar PYTHONPATH para imports desde src/
+    export PYTHONPATH="${PROJECT_ROOT}/src:${PYTHONPATH}"
 
-    # Cambiar al directorio del MCP y ejecutar tests
-    cd "${MCP_DIR}"
-    pytest "$@" tests/
+    # Cambiar al directorio raíz y ejecutar tests
+    cd "${PROJECT_ROOT}"
+    pytest "$@" tests/test_mcp/
     MCP_RESULT=$?
 
     if [ $MCP_RESULT -ne 0 ]; then
@@ -152,11 +152,11 @@ if [ "$RUN_BACKOFFICE" = true ]; then
     echo -e "${YELLOW}📂 Directorio:${NC} ${BACKOFFICE_DIR}"
     echo ""
 
-    # Cambiar al directorio del proyecto raíz para mantener imports relativos
+    # Cambiar al directorio del proyecto raíz
     cd "${PROJECT_ROOT}"
 
-    # Ejecutar tests del back-office desde el directorio raíz
-    pytest "$@" backoffice/tests/
+    # Ejecutar tests del back-office
+    pytest "$@" tests/test_backoffice/
     BACKOFFICE_RESULT=$?
 
     if [ $BACKOFFICE_RESULT -ne 0 ]; then

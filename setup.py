@@ -11,7 +11,8 @@ setup(
     name="agentix",
     version="1.0.0",
     description="AI Agent System for GEX document management",
-    packages=find_packages(),
+    package_dir={"": "src"},
+    packages=find_packages(where="src"),
     python_requires=">=3.11",
     install_requires=[
         "anthropic>=0.39.0",

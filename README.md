@@ -159,7 +159,7 @@ Ver [.devcontainer/README.md](.devcontainer/README.md) para documentación compl
 
 ```bash
 # 1. Instalar dependencias del servidor MCP
-cd mcp-mock/mcp-expedientes
+cd src/mcp_mock/mcp_expedientes
 pip install -r requirements.txt
 
 # 2. Instalar dependencias del back-office
@@ -236,7 +236,7 @@ La forma más simple de usar aGEntiX es mediante la API REST:
 #### 1. Iniciar Servidor MCP Expedientes
 
 ```bash
-cd mcp-mock/mcp-expedientes
+cd src/mcp_mock/mcp_expedientes
 python -m uvicorn mcp_expedientes.server_http:app --reload --port 8000
 ```
 
@@ -256,7 +256,7 @@ La API estará disponible en `http://localhost:8080` con documentación interact
 
 ```bash
 # Generar token JWT válido
-cd mcp-mock/mcp-expedientes
+cd src/mcp_mock/mcp_expedientes
 python -m mcp_expedientes.generate_token EXP-2024-001
 
 # Ejecutar agente (reemplazar <TOKEN> con el token generado)
@@ -297,7 +297,7 @@ Para integración avanzada o testing, puedes usar el back-office directamente:
 #### 1. Iniciar Servidor MCP Expedientes
 
 ```bash
-cd mcp-mock/mcp-expedientes
+cd src/mcp_mock/mcp_expedientes
 python -m uvicorn mcp_expedientes.server_http:app --reload --port 8000
 ```
 
@@ -356,7 +356,7 @@ if __name__ == "__main__":
 ### 3. Generar Token JWT
 
 ```bash
-cd mcp-mock/mcp-expedientes
+cd src/mcp_mock/mcp_expedientes
 python -m mcp_expedientes.generate_token EXP-2024-001
 ```
 
@@ -364,43 +364,60 @@ python -m mcp_expedientes.generate_token EXP-2024-001
 
 ```
 aGEntiX/
-├── backoffice/                      # Back-Office de Agentes IA (Paso 1)
-│   ├── executor.py                  # AgentExecutor (punto de entrada)
-│   ├── models.py                    # Modelos Pydantic
-│   ├── settings.py                  # Configuración con variables de entorno
-│   ├── auth/
-│   │   └── jwt_validator.py         # Validación JWT (10 claims)
-│   ├── agents/
-│   │   ├── base.py                  # Clase base agentes
-│   │   ├── registry.py              # Registro de agentes
-│   │   ├── validador_documental.py
-│   │   ├── analizador_subvencion.py
-│   │   └── generador_informe.py
-│   ├── config/
-│   │   ├── models.py                # Modelos configuración MCP
-│   │   └── mcp_servers.yaml         # Catálogo de servidores MCP
-│   ├── mcp/
-│   │   ├── client.py                # Cliente MCP (JSON-RPC 2.0)
-│   │   ├── registry.py              # MCPClientRegistry (routing)
-│   │   └── exceptions.py            # Excepciones MCP
-│   ├── logging/
-│   │   ├── pii_redactor.py          # Redactor PII (GDPR/LOPD)
-│   │   └── audit_logger.py          # Logger auditoría
-│   └── tests/
-│       ├── test_jwt_validator.py    # 19 tests JWT
-│       ├── test_mcp_integration.py  # 15 tests MCP
-│       └── test_logging.py          # 12 tests PII
+├── src/                             # Código fuente Python (estructura plana)
+│   ├── api/                         # API REST con FastAPI (Paso 2)
+│   │   ├── main.py                  # FastAPI app
+│   │   ├── models.py                # Modelos Pydantic
+│   │   └── routes/                  # Endpoints REST
+│   │
+│   ├── backoffice/                  # Back-Office de Agentes IA (Paso 1)
+│   │   ├── executor.py              # AgentExecutor (punto de entrada)
+│   │   ├── models.py                # Modelos Pydantic
+│   │   ├── settings.py              # Configuración con variables de entorno
+│   │   ├── auth/
+│   │   │   └── jwt_validator.py     # Validación JWT (10 claims)
+│   │   ├── agents/
+│   │   │   ├── base.py              # Clase base agentes
+│   │   │   ├── registry.py          # Registro de agentes
+│   │   │   ├── validador_documental.py
+│   │   │   ├── analizador_subvencion.py
+│   │   │   └── generador_informe.py
+│   │   ├── config/
+│   │   │   ├── models.py            # Modelos configuración MCP
+│   │   │   └── mcp_servers.yaml     # Catálogo de servidores MCP
+│   │   ├── mcp/
+│   │   │   ├── client.py            # Cliente MCP (JSON-RPC 2.0)
+│   │   │   ├── registry.py          # MCPClientRegistry (routing)
+│   │   │   └── exceptions.py        # Excepciones MCP
+│   │   └── logging/
+│   │       ├── pii_redactor.py      # Redactor PII (GDPR/LOPD)
+│   │       └── audit_logger.py      # Logger auditoría
+│   │
+│   └── mcp_mock/                    # Servidores MCP Mock (renombrado de mcp-mock)
+│       └── mcp_expedientes/         # Servidor MCP Expedientes
+│           ├── server_http.py       # Servidor HTTP/SSE
+│           ├── server_stdio.py      # Servidor STDIO
+│           ├── auth.py              # Validación JWT
+│           ├── models.py            # Modelos de datos
+│           ├── tools.py             # Tools MCP
+│           ├── resources.py         # Resources MCP
+│           ├── generate_token.py    # Generador de tokens
+│           └── data/                # Datos mock
+│               └── expedientes/
 │
-├── mcp-mock/
-│   └── mcp-expedientes/             # Servidor MCP Mock
-│       ├── mcp_expedientes/
-│       │   ├── server_http.py       # Servidor HTTP/SSE
-│       │   ├── auth.py              # Validación JWT
-│       │   ├── models.py            # Modelos de datos
-│       │   └── generate_token.py    # Generador de tokens
-│       ├── data/                    # Datos mock
-│       │   └── expedientes/
-│       └── tests/                   # 33 tests
+├── tests/                           # Tests organizados por componente
+│   ├── api/                         # Tests de API REST
+│   ├── test_backoffice/             # Tests de Back-Office (86 tests)
+│   │   ├── test_jwt_validator.py    # 19 tests JWT
+│   │   ├── test_mcp_integration.py  # 15 tests MCP
+│   │   ├── test_logging.py          # 12 tests PII
+│   │   ├── test_executor.py         # 30 tests AgentExecutor
+│   │   └── test_protocols.py        # 7 tests protocolos
+│   └── test_mcp/                    # Tests de MCP Mock (33 tests)
+│       ├── test_auth.py             # 10 tests autenticación
+│       ├── test_tools.py            # 9 tests tools
+│       ├── test_resources.py        # 7 tests resources
+│       └── test_server_http.py      # 7 tests servidor
 │
 ├── doc/                             # Documentación Zettelkasten
 │   ├── index.md                     # Índice de temas
@@ -416,11 +433,19 @@ aGEntiX/
 │   │   └── plan-mejoras.md          # Plan de mejoras (✅ 100% implementadas)
 │   └── fix-*/                       # Reviews de fixes
 │
+├── setup.py                         # Configuración del paquete (package_dir="src")
+├── conftest.py                      # Configuración global de pytest
 ├── .env.example                     # Template de configuración
-├── run-tests.sh                     # Script unificado de tests
+├── run-tests.sh                     # Script unificado de tests (119 tests)
 ├── requirements.txt                 # Dependencias Python
 └── README.md                        # Este archivo
 ```
+
+**Nota sobre la estructura:**
+- Todo el código Python está bajo `/src` siguiendo las mejores prácticas de Python
+- Los tests están organizados bajo `/tests` en la raíz del proyecto
+- Los nombres de directorios siguen PEP-8 (`mcp_mock` en lugar de `mcp-mock`)
+- Los imports usan la estructura plana: `from backoffice.executor import AgentExecutor`
 
 ## Cumplimiento Normativo
 

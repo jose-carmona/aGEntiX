@@ -11,8 +11,11 @@ import shutil
 from pathlib import Path
 import pytest
 
-# Configurar path para imports
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+# Configurar PYTHONPATH para imports desde src/ y fixtures locales
+project_root = Path(__file__).parent.parent.parent
+sys.path.insert(0, str(project_root / "src"))
+# Agregar directorio de tests para imports de fixtures
+sys.path.insert(0, str(Path(__file__).parent))
 
 # Configurar JWT_SECRET para todos los tests
 os.environ["JWT_SECRET"] = "test-secret-key"
@@ -69,7 +72,8 @@ def restore_expediente_data():
             # Test que modifica datos
             pass
     """
-    data_dir = Path(__file__).parent.parent / "data" / "expedientes"
+    root_dir = Path(__file__).parent.parent.parent
+    data_dir = root_dir / "src" / "mcp_mock" / "mcp_expedientes" / "data" / "expedientes"
 
     # Restaurar todos los expedientes desde backup
     for backup_file in data_dir.glob("*.json.backup"):

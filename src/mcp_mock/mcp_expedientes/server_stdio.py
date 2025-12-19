@@ -29,7 +29,7 @@ import asyncio
 import logging
 import sys
 from mcp.server.stdio import stdio_server
-from server import create_server, get_server_info
+from .server import create_server, get_server_info
 
 # Configurar logging
 logging.basicConfig(

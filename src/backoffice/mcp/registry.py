@@ -3,7 +3,7 @@
 from typing import Dict, List, Any
 from .client import MCPClient
 from .exceptions import MCPError, MCPToolError
-from backoffice.config.models import MCPServersConfig
+from ..config.models import MCPServersConfig
 import asyncio
 import logging
 

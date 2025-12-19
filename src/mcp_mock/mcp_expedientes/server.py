@@ -13,9 +13,9 @@ from mcp.server import Server
 from mcp import types
 
 # Importar handlers
-from auth import validate_jwt, AuthError
-from resources import list_resources, get_resource
-from tools import list_tools, call_tool
+from .auth import validate_jwt, AuthError
+from .resources import list_resources, get_resource
+from .tools import list_tools, call_tool
 
 # Configurar logging
 logging.basicConfig(

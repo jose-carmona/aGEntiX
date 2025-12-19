@@ -18,7 +18,7 @@ class Settings(BaseSettings):
     JWT_REQUIRED_AUDIENCE: str = "agentix-mcp-expedientes"
 
     # MCP Configuration
-    MCP_CONFIG_PATH: str = "backoffice/config/mcp_servers.yaml"
+    MCP_CONFIG_PATH: str = str(Path(__file__).parent / "config" / "mcp_servers.yaml")
 
     # Logging
     LOG_LEVEL: str = "INFO"

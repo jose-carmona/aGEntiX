@@ -10,8 +10,8 @@ import os
 from pathlib import Path
 from typing import List, Optional
 from mcp import types
-from models import Expediente
-from auth import AuthError
+from .models import Expediente
+from .auth import AuthError
 
 
 # Directorio de datos

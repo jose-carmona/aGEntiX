@@ -2,8 +2,8 @@
 
 from abc import ABC, abstractmethod
 from typing import Dict, Any, List
-from backoffice.mcp.registry import MCPClientRegistry
-from backoffice.logging.audit_logger import AuditLogger
+from ..mcp.registry import MCPClientRegistry
+from ..logging.audit_logger import AuditLogger
 
 
 class AgentMock(ABC):

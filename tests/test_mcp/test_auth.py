@@ -14,10 +14,9 @@ import os
 import sys
 import pytest
 
-# Configurar path para imports
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+# Path para imports configurado por setup.py y run-tests.sh
 
-from auth import validate_jwt, AuthError
+from mcp_mock.mcp_expedientes.auth import validate_jwt, AuthError
 from fixtures.tokens import (
     token_consulta,
     token_gestion,

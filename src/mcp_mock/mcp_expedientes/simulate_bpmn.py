@@ -19,8 +19,8 @@ import argparse
 import sys
 from pathlib import Path
 from typing import List
-from generate_token import generate_test_token
-from resources import load_expediente
+from .generate_token import generate_test_token
+from .resources import load_expediente
 
 
 class BPMNSimulator:

@@ -9,7 +9,7 @@ import os
 import jwt
 from datetime import datetime
 from typing import Optional, List, Dict, Any
-from models import JWTClaims
+from .models import JWTClaims
 
 
 class AuthError(Exception):

@@ -2,7 +2,7 @@
 
 import httpx
 from typing import Dict, Any, List
-from backoffice.config.models import MCPServerConfig
+from ..config.models import MCPServerConfig
 from .exceptions import MCPConnectionError, MCPToolError, MCPAuthError, MCPError
 
 

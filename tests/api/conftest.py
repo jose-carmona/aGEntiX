@@ -8,9 +8,6 @@ import sys
 import os
 from pathlib import Path
 
-# Añadir directorio raíz al PYTHONPATH
+# Cambiar al directorio raíz para acceso a .env
 root_dir = Path(__file__).parent.parent.parent
-sys.path.insert(0, str(root_dir))
-
-# También cambiar al directorio raíz para imports relativos
 os.chdir(str(root_dir))

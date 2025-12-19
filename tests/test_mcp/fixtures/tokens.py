@@ -12,7 +12,7 @@ from datetime import datetime, timedelta
 # Añadir directorio padre al path para importar módulos
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../.."))
 
-from generate_token import generate_test_token
+from mcp_mock.mcp_expedientes.generate_token import generate_test_token
 
 
 def token_consulta(exp_id: str = "EXP-2024-001") -> str:

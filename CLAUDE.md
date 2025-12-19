@@ -12,23 +12,25 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### Implemented Features (Paso 1)
 
-- ✅ **AgentExecutor**: Main orchestrator (`backoffice/executor.py`)
-- ✅ **JWT Validation**: Complete validation with 10 mandatory claims (`backoffice/auth/jwt_validator.py`)
-- ✅ **Multi-MCP Architecture**: Plug-and-play registry with automatic tool routing (`backoffice/mcp/registry.py`)
-- ✅ **MCP Client**: JSON-RPC 2.0 over HTTP/SSE (`backoffice/mcp/client.py`)
-- ✅ **PII Redaction**: Automatic redaction of 8 types of personal data (GDPR/LOPD/ENS) (`backoffice/logging/pii_redactor.py`)
-- ✅ **Audit Logging**: Structured JSON lines logs (`backoffice/logging/audit_logger.py`)
-- ✅ **3 Mock Agents**: ValidadorDocumental, AnalizadorSubvencion, GeneradorInforme (`backoffice/agents/`)
-- ✅ **Test Suite**: 79 tests total (46 back-office + 33 MCP mock) - 100% PASS
+- ✅ **AgentExecutor**: Main orchestrator (`src/backoffice/executor.py`)
+- ✅ **JWT Validation**: Complete validation with 10 mandatory claims (`src/backoffice/auth/jwt_validator.py`)
+- ✅ **Multi-MCP Architecture**: Plug-and-play registry with automatic tool routing (`src/backoffice/mcp/registry.py`)
+- ✅ **MCP Client**: JSON-RPC 2.0 over HTTP/SSE (`src/backoffice/mcp/client.py`)
+- ✅ **PII Redaction**: Automatic redaction of 8 types of personal data (GDPR/LOPD/ENS) (`src/backoffice/logging/pii_redactor.py`)
+- ✅ **Audit Logging**: Structured JSON lines logs (`src/backoffice/logging/audit_logger.py`)
+- ✅ **3 Mock Agents**: ValidadorDocumental, AnalizadorSubvencion, GeneradorInforme (`src/backoffice/agents/`)
+- ✅ **Test Suite**: 119 tests total (86 back-office + 33 MCP mock) - 100% PASS
 - ✅ **Externalized Configuration**: .env for secrets, YAML for MCP servers
 
 ### Quality Metrics
 
-- **Tests:** 79/79 PASS (100%)
+- **Tests:** 119/119 PASS (100%)
   - 19 JWT security tests
   - 15 MCP integration tests
   - 12 PII compliance tests
-  - 33 MCP mock server tests
+  - 30 AgentExecutor tests
+  - 7 protocols tests
+  - 33 MCP mock server tests (10 auth + 9 tools + 7 resources + 7 server)
 - **Vulnerabilities:** 0
 - **Code Quality:** 4.6/5 ⭐⭐⭐⭐⭐
 - **PII Coverage:** 8 types (DNI, NIE, email, mobile/landline phones, IBAN, cards, CCC)
@@ -58,38 +60,50 @@ See `code-review/commit-c039abe/` for detailed analysis and improvement plan (10
   - JWT_SECRET, JWT_ALGORITHM, JWT_EXPECTED_ISSUER, JWT_EXPECTED_SUBJECT, JWT_REQUIRED_AUDIENCE
   - MCP_CONFIG_PATH, LOG_LEVEL, LOG_DIR
 
-- **MCP Servers**: `backoffice/config/mcp_servers.yaml`
+- **MCP Servers**: `src/backoffice/config/mcp_servers.yaml`
   - List of MCP servers with id, name, url, enabled flag
   - Add new MCP by setting `enabled: true` (no code changes required)
 
 ### Key Components Location
 
 ```
-backoffice/
-├── executor.py              # Main entry point - AgentExecutor
-├── settings.py              # Configuration with Pydantic Settings
-├── auth/jwt_validator.py    # JWT validation (10 claims)
-├── mcp/
-│   ├── client.py           # MCPClient - JSON-RPC 2.0 client
-│   ├── registry.py         # MCPClientRegistry - routing
-│   └── exceptions.py       # MCP exceptions
-├── logging/
-│   ├── pii_redactor.py     # PII redaction (8 types)
-│   └── audit_logger.py     # Structured logging
-└── agents/
-    ├── base.py             # BaseAgent class
-    └── [specific agents]   # Mock implementations
+src/
+├── api/                     # API REST con FastAPI
+│   ├── main.py             # FastAPI application
+│   └── routes/             # REST endpoints
+│
+├── backoffice/             # Back-Office de Agentes
+│   ├── executor.py         # Main entry point - AgentExecutor
+│   ├── settings.py         # Configuration with Pydantic Settings
+│   ├── auth/jwt_validator.py    # JWT validation (10 claims)
+│   ├── mcp/
+│   │   ├── client.py       # MCPClient - JSON-RPC 2.0 client
+│   │   ├── registry.py     # MCPClientRegistry - routing
+│   │   └── exceptions.py   # MCP exceptions
+│   ├── logging/
+│   │   ├── pii_redactor.py # PII redaction (8 types)
+│   │   └── audit_logger.py # Structured logging
+│   └── agents/
+│       ├── base.py         # BaseAgent class
+│       └── [specific agents]   # Mock implementations
+│
+└── mcp_mock/               # MCP Mock Servers (renamed from mcp-mock)
+    └── mcp_expedientes/    # Expedientes MCP server
+        ├── server_http.py  # HTTP/SSE server
+        ├── server_stdio.py # STDIO server
+        ├── auth.py         # JWT validation
+        └── data/           # Mock data
 ```
 
 ### MCP Mock Server
 
 ```bash
 # Start server
-cd mcp-mock/mcp-expedientes
-python -m uvicorn mcp_expedientes.server_http:app --reload --port 8000
+cd src/mcp_mock/mcp_expedientes
+python -m uvicorn server_http:app --reload --port 8000
 
 # Generate JWT token
-python -m mcp_expedientes.generate_token EXP-2024-001
+python -m generate_token EXP-2024-001
 ```
 
 ## Important Implementation Details
@@ -108,7 +122,7 @@ The system validates 10 JWT claims:
 9. **permisos** (permissions): Must include required permissions for tools
 10. **Signature**: Must be valid with JWT_SECRET
 
-See `backoffice/tests/test_jwt_validator.py` for all validation scenarios.
+See `tests/test_backoffice/test_jwt_validator.py` for all validation scenarios.
 
 ### PII Redaction (GDPR/LOPD/ENS Compliance)
 
@@ -125,14 +139,14 @@ All logs automatically redact 8 types of personal data:
 | Card | Standard format | 4532... | [TARJETA-REDACTED] |
 | CCC | `\d{20}` | 123... | [CCC-REDACTED] |
 
-**CRITICAL:** All 12 PII tests must pass before committing changes to logging system.
+**CRITICAL:** All 12 PII tests must pass before committing changes to logging system. Tests located in `tests/test_backoffice/test_logging.py`.
 
 ### Multi-MCP Architecture
 
 The system supports multiple MCP servers via configuration:
 
 ```yaml
-# backoffice/config/mcp_servers.yaml
+# src/backoffice/config/mcp_servers.yaml
 mcp_servers:
   - id: expedientes
     enabled: true    # Active
@@ -270,7 +284,7 @@ The primary language of this project is **Spanish**. Code comments, documentatio
 
 - **100% test pass required** before commits
 - **Critical tests** (PII, JWT) must NEVER be skipped or modified to pass
-- **Test files mirror source structure** (`backoffice/tests/test_*.py`)
+- **Test files organized by component** (`tests/test_backoffice/test_*.py`, `tests/test_mcp/test_*.py`, `tests/api/test_*.py`)
 - **Use fixtures** for common test data (see `conftest.py`)
 - **Mock external dependencies** (MCP servers, LLM APIs)
 
@@ -287,19 +301,31 @@ The primary language of this project is **Spanish**. Code comments, documentatio
 
 ```bash
 # Start MCP server
-cd mcp-mock/mcp-expedientes && python -m uvicorn mcp_expedientes.server_http:app --reload --port 8000
+cd src/mcp_mock/mcp_expedientes
+python -m uvicorn server_http:app --reload --port 8000
 
 # Generate test token
-cd mcp-mock/mcp-expedientes && python -m mcp_expedientes.generate_token EXP-2024-001
+cd src/mcp_mock/mcp_expedientes
+python -m generate_token EXP-2024-001
 
 # Run specific test file
-pytest backoffice/tests/test_jwt_validator.py -v
+pytest tests/test_backoffice/test_jwt_validator.py -v
+
+# Run all tests
+./run-tests.sh  # 119 tests total
+
+# Run only backoffice tests
+./run-tests.sh --backoffice-only  # 86 tests
+
+# Run only MCP tests
+./run-tests.sh --mcp-only  # 33 tests
 
 # Run with coverage
-pytest --cov=backoffice --cov-report=html
+pytest --cov=src/backoffice --cov=src/mcp_mock --cov-report=html
 
 # Check code quality
-pylint backoffice/
+pylint src/backoffice/
+pylint src/mcp_mock/
 ```
 
 ## When in Doubt

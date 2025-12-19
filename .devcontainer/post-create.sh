@@ -12,9 +12,9 @@ echo "🔧 Instalando herramientas de desarrollo..."
 pip install --user black flake8 isort pytest pytest-asyncio mypy ruff
 
 # Instalar dependencias del proyecto MCP Mock
-if [ -f "mcp-mock/mcp-expedientes/requirements.txt" ]; then
+if [ -f "src/mcp_mock/mcp_expedientes/requirements.txt" ]; then
     echo "📚 Instalando dependencias de mcp-expedientes..."
-    pip install -r mcp-mock/mcp-expedientes/requirements.txt
+    pip install -r src/mcp_mock/mcp_expedientes/requirements.txt
 fi
 
 # Instalar MCP CLI tools (si están disponibles)
@@ -29,15 +29,14 @@ fi
 
 # Crear directorios necesarios si no existen
 echo "📁 Verificando estructura de directorios..."
-mkdir -p mcp-mock/mcp-expedientes/data/expedientes
-mkdir -p mcp-mock/mcp-expedientes/data/documentos
+mkdir -p src/mcp_mock/mcp_expedientes/data/expedientes
+mkdir -p src/mcp_mock/mcp_expedientes/data/documentos
 
 # Hacer ejecutables los scripts
 echo "🔐 Configurando permisos de scripts..."
-chmod +x mcp-mock/mcp-expedientes/generate_token.py || true
-chmod +x mcp-mock/mcp-expedientes/server_stdio.py || true
-chmod +x mcp-mock/mcp-expedientes/simulate_bpmn.py || true
-chmod +x mcp-mock/mcp-expedientes/quick_test.sh || true
+chmod +x src/mcp_mock/mcp_expedientes/generate_token.py || true
+chmod +x src/mcp_mock/mcp_expedientes/server_stdio.py || true
+chmod +x src/mcp_mock/mcp_expedientes/simulate_bpmn.py || true
 
 # Mensaje de éxito
 echo ""
@@ -45,7 +44,7 @@ echo "✅ Entorno de desarrollo configurado correctamente!"
 echo ""
 echo "📋 Próximos pasos:"
 echo "   1. Revisar la documentación en /doc/index.md"
-echo "   2. Probar el servidor MCP: cd mcp-mock/mcp-expedientes && ./quick_test.sh"
-echo "   3. Ejecutar tests: cd mcp-mock/mcp-expedientes && pytest"
+echo "   2. Probar el servidor MCP: cd src/mcp_mock/mcp_expedientes"
+echo "   3. Ejecutar tests: ./run-tests.sh"
 echo ""
 echo "🎉 ¡Listo para desarrollar!"

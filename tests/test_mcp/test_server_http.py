@@ -7,8 +7,8 @@ la request, antes de procesar cualquier operación MCP (fail-fast).
 
 import pytest
 from starlette.testclient import TestClient
-from server_http import app
-from generate_token import generate_test_token
+from mcp_mock.mcp_expedientes.server_http import app
+from mcp_mock.mcp_expedientes.generate_token import generate_test_token
 import time
 import jwt
 import os

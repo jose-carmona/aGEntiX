@@ -12,10 +12,9 @@ import sys
 import json
 import pytest
 
-# Configurar path para imports
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+# Path para imports configurado por setup.py y run-tests.sh
 
-from resources import list_resources, get_resource
+from mcp_mock.mcp_expedientes.resources import list_resources, get_resource
 from fixtures.tokens import token_consulta
 
 # Configurar JWT_SECRET
@@ -152,7 +151,7 @@ async def test_resource_expediente_inexistente():
     When: Se intenta acceder a un expediente que no existe
     Then: Se retorna error 404
     """
-    from auth import AuthError
+    from mcp_mock.mcp_expedientes.auth import AuthError
 
     uri = "expediente://EXP-9999-999"
 
@@ -172,7 +171,7 @@ async def test_resource_uri_invalida():
     When: Se intenta obtener el resource
     Then: Se retorna error 400
     """
-    from auth import AuthError
+    from mcp_mock.mcp_expedientes.auth import AuthError
 
     uri = "invalid://something"
 

@@ -1,6 +1,10 @@
 #!/bin/bash
 # Script para lanzar la API de aGEntiX
 
+# Configurar PYTHONPATH para imports desde src/
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+export PYTHONPATH="${SCRIPT_DIR}/src:${PYTHONPATH}"
+
 # Cargar variables de entorno
 if [ -f .env ]; then
     export $(cat .env | grep -v '^#' | xargs)
