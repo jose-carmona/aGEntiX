@@ -10,11 +10,10 @@ Casos de prueba:
 - TC-AUTH-006: Usuario No Automático
 """
 
-import os
-import sys
 import pytest
 
-# Path para imports configurado por setup.py y run-tests.sh
+# ELIMINADO: os, sys imports - no necesarios
+# JWT_SECRET ya configurado por fixture autouse en conftest.py global
 
 from mcp_mock.mcp_expedientes.auth import validate_jwt, AuthError
 from fixtures.tokens import (
@@ -25,9 +24,6 @@ from fixtures.tokens import (
     token_otro_expediente,
     token_usuario_invalido
 )
-
-# Configurar JWT_SECRET para los tests
-os.environ["JWT_SECRET"] = "test-secret-key"
 
 
 @pytest.mark.asyncio

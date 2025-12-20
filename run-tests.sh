@@ -22,6 +22,7 @@ NC='\033[0m' # No Color
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 MCP_DIR="${PROJECT_ROOT}/src/mcp_mock/mcp_expedientes"
 BACKOFFICE_DIR="${PROJECT_ROOT}/tests/test_backoffice"
+API_DIR="${PROJECT_ROOT}/tests/api"
 
 # Función para mostrar ayuda
 show_help() {
@@ -40,6 +41,7 @@ ${YELLOW}Opciones comunes:${NC}
     -k EXPRESION        Ejecutar solo tests que coincidan con la expresión
     --failed            Ejecutar solo los tests que fallaron la última vez
     -x, --exitfirst     Detener en el primer fallo
+    --api-only          Ejecutar solo tests de API
     --mcp-only          Ejecutar solo tests de MCP
     --backoffice-only   Ejecutar solo tests de Back-Office
 
@@ -62,6 +64,9 @@ ${YELLOW}Ejemplos:${NC}
     ${GREEN}# Re-ejecutar solo los tests que fallaron${NC}
     ./run-tests.sh --failed
 
+    ${GREEN}# Ejecutar solo tests de API${NC}
+    ./run-tests.sh --api-only
+
     ${GREEN}# Ejecutar solo tests de MCP${NC}
     ./run-tests.sh --mcp-only
 
@@ -79,13 +84,20 @@ if [[ "$1" == "-h" ]] || [[ "$1" == "--help" ]]; then
 fi
 
 # Detectar qué tests ejecutar
+RUN_API=true
 RUN_MCP=true
 RUN_BACKOFFICE=true
 
-if [[ "$1" == "--mcp-only" ]]; then
+if [[ "$1" == "--api-only" ]]; then
+    RUN_MCP=false
+    RUN_BACKOFFICE=false
+    shift
+elif [[ "$1" == "--mcp-only" ]]; then
+    RUN_API=false
     RUN_BACKOFFICE=false
     shift
 elif [[ "$1" == "--backoffice-only" ]]; then
+    RUN_API=false
     RUN_MCP=false
     shift
 fi
@@ -97,6 +109,12 @@ echo -e "${BLUE}═════════════════════�
 echo ""
 
 # Verificar que existen los directorios de tests
+if [ "$RUN_API" = true ] && [ ! -d "${API_DIR}" ]; then
+    echo -e "${RED}✗ Error: No se encuentra el directorio de tests de API${NC}"
+    echo -e "  Esperado en: ${API_DIR}"
+    exit 1
+fi
+
 if [ "$RUN_MCP" = true ] && [ ! -d "${PROJECT_ROOT}/tests/test_mcp" ]; then
     echo -e "${RED}✗ Error: No se encuentra el directorio de tests de MCP${NC}"
     echo -e "  Esperado en: ${PROJECT_ROOT}/tests/test_mcp"
@@ -120,6 +138,29 @@ echo -e "${YELLOW}🐍 Python:${NC} $(python --version 2>&1)"
 echo ""
 
 OVERALL_RESULT=0
+
+# Ejecutar tests de API si está habilitado
+if [ "$RUN_API" = true ]; then
+    echo -e "${BLUE}═══════════════════════════════════════════════════════════════${NC}"
+    echo -e "${YELLOW}📦 Tests de API${NC}"
+    echo -e "${BLUE}═══════════════════════════════════════════════════════════════${NC}"
+    echo -e "${YELLOW}📂 Directorio:${NC} ${API_DIR}"
+    echo ""
+
+    # Configurar PYTHONPATH para imports desde src/
+    export PYTHONPATH="${PROJECT_ROOT}/src:${PYTHONPATH}"
+
+    # Cambiar al directorio raíz y ejecutar tests
+    cd "${PROJECT_ROOT}"
+    pytest "$@" tests/api/
+    API_RESULT=$?
+
+    if [ $API_RESULT -ne 0 ]; then
+        OVERALL_RESULT=$API_RESULT
+    fi
+
+    echo ""
+fi
 
 # Ejecutar tests de MCP si está habilitado
 if [ "$RUN_MCP" = true ]; then

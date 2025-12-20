@@ -28,18 +28,18 @@ from backoffice.mcp.exceptions import MCPConnectionError, MCPToolError, MCPAuthE
 # ============================================================================
 
 @pytest.fixture
-def mock_jwt_validator():
+def mock_jwt_validator(test_constants):
     """Mock de JWTValidatorProtocol"""
     validator = Mock()
     validator.validate = Mock(return_value=JWTClaims(
-        iss="agentix-bpmn",
-        sub="Automático",
-        aud=["agentix-mcp-expedientes"],
+        iss=test_constants["issuer"],
+        sub=test_constants["subject"],
+        aud=[test_constants["audience"]],
         exp=9999999999,
         iat=1234567890,
         nbf=1234567890,
         jti="test-jti",
-        exp_id="EXP-2024-001",
+        exp_id=test_constants["default_exp_ids"][0],
         permisos=["consulta", "gestion"]
     ))
     return validator
@@ -230,7 +230,7 @@ async def test_jwt_valid_proceeds_to_execution(executor, mock_jwt_validator, age
 
     # Assert
     assert result.success is True
-    assert mock_jwt_validator.validate.called
+    mock_jwt_validator.validate.assert_called_once()
 
 
 # ============================================================================
@@ -280,7 +280,7 @@ async def test_mcp_config_valid_creates_registry(executor, mock_registry_factory
     )
 
     assert result.success is True
-    assert mock_registry_factory.create.called
+    mock_registry_factory.create.assert_called_once()
 
 
 # ============================================================================
@@ -320,7 +320,7 @@ async def test_registry_init_success_discovers_tools(executor, mock_registry_fac
     assert result.success is True
     # Verificar que se descubrieron tools
     mock_registry = mock_registry_factory.create.return_value
-    assert mock_registry.get_available_tools.called
+    mock_registry.get_available_tools.assert_called_once()
 
 
 @pytest.mark.asyncio
@@ -371,7 +371,7 @@ async def test_agent_creation_success_returns_instance(executor, mock_agent_regi
     )
 
     assert result.success is True
-    assert mock_agent_registry.get.called
+    mock_agent_registry.get.assert_called_once()
 
 
 # ============================================================================
@@ -464,7 +464,7 @@ async def test_logger_created_early_captures_jwt_error(executor, mock_logger_fac
     )
 
     # Assert: Logger fue creado y capturó el error
-    assert mock_logger_factory.create.called
+    mock_logger_factory.create.assert_called_once()
     assert result.log_auditoria is not None
     assert len(result.log_auditoria) > 0
 
@@ -499,7 +499,7 @@ async def test_logger_logs_agent_run_id(executor, mock_logger_factory, agent_con
     # Assert: agent_run_id tiene formato esperado
     assert result.agent_run_id.startswith("RUN-")
     # Logger fue creado con el run_id
-    assert mock_logger_factory.create.called
+    mock_logger_factory.create.assert_called_once()
 
 
 @pytest.mark.asyncio
@@ -521,7 +521,7 @@ async def test_logger_error_method_called_on_failure(executor, mock_logger_facto
 
     # Assert: Logger.error() fue llamado
     mock_logger = mock_logger_factory.create.return_value
-    assert mock_logger.error.called
+    mock_logger.error.assert_called_once()
 
 
 # ============================================================================

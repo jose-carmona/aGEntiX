@@ -13,19 +13,14 @@ Casos de prueba:
 - TC-TOOL-007: Añadir Anotación
 """
 
-import os
-import sys
 import json
 import pytest
 
-# Path para imports configurado por setup.py y run-tests.sh
+# JWT_SECRET ya configurado por fixture autouse en conftest.py global
 
 from mcp_mock.mcp_expedientes.auth import validate_jwt, AuthError
 from mcp_mock.mcp_expedientes.tools import call_tool
 from fixtures.tokens import token_consulta, token_gestion
-
-# Configurar JWT_SECRET
-os.environ["JWT_SECRET"] = "test-secret-key"
 
 
 @pytest.mark.asyncio

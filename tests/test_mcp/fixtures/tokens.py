@@ -5,12 +5,10 @@ Proporciona funciones para generar diferentes tipos de tokens
 para probar distintos escenarios de autenticación y autorización.
 """
 
-import os
-import sys
 from datetime import datetime, timedelta
 
-# Añadir directorio padre al path para importar módulos
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../.."))
+# ELIMINADO: sys.path manipulation - ya configurado en conftest.py global
+# Los imports funcionan correctamente porque src/ está en sys.path
 
 from mcp_mock.mcp_expedientes.generate_token import generate_test_token
 

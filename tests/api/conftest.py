@@ -2,12 +2,12 @@
 
 """
 Configuración de pytest para tests de API.
+
+NOTA: sys.path ya está configurado en conftest.py global.
+No duplicar configuración aquí para evitar problemas de imports.
+
+Si se necesitan fixtures específicas de API, definirlas aquí.
 """
 
-import sys
-import os
-from pathlib import Path
-
-# Cambiar al directorio raíz para acceso a .env
-root_dir = Path(__file__).parent.parent.parent
-os.chdir(str(root_dir))
+# ELIMINADO: os.chdir() - antipatrón que modifica estado global
+# ELIMINADO: sys.path manipulation - ya está en conftest.py global

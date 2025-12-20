@@ -10,31 +10,22 @@ from backoffice.auth.jwt_validator import (
 )
 
 
-@pytest.fixture
-def jwt_secret():
-    """Secret para tests"""
-    return "test-secret-key"
+# ELIMINADO: jwt_secret y jwt_algorithm - ahora están en conftest.py global
 
 
 @pytest.fixture
-def jwt_algorithm():
-    """Algoritmo para tests"""
-    return "HS256"
-
-
-@pytest.fixture
-def valid_claims():
+def valid_claims(test_constants):
     """Claims válidos para tests"""
     now = datetime.now(timezone.utc)
     return {
-        "iss": "agentix-bpmn",
-        "sub": "Automático",
-        "aud": ["agentix-mcp-expedientes"],
+        "iss": test_constants["issuer"],
+        "sub": test_constants["subject"],
+        "aud": [test_constants["audience"]],
         "exp": int((now + timedelta(hours=1)).timestamp()),
         "iat": int(now.timestamp()),
         "nbf": int(now.timestamp()),
         "jti": "test-jti-123",
-        "exp_id": "EXP-2024-001",
+        "exp_id": test_constants["default_exp_ids"][0],
         "permisos": ["consulta", "gestion"]
     }
 

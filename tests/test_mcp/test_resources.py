@@ -7,18 +7,13 @@ Casos de prueba:
 - TC-RES-003: Resource Historial
 """
 
-import os
-import sys
 import json
 import pytest
 
-# Path para imports configurado por setup.py y run-tests.sh
+# JWT_SECRET ya configurado por fixture autouse en conftest.py global
 
 from mcp_mock.mcp_expedientes.resources import list_resources, get_resource
 from fixtures.tokens import token_consulta
-
-# Configurar JWT_SECRET
-os.environ["JWT_SECRET"] = "test-secret-key"
 
 
 @pytest.mark.asyncio

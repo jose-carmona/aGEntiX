@@ -5,54 +5,43 @@ Este módulo proporciona configuración global y fixtures
 que pueden ser usadas en todos los tests.
 """
 
-import os
 import sys
 import shutil
 from pathlib import Path
 import pytest
 
-# Configurar PYTHONPATH para imports desde src/ y fixtures locales
-project_root = Path(__file__).parent.parent.parent
-sys.path.insert(0, str(project_root / "src"))
-# Agregar directorio de tests para imports de fixtures
+# NOTA: src/ ya está en sys.path (conftest global)
+# PERO necesitamos agregar directorio local para imports de fixtures/
 sys.path.insert(0, str(Path(__file__).parent))
 
-# Configurar JWT_SECRET para todos los tests
-os.environ["JWT_SECRET"] = "test-secret-key"
+# os.environ["JWT_SECRET"] configurado por fixture autouse en conftest global
+
+
+# ELIMINADO: jwt_secret fixture - ahora está en conftest.py global
 
 
 @pytest.fixture(scope="session")
-def jwt_secret():
-    """Fixture que proporciona la clave secreta JWT"""
-    return "test-secret-key"
-
-
-@pytest.fixture(scope="session")
-def test_expedientes():
+def test_expedientes(test_constants):
     """Fixture que proporciona los IDs de expedientes de prueba"""
-    return [
-        "EXP-2024-001",  # Subvenciones en trámite
-        "EXP-2024-002",  # Licencia pendiente documentación
-        "EXP-2024-003"   # Certificado archivado
-    ]
+    return test_constants["default_exp_ids"]
 
 
 @pytest.fixture
-def exp_id_subvenciones():
+def exp_id_subvenciones(test_constants):
     """ID del expediente de subvenciones"""
-    return "EXP-2024-001"
+    return test_constants["default_exp_ids"][0]
 
 
 @pytest.fixture
-def exp_id_licencia():
+def exp_id_licencia(test_constants):
     """ID del expediente de licencia"""
-    return "EXP-2024-002"
+    return test_constants["default_exp_ids"][1]
 
 
 @pytest.fixture
-def exp_id_certificado():
+def exp_id_certificado(test_constants):
     """ID del expediente de certificado"""
-    return "EXP-2024-003"
+    return test_constants["default_exp_ids"][2]
 
 
 @pytest.fixture
@@ -66,6 +55,9 @@ def restore_expediente_data():
     Los archivos .backup contienen el estado original de los expedientes
     y siempre deben existir en data/expedientes/*.json.backup
 
+    IMPORTANTE: Esta fixture es idempotente - restaura el estado limpio
+    tanto ANTES como DESPUÉS de cada test.
+
     Uso:
         @pytest.mark.usefixtures("restore_expediente_data")
         async def test_modificar_datos():
@@ -75,12 +67,16 @@ def restore_expediente_data():
     root_dir = Path(__file__).parent.parent.parent
     data_dir = root_dir / "src" / "mcp_mock" / "mcp_expedientes" / "data" / "expedientes"
 
-    # Restaurar todos los expedientes desde backup
-    for backup_file in data_dir.glob("*.json.backup"):
-        test_file = backup_file.with_suffix("")  # Elimina .backup
-        shutil.copy(backup_file, test_file)
+    def _restore_from_backup():
+        """Restaura todos los expedientes desde sus backups"""
+        for backup_file in data_dir.glob("*.json.backup"):
+            test_file = backup_file.with_suffix("")  # Elimina .backup
+            shutil.copy(backup_file, test_file)
+
+    # Setup: Restaurar estado limpio ANTES del test
+    _restore_from_backup()
 
     yield
 
-    # Opcionalmente limpiar después del test
-    # (por ahora no hacemos nada, dejamos el estado final para debug)
+    # Teardown: Restaurar estado limpio DESPUÉS del test (idempotencia)
+    _restore_from_backup()
