@@ -480,7 +480,9 @@ done
 # ============================================================================
 # RESUMEN FINAL
 # ============================================================================
-echo -e "${BLUE}═══════════════════════════════════════════════════════════════${NC}"
+if [ "$QUIET_MODE" = false ]; then
+    echo -e "${BLUE}═══════════════════════════════════════════════════════════════${NC}"
+fi
 
 if [ $OVERALL_RESULT -eq 0 ]; then
     echo -e "${GREEN}✓ TODOS LOS TESTS PASARON${NC}"
@@ -488,7 +490,9 @@ else
     echo -e "${RED}✗ ALGUNOS TESTS FALLARON${NC}"
 fi
 
-echo -e "${BLUE}═══════════════════════════════════════════════════════════════${NC}"
+if [ "$QUIET_MODE" = false ]; then
+    echo -e "${BLUE}═══════════════════════════════════════════════════════════════${NC}"
+fi
 
 # Resumen por suite (solo si no está en quiet mode)
 if [ "$QUIET_MODE" = false ]; then
@@ -513,8 +517,8 @@ if [ "$QUIET_MODE" = false ]; then
 
     echo ""
     echo -e "${CYAN}Total:${NC} ${SUITES_PASSED} passed, ${SUITES_FAILED} failed"
+    echo -e "${BLUE}═══════════════════════════════════════════════════════════════${NC}"
 fi
 
-echo -e "${BLUE}═══════════════════════════════════════════════════════════════${NC}"
 
 exit $OVERALL_RESULT
