@@ -72,7 +72,7 @@ Sistema fortalecido con manejo completo de errores y casos edge:
 
 ### Calidad del Código
 
-- **Tests:** 166/170 PASS (97.6%) - 87 backoffice + 22 API + 34 MCP + 15 error handling
+- **Tests:** 166/170 PASS (97.6%) - 87 backoffice + 22 API + 34 MCP + 12 contracts + 15 error handling
   - 166 tests activos pasando
   - 4 tests skip (1 MCP SSE + 3 error handling futuro)
   - 0 tests fallando ✅
@@ -204,7 +204,7 @@ npm install -g @modelcontextprotocol/inspector
 El proyecto incluye un script unificado para ejecutar todos los tests:
 
 ```bash
-# Ejecutar todos los tests (MCP + Back-Office)
+# Ejecutar todos los tests (MCP + Back-Office + API + Contracts + Error Handling)
 ./run-tests.sh
 
 # Solo tests de Back-Office
@@ -212,6 +212,9 @@ El proyecto incluye un script unificado para ejecutar todos los tests:
 
 # Solo tests de MCP Mock
 ./run-tests.sh --mcp-only
+
+# Solo tests de API
+./run-tests.sh --api-only
 
 # Tests con verbose
 ./run-tests.sh -v
@@ -233,24 +236,33 @@ El proyecto incluye un script unificado para ejecutar todos los tests:
 
 ### Suite de Tests Actual
 
-**Total: 96 tests (100% PASS)**
+**Total: 170 tests (166 PASS, 4 SKIP)**
 
-#### Back-Office (86 tests)
+#### Back-Office (87 tests)
 - **19 tests JWT** - Validación de seguridad y autenticación
 - **15 tests MCP** - Integración con servidores MCP
 - **12 tests PII** - Cumplimiento normativo GDPR/LOPD/ENS
-- **33 tests Executor** - Tests unitarios del AgentExecutor
+- **34 tests Executor** - Tests unitarios del AgentExecutor
 - **7 tests Protocols** - Interfaces y abstracciones
 
-#### API REST (10 tests)
+#### API REST (22 tests)
 - **4 tests Health** - Health check, metrics, docs
-- **6 tests Agent Endpoints** - Execute, status, validaciones
+- **18 tests Agent Endpoints** - Execute, status, webhook validation, error handling
 
-#### MCP Mock Expedientes (33 tests)
+#### MCP Mock Expedientes (34 tests)
 - **10 tests Auth** - Validación JWT en servidor MCP
 - **7 tests Resources** - Recursos MCP (expedientes, documentos)
-- **7 tests Server HTTP** - Servidor HTTP/SSE
-- **9 tests Tools** - Herramientas MCP (consulta, actualización)
+- **7 tests Server HTTP** - Servidor HTTP/SSE (1 skip SSE)
+- **10 tests Tools** - Herramientas MCP (consulta, actualización)
+
+#### Contracts (12 tests)
+- **4 tests MCP Client** - Contract testing para MCPClient
+- **4 tests Agent Registry** - Contract testing para AgentRegistry
+- **4 tests Config Loader** - Contract testing para ConfigLoader
+
+#### Error Handling (15 tests)
+- **12 tests activos** - Manejo de errores MCP, JWT, webhook, agente, PII
+- **3 tests skip** - Casos futuros (BD, OOM, rate limiting)
 
 ## Uso del Sistema
 
@@ -431,18 +443,24 @@ aGEntiX/
 │               └── expedientes/
 │
 ├── tests/                           # Tests organizados por componente
-│   ├── api/                         # Tests de API REST
-│   ├── test_backoffice/             # Tests de Back-Office (86 tests)
+│   ├── api/                         # Tests de API REST (22 tests)
+│   │   ├── test_health.py           # 4 tests health/metrics/docs
+│   │   └── test_agent_endpoints.py  # 18 tests execute/status/webhook
+│   ├── test_backoffice/             # Tests de Back-Office (87 tests)
 │   │   ├── test_jwt_validator.py    # 19 tests JWT
 │   │   ├── test_mcp_integration.py  # 15 tests MCP
 │   │   ├── test_logging.py          # 12 tests PII
-│   │   ├── test_executor.py         # 30 tests AgentExecutor
+│   │   ├── test_executor.py         # 34 tests AgentExecutor
 │   │   └── test_protocols.py        # 7 tests protocolos
-│   └── test_mcp/                    # Tests de MCP Mock (33 tests)
-│       ├── test_auth.py             # 10 tests autenticación
-│       ├── test_tools.py            # 9 tests tools
-│       ├── test_resources.py        # 7 tests resources
-│       └── test_server_http.py      # 7 tests servidor
+│   ├── test_mcp/                    # Tests de MCP Mock (34 tests)
+│   │   ├── test_auth.py             # 10 tests autenticación
+│   │   ├── test_tools.py            # 10 tests tools
+│   │   ├── test_resources.py        # 7 tests resources
+│   │   └── test_server_http.py      # 7 tests servidor
+│   ├── test_contracts/              # Tests de Contracts (12 tests)
+│   │   └── test_interfaces.py  # 12 tests de interfaces y contratos
+│   └── test_error_handling/         # Tests de Error Handling (15 tests)
+│       └── test_resilience.py       # 12 activos + 3 skip
 │
 ├── doc/                             # Documentación Zettelkasten
 │   ├── index.md                     # Índice de temas
@@ -461,7 +479,7 @@ aGEntiX/
 ├── setup.py                         # Configuración del paquete (package_dir="src")
 ├── conftest.py                      # Configuración global de pytest
 ├── .env.example                     # Template de configuración
-├── run-tests.sh                     # Script unificado de tests (119 tests)
+├── run-tests.sh                     # Script unificado de tests (170 tests)
 ├── requirements.txt                 # Dependencias Python
 └── README.md                        # Este archivo
 ```

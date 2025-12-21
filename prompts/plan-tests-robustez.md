@@ -13,6 +13,7 @@
 - ✅ **API:** 22 tests (endpoints básicos, webhooks, health)
 - ✅ **MCP Mock:** 34 tests (auth, resources, tools, server HTTP) - 33 pass + 1 skip
 - ✅ **Backoffice:** 87 tests (executor, JWT, logging, MCP integration, protocols)
+- ✅ **Contracts:** 12 tests (MCP client, agent registry, config loader) ⭐ NUEVO
 - ✅ **Error Handling:** 15 tests (resilience, error cases) - 12 pass + 3 skip ⭐ NUEVO
 
 ### Coverage por Componente
@@ -1377,7 +1378,7 @@ tests/
 │   ├── test_health_endpoints.py
 │   └── test_webhook_validation.py
 │
-├── test_mcp/                      # 33 tests existentes
+├── test_mcp/                      # 34 tests existentes
 │   ├── test_auth.py
 │   ├── test_resources.py
 │   ├── test_server_http.py
@@ -1390,31 +1391,33 @@ tests/
 │   ├── test_mcp_integration.py
 │   └── test_protocols.py
 │
-├── test_integration/              # NUEVO: 8 tests E2E
+├── test_contracts/                # 12 tests existentes ✅
+│   └── test_interfaces.py
+│
+├── test_error_handling/           # 15 tests existentes ✅
+│   └── test_resilience.py
+│
+├── test_integration/              # NUEVO: 8 tests E2E propuestos
 │   ├── conftest.py
 │   └── test_e2e_flows.py
 │
-├── test_contracts/                # NUEVO: 12 tests de contrato
-│   └── test_interfaces.py
-│
-├── test_error_handling/           # NUEVO: 15 tests de errores
-│   └── test_resilience.py
-│
-├── test_performance/              # NUEVO: 8 tests de performance
+├── test_performance/              # NUEVO: 8 tests de performance propuestos
 │   └── test_concurrency.py
 │
-├── test_security/                 # NUEVO: 10 tests de seguridad
+├── test_security/                 # NUEVO: 10 tests de seguridad propuestos
 │   └── test_additional_security.py
 │
-├── test_regression/               # NUEVO: 8 tests de regresión
+├── test_regression/               # NUEVO: 8 tests de regresión propuestos
 │   └── test_paso3_compatibility.py
 │
-└── test_data_validation/          # NUEVO: 6 tests de validación
+└── test_data_validation/          # NUEVO: 6 tests de validación propuestos
     └── test_pydantic_edge_cases.py
 ```
 
-**Total tests propuestos:** +67 tests nuevos
-**Total después:** 142 + 67 = **209 tests**
+**Tests implementados:** 27 (12 contracts + 15 error handling) ✅
+**Tests propuestos restantes:** +40 tests nuevos
+**Total actual:** 170 tests (166 pass + 4 skip)
+**Total proyectado final:** 142 + 67 = **209 tests**
 
 ---
 
@@ -1619,7 +1622,46 @@ Asegurar que todos los tests corren en cada PR
 
 ---
 
+### Tests de Contracts - COMPLETADOS ✅
+
+**Archivo:** `tests/test_contracts/test_interfaces.py`
+
+**Tests implementados: 12 (100% pass)**
+
+| Test | Estado | Descripción |
+|------|--------|-------------|
+| CONTRACT-1 | ✅ PASS | MCPClient.call_tool signature |
+| CONTRACT-2 | ✅ PASS | MCPClient.list_tools signature |
+| CONTRACT-3 | ✅ PASS | MCPClient exception contracts |
+| CONTRACT-4 | ✅ PASS | MCPClient async behavior |
+| CONTRACT-5 | ✅ PASS | AgentRegistry.get signature |
+| CONTRACT-6 | ✅ PASS | AgentRegistry.list signature |
+| CONTRACT-7 | ✅ PASS | AgentRegistry exception contracts |
+| CONTRACT-8 | ✅ PASS | AgentRegistry lifecycle |
+| CONTRACT-9 | ✅ PASS | ConfigLoader.load signature |
+| CONTRACT-10 | ✅ PASS | ConfigLoader.validate signature |
+| CONTRACT-11 | ✅ PASS | ConfigLoader exception contracts |
+| CONTRACT-12 | ✅ PASS | ConfigLoader immutability |
+
+**Propósito:**
+- Garantizar estabilidad de interfaces públicas
+- Detectar cambios incompatibles antes de Paso 3
+- Documentar contratos esperados para agentes reales
+
+**Métricas:**
+- Total tests: 12 (100% pass)
+- Código tests: ~480 LOC
+- Tiempo ejecución: ~0.3s
+- Cobertura: Interfaces críticas para backward compatibility
+
+**Integración:**
+- Incluidos en `run-tests.sh` junto con otras suites
+- Ejecutados automáticamente en cada run
+- Parte del total de 170 tests
+
+---
+
 **Documento creado:** 2025-12-20
 **Implementación completada:** 2025-12-21
 **Autor:** Claude Code
-**Estado:** ✅ IMPLEMENTADO - Tests de Error Handling completos
+**Estado:** ✅ IMPLEMENTADO - Tests de Error Handling y Contracts completos

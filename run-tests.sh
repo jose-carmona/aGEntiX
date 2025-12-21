@@ -87,18 +87,26 @@ fi
 RUN_API=true
 RUN_MCP=true
 RUN_BACKOFFICE=true
+RUN_CONTRACTS=true
+RUN_ERROR_HANDLING=true
 
 if [[ "$1" == "--api-only" ]]; then
     RUN_MCP=false
     RUN_BACKOFFICE=false
+    RUN_CONTRACTS=false
+    RUN_ERROR_HANDLING=false
     shift
 elif [[ "$1" == "--mcp-only" ]]; then
     RUN_API=false
     RUN_BACKOFFICE=false
+    RUN_CONTRACTS=false
+    RUN_ERROR_HANDLING=false
     shift
 elif [[ "$1" == "--backoffice-only" ]]; then
     RUN_API=false
     RUN_MCP=false
+    RUN_CONTRACTS=false
+    RUN_ERROR_HANDLING=false
     shift
 fi
 
@@ -202,6 +210,50 @@ if [ "$RUN_BACKOFFICE" = true ]; then
 
     if [ $BACKOFFICE_RESULT -ne 0 ]; then
         OVERALL_RESULT=$BACKOFFICE_RESULT
+    fi
+
+    echo ""
+fi
+
+# Ejecutar tests de Contracts si está habilitado
+if [ "$RUN_CONTRACTS" = true ]; then
+    echo -e "${BLUE}═══════════════════════════════════════════════════════════════${NC}"
+    echo -e "${YELLOW}📦 Tests de Contracts${NC}"
+    echo -e "${BLUE}═══════════════════════════════════════════════════════════════${NC}"
+    echo -e "${YELLOW}📂 Directorio:${NC} ${PROJECT_ROOT}/tests/test_contracts"
+    echo ""
+
+    # Cambiar al directorio del proyecto raíz
+    cd "${PROJECT_ROOT}"
+
+    # Ejecutar tests de contracts
+    pytest "$@" tests/test_contracts/
+    CONTRACTS_RESULT=$?
+
+    if [ $CONTRACTS_RESULT -ne 0 ]; then
+        OVERALL_RESULT=$CONTRACTS_RESULT
+    fi
+
+    echo ""
+fi
+
+# Ejecutar tests de Error Handling si está habilitado
+if [ "$RUN_ERROR_HANDLING" = true ]; then
+    echo -e "${BLUE}═══════════════════════════════════════════════════════════════${NC}"
+    echo -e "${YELLOW}📦 Tests de Error Handling${NC}"
+    echo -e "${BLUE}═══════════════════════════════════════════════════════════════${NC}"
+    echo -e "${YELLOW}📂 Directorio:${NC} ${PROJECT_ROOT}/tests/test_error_handling"
+    echo ""
+
+    # Cambiar al directorio del proyecto raíz
+    cd "${PROJECT_ROOT}"
+
+    # Ejecutar tests de error handling
+    pytest "$@" tests/test_error_handling/
+    ERROR_HANDLING_RESULT=$?
+
+    if [ $ERROR_HANDLING_RESULT -ne 0 ]; then
+        OVERALL_RESULT=$ERROR_HANDLING_RESULT
     fi
 
     echo ""
