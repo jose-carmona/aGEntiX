@@ -33,6 +33,9 @@ class Settings(BaseSettings):
     # CORS
     CORS_ORIGINS: str = "http://localhost:3000,http://localhost:8080"
 
+    # Admin Authentication (Paso 3 - Frontend Dashboard)
+    API_ADMIN_TOKEN: str = "change-me-in-production"
+
     class Config:
         env_file = ".env"
         case_sensitive = True

@@ -8,9 +8,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Current Project Status
 
-**Phase:** Paso 1 - Back-Office Mock with Multi-MCP Architecture ✅ COMPLETED
+**Current Phase:** Paso 3 - Frontend Dashboard (Fase 1 - Autenticación) ✅ COMPLETED
 
-### Implemented Features (Paso 1)
+### Completed Phases
+
+#### Paso 1 - Back-Office Mock with Multi-MCP Architecture ✅
+#### Paso 2 - API REST con FastAPI ✅
+#### Paso 3 - Fase 1: Sistema de Autenticación Frontend ✅
+
+### Implemented Features (Paso 1 - Back-Office)
 
 - ✅ **AgentExecutor**: Main orchestrator (`src/backoffice/executor.py`)
 - ✅ **JWT Validation**: Complete validation with 10 mandatory claims (`src/backoffice/auth/jwt_validator.py`)
@@ -37,7 +43,82 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 See `code-review/commit-c039abe/` for detailed analysis and improvement plan (100% implemented).
 
+### Implemented Features (Paso 2 - API REST)
+
+- ✅ **FastAPI Application**: REST API with async support (`src/api/main.py`)
+- ✅ **Agent Execution Endpoint**: `POST /api/v1/agent/execute` - Async agent execution with background tasks
+- ✅ **Status Endpoint**: `GET /api/v1/agent/status/{agent_run_id}` - Query execution status
+- ✅ **Health Check**: `GET /health` - Service health monitoring
+- ✅ **Prometheus Metrics**: `GET /metrics` - Metrics instrumentation
+- ✅ **Webhook Callbacks**: Automatic notifications on completion
+- ✅ **Task Tracker**: In-memory tracking of agent executions
+- ✅ **CORS Configuration**: Support for local development and Codespaces
+
+### Implemented Features (Paso 3 - Fase 1: Autenticación Frontend)
+
+- ✅ **Frontend React + TypeScript**: Vite setup with TailwindCSS
+- ✅ **Authentication System**:
+  - Admin Token validation (`POST /api/v1/auth/validate-admin-token`)
+  - Login page with error handling
+  - Protected routes with automatic redirection
+  - AuthContext for state management
+  - Token storage in localStorage
+  - Logout functionality
+- ✅ **UI Components Base**:
+  - Layout (Header + Sidebar)
+  - Card, Button, Input (reusable components)
+  - Dashboard placeholder (Fase 2)
+- ✅ **Configuration**:
+  - Vite configured for Codespaces (`host: true`)
+  - TypeScript types for `import.meta.env`
+  - CORS properly configured for frontend port
+  - API client with interceptors
+
+**Documentation:** `/doc/paso-3-fase-1-autenticacion.md`
+
 ## Quick Reference for Common Tasks
+
+### Running the Application
+
+#### Backend (API REST - Port 8080)
+
+```bash
+cd /workspaces/aGEntiX
+
+# Iniciar servidor FastAPI
+python -m uvicorn src.api.main:app --reload --port 8080
+
+# Verificar que está corriendo
+curl http://localhost:8080/health
+```
+
+#### Frontend (Dashboard Web - Port 5173)
+
+```bash
+cd /workspaces/aGEntiX/frontend
+
+# Instalar dependencias (primera vez)
+npm install
+
+# Iniciar servidor de desarrollo
+npm run dev
+
+# Acceso:
+# - Codespaces: Panel PORTS → Puerto 5173 → Abrir en navegador
+# - Local: http://localhost:5173
+```
+
+#### MCP Mock Server (Port 8000)
+
+```bash
+cd src/mcp_mock/mcp_expedientes
+
+# Iniciar servidor MCP
+python -m uvicorn server_http:app --reload --port 8000
+
+# Generar token de prueba
+python -m generate_token EXP-2024-001
+```
 
 ### Running Tests
 
@@ -45,7 +126,7 @@ See `code-review/commit-c039abe/` for detailed analysis and improvement plan (10
 # All tests
 ./run-tests.sh
 
-# Back-office only (46 tests)
+# Back-office only (86 tests)
 ./run-tests.sh --backoffice-only
 
 # Specific test suites
@@ -56,9 +137,14 @@ See `code-review/commit-c039abe/` for detailed analysis and improvement plan (10
 
 ### Configuration Files
 
-- **JWT & Environment**: `.env` (created from `.env.example`)
-  - JWT_SECRET, JWT_ALGORITHM, JWT_EXPECTED_ISSUER, JWT_EXPECTED_SUBJECT, JWT_REQUIRED_AUDIENCE
-  - MCP_CONFIG_PATH, LOG_LEVEL, LOG_DIR
+- **Backend Environment**: `.env` (created from `.env.example`)
+  - **JWT:** JWT_SECRET, JWT_ALGORITHM, JWT_EXPECTED_ISSUER, JWT_EXPECTED_SUBJECT, JWT_REQUIRED_AUDIENCE
+  - **Admin Auth:** API_ADMIN_TOKEN (for dashboard access)
+  - **Config:** MCP_CONFIG_PATH, LOG_LEVEL, LOG_DIR
+  - **CORS:** CORS_ORIGINS (include frontend port 5173)
+
+- **Frontend Environment**: `frontend/.env`
+  - VITE_API_URL=http://localhost:8080 (backend API URL)
 
 - **MCP Servers**: `src/backoffice/config/mcp_servers.yaml`
   - List of MCP servers with id, name, url, enabled flag
@@ -68,31 +154,58 @@ See `code-review/commit-c039abe/` for detailed analysis and improvement plan (10
 
 ```
 src/
-├── api/                     # API REST con FastAPI
-│   ├── main.py             # FastAPI application
-│   └── routes/             # REST endpoints
+├── api/                        # API REST con FastAPI (Paso 2)
+│   ├── main.py                # FastAPI application
+│   ├── models.py              # Pydantic models
+│   ├── routers/
+│   │   ├── auth.py           # Authentication endpoints (Paso 3)
+│   │   ├── agent.py          # Agent execution endpoints
+│   │   └── health.py         # Health check
+│   └── services/
+│       ├── webhook.py        # Webhook callbacks
+│       └── task_tracker.py   # Task tracking
 │
-├── backoffice/             # Back-Office de Agentes
-│   ├── executor.py         # Main entry point - AgentExecutor
-│   ├── settings.py         # Configuration with Pydantic Settings
-│   ├── auth/jwt_validator.py    # JWT validation (10 claims)
+├── backoffice/                # Back-Office de Agentes (Paso 1)
+│   ├── executor.py           # Main entry point - AgentExecutor
+│   ├── settings.py           # Configuration with Pydantic Settings
+│   ├── auth/jwt_validator.py # JWT validation (10 claims)
 │   ├── mcp/
-│   │   ├── client.py       # MCPClient - JSON-RPC 2.0 client
-│   │   ├── registry.py     # MCPClientRegistry - routing
-│   │   └── exceptions.py   # MCP exceptions
+│   │   ├── client.py        # MCPClient - JSON-RPC 2.0 client
+│   │   ├── registry.py      # MCPClientRegistry - routing
+│   │   └── exceptions.py    # MCP exceptions
 │   ├── logging/
-│   │   ├── pii_redactor.py # PII redaction (8 types)
-│   │   └── audit_logger.py # Structured logging
+│   │   ├── pii_redactor.py  # PII redaction (8 types)
+│   │   └── audit_logger.py  # Structured logging
 │   └── agents/
-│       ├── base.py         # BaseAgent class
-│       └── [specific agents]   # Mock implementations
+│       ├── base.py          # BaseAgent class
+│       └── [specific agents]  # Mock implementations
 │
-└── mcp_mock/               # MCP Mock Servers (renamed from mcp-mock)
-    └── mcp_expedientes/    # Expedientes MCP server
-        ├── server_http.py  # HTTP/SSE server
-        ├── server_stdio.py # STDIO server
-        ├── auth.py         # JWT validation
-        └── data/           # Mock data
+└── mcp_mock/                  # MCP Mock Servers
+    └── mcp_expedientes/       # Expedientes MCP server
+        ├── server_http.py     # HTTP/SSE server
+        ├── server_stdio.py    # STDIO server
+        ├── auth.py            # JWT validation
+        └── data/              # Mock data
+
+frontend/                      # Dashboard Web (Paso 3)
+├── src/
+│   ├── components/
+│   │   ├── auth/             # Authentication components
+│   │   ├── layout/           # Layout (Header, Sidebar)
+│   │   └── ui/               # Reusable UI components
+│   ├── contexts/
+│   │   └── AuthContext.tsx   # Authentication state
+│   ├── pages/
+│   │   ├── Login.tsx         # Login page
+│   │   ├── Dashboard.tsx     # Main dashboard
+│   │   ├── Logs.tsx          # Logs viewer (Fase 3)
+│   │   └── TestPanel.tsx     # Agent testing (Fase 4)
+│   ├── services/
+│   │   ├── api.ts            # Axios client with interceptors
+│   │   └── authService.ts    # Authentication service
+│   └── types/                # TypeScript type definitions
+├── vite.config.ts            # Vite configuration
+└── .env                      # VITE_API_URL
 ```
 
 ### MCP Mock Server
