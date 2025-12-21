@@ -54,71 +54,69 @@ DEFAULT_SUITE_ORDER=("api" "mcp" "backoffice" "contracts" "error")
 # FUNCIÓN PARA MOSTRAR AYUDA
 # ============================================================================
 show_help() {
-    cat << EOF
-${BLUE}═══════════════════════════════════════════════════════════════${NC}
-${GREEN}Script de Tests - aGEntiX v2.0${NC}
-${BLUE}═══════════════════════════════════════════════════════════════${NC}
-
-${YELLOW}Uso:${NC}
-    ./run-tests.sh [opciones] [argumentos_pytest]
-
-${YELLOW}Opciones de selección de suites:${NC}
-    --suites=SUITE1,SUITE2,...  Ejecutar solo las suites especificadas
-    --exclude=SUITE1,SUITE2,... Excluir suites específicas
-    --api-only                  Ejecutar solo tests de API (compatible)
-    --mcp-only                  Ejecutar solo tests de MCP (compatible)
-    --backoffice-only           Ejecutar solo tests de Back-Office (compatible)
-    --contracts-only            Ejecutar solo tests de Contracts
-    --error-only                Ejecutar solo tests de Error Handling
-
-${YELLOW}Opciones de ejecución:${NC}
-    --coverage                  Ejecutar con coverage report
-    --parallel                  Ejecutar tests en paralelo (requiere pytest-xdist)
-    --fail-fast                 Detener en el primer error de cualquier suite
-    --quiet                     Output mínimo (solo resultados finales)
-    --verbose                   Output detallado (equivale a -v para pytest)
-
-${YELLOW}Opciones de pytest (se pasan directamente):${NC}
-    -v, --verbose               Modo verbose de pytest
-    -vv                         Modo muy verbose (muestra print statements)
-    -k EXPRESION                Ejecutar solo tests que coincidan con la expresión
-    -x, --exitfirst             Detener pytest en el primer fallo
-    --failed                    Re-ejecutar solo los tests que fallaron
-    --lf, --last-failed         Alias de --failed
-    -m MARCA                    Ejecutar solo tests con marca específica
-    --maxfail=N                 Detener después de N fallos
-
-${YELLOW}Otras opciones:${NC}
-    -h, --help                  Mostrar esta ayuda
-    --list-suites               Listar suites disponibles y salir
-
-${YELLOW}Ejemplos:${NC}
-    ${GREEN}# Ejecutar todos los tests${NC}
-    ./run-tests.sh
-
-    ${GREEN}# Ejecutar solo API y Contracts${NC}
-    ./run-tests.sh --suites=api,contracts
-
-    ${GREEN}# Ejecutar todo excepto MCP${NC}
-    ./run-tests.sh --exclude=mcp
-
-    ${GREEN}# Tests con coverage en paralelo${NC}
-    ./run-tests.sh --coverage --parallel
-
-    ${GREEN}# Solo tests de autenticación con verbose${NC}
-    ./run-tests.sh -k auth -v
-
-    ${GREEN}# API tests con coverage y detener en primer error${NC}
-    ./run-tests.sh --api-only --coverage -x
-
-    ${GREEN}# Modo silencioso, solo API y Contracts${NC}
-    ./run-tests.sh --quiet --suites=api,contracts
-
-    ${GREEN}# Re-ejecutar solo tests fallidos con verbose${NC}
-    ./run-tests.sh --failed -vv
-
-${YELLOW}Suites disponibles:${NC}
-EOF
+    echo -e "${BLUE}═══════════════════════════════════════════════════════════════${NC}"
+    echo -e "${GREEN}Script de Tests - aGEntiX v2.0${NC}"
+    echo -e "${BLUE}═══════════════════════════════════════════════════════════════${NC}"
+    echo ""
+    echo -e "${YELLOW}Uso:${NC}"
+    echo "    ./run-tests.sh [opciones] [argumentos_pytest]"
+    echo ""
+    echo -e "${YELLOW}Opciones de selección de suites:${NC}"
+    echo "    --suites=SUITE1,SUITE2,...  Ejecutar solo las suites especificadas"
+    echo "    --exclude=SUITE1,SUITE2,... Excluir suites específicas"
+    echo "    --api-only                  Ejecutar solo tests de API (compatible)"
+    echo "    --mcp-only                  Ejecutar solo tests de MCP (compatible)"
+    echo "    --backoffice-only           Ejecutar solo tests de Back-Office (compatible)"
+    echo "    --contracts-only            Ejecutar solo tests de Contracts"
+    echo "    --error-only                Ejecutar solo tests de Error Handling"
+    echo ""
+    echo -e "${YELLOW}Opciones de ejecución:${NC}"
+    echo "    --coverage                  Ejecutar con coverage report"
+    echo "    --parallel                  Ejecutar tests en paralelo (requiere pytest-xdist)"
+    echo "    --fail-fast                 Detener en el primer error de cualquier suite"
+    echo "    --quiet                     Output mínimo (solo resultados finales)"
+    echo "    --verbose                   Output detallado (equivale a -v para pytest)"
+    echo ""
+    echo -e "${YELLOW}Opciones de pytest (se pasan directamente):${NC}"
+    echo "    -v, --verbose               Modo verbose de pytest"
+    echo "    -vv                         Modo muy verbose (muestra print statements)"
+    echo "    -k EXPRESION                Ejecutar solo tests que coincidan con la expresión"
+    echo "    -x, --exitfirst             Detener pytest en el primer fallo"
+    echo "    --failed                    Re-ejecutar solo los tests que fallaron"
+    echo "    --lf, --last-failed         Alias de --failed"
+    echo "    -m MARCA                    Ejecutar solo tests con marca específica"
+    echo "    --maxfail=N                 Detener después de N fallos"
+    echo ""
+    echo -e "${YELLOW}Otras opciones:${NC}"
+    echo "    -h, --help                  Mostrar esta ayuda"
+    echo "    --list-suites               Listar suites disponibles y salir"
+    echo ""
+    echo -e "${YELLOW}Ejemplos:${NC}"
+    echo -e "    ${GREEN}# Ejecutar todos los tests${NC}"
+    echo "    ./run-tests.sh"
+    echo ""
+    echo -e "    ${GREEN}# Ejecutar solo API y Contracts${NC}"
+    echo "    ./run-tests.sh --suites=api,contracts"
+    echo ""
+    echo -e "    ${GREEN}# Ejecutar todo excepto MCP${NC}"
+    echo "    ./run-tests.sh --exclude=mcp"
+    echo ""
+    echo -e "    ${GREEN}# Tests con coverage en paralelo${NC}"
+    echo "    ./run-tests.sh --coverage --parallel"
+    echo ""
+    echo -e "    ${GREEN}# Solo tests de autenticación con verbose${NC}"
+    echo "    ./run-tests.sh -k auth -v"
+    echo ""
+    echo -e "    ${GREEN}# API tests con coverage y detener en primer error${NC}"
+    echo "    ./run-tests.sh --api-only --coverage -x"
+    echo ""
+    echo -e "    ${GREEN}# Modo silencioso, solo API y Contracts${NC}"
+    echo "    ./run-tests.sh --quiet --suites=api,contracts"
+    echo ""
+    echo -e "    ${GREEN}# Re-ejecutar solo tests fallidos con verbose${NC}"
+    echo "    ./run-tests.sh --failed -vv"
+    echo ""
+    echo -e "${YELLOW}Suites disponibles:${NC}"
 
     # Listar suites dinámicamente
     for suite_key in "${DEFAULT_SUITE_ORDER[@]}"; do
@@ -135,10 +133,8 @@ EOF
         fi
     done
 
-    cat << EOF
-
-${BLUE}═══════════════════════════════════════════════════════════════${NC}
-EOF
+    echo ""
+    echo -e "${BLUE}═══════════════════════════════════════════════════════════════${NC}"
 }
 
 # ============================================================================
