@@ -201,38 +201,83 @@ npm install -g @modelcontextprotocol/inspector
 
 ## Ejecución de Tests
 
-El proyecto incluye un script unificado para ejecutar todos los tests:
+El proyecto incluye un **script unificado v2.0** con configuración declarativa y opciones avanzadas:
 
 ```bash
-# Ejecutar todos los tests (MCP + Back-Office + API + Contracts + Error Handling)
+# Ejecutar todos los tests (5 suites: API, MCP, Back-Office, Contracts, Error Handling)
 ./run-tests.sh
 
-# Solo tests de Back-Office
-./run-tests.sh --backoffice-only
+# ============================================================================
+# SELECCIÓN DE SUITES
+# ============================================================================
 
-# Solo tests de MCP Mock
-./run-tests.sh --mcp-only
+# Ejecutar suites específicas (NUEVO)
+./run-tests.sh --suites=api,contracts
+./run-tests.sh --suites=backoffice,error
 
-# Solo tests de API
+# Excluir suites específicas (NUEVO)
+./run-tests.sh --exclude=mcp
+./run-tests.sh --exclude=mcp,backoffice
+
+# Flags compatibles con versión anterior
 ./run-tests.sh --api-only
+./run-tests.sh --mcp-only
+./run-tests.sh --backoffice-only
+./run-tests.sh --contracts-only      # NUEVO
+./run-tests.sh --error-only          # NUEVO
 
-# Tests con verbose
-./run-tests.sh -v
+# ============================================================================
+# OPCIONES AVANZADAS
+# ============================================================================
 
-# Tests específicos
-./run-tests.sh -k jwt
-./run-tests.sh -k pii
-./run-tests.sh -k mcp_integration
+# Ejecutar con coverage (NUEVO - requiere pytest-cov)
+./run-tests.sh --coverage
 
-# Detener en el primer error
-./run-tests.sh -x
+# Ejecutar en paralelo (NUEVO - requiere pytest-xdist)
+./run-tests.sh --parallel
+
+# Modo silencioso (NUEVO - solo muestra resultados finales)
+./run-tests.sh --quiet
+
+# Detener en el primer error de cualquier suite (NUEVO)
+./run-tests.sh --fail-fast
+
+# ============================================================================
+# COMBINACIONES ÚTILES
+# ============================================================================
+
+# API y Contracts con coverage
+./run-tests.sh --suites=api,contracts --coverage
+
+# Todo excepto MCP en modo silencioso
+./run-tests.sh --exclude=mcp --quiet
+
+# Solo tests de autenticación con verbose
+./run-tests.sh -k auth -v
 
 # Re-ejecutar solo tests fallidos
 ./run-tests.sh --failed
 
+# ============================================================================
+# AYUDA Y UTILIDADES
+# ============================================================================
+
 # Ver todas las opciones disponibles
 ./run-tests.sh --help
+
+# Listar suites disponibles
+./run-tests.sh --list-suites
 ```
+
+### Características del Script v2.0
+
+- ✅ **Configuración declarativa**: Agregar nueva suite = 1 línea de código
+- ✅ **Selección múltiple**: `--suites=api,contracts` o `--exclude=mcp`
+- ✅ **Coverage integrado**: `--coverage` con pytest-cov
+- ✅ **Ejecución paralela**: `--parallel` con pytest-xdist
+- ✅ **Modo silencioso**: `--quiet` para CI/CD
+- ✅ **Compatibilidad**: Todos los flags anteriores funcionan
+- ✅ **Resumen detallado**: Muestra estado por suite automáticamente
 
 ### Suite de Tests Actual
 
