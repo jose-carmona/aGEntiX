@@ -133,6 +133,13 @@ class MCPClient:
                     detalle=e.response.text
                 )
 
+            elif status == 409:
+                raise MCPToolError(
+                    codigo="MCP_CONFLICT",
+                    mensaje=f"Conflicto de modificación concurrente en {self.server_config.name}",
+                    detalle=e.response.text
+                )
+
             elif status in [502, 503, 504]:
                 raise MCPConnectionError(
                     codigo="MCP_SERVER_UNAVAILABLE",

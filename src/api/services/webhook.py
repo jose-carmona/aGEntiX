@@ -98,3 +98,84 @@ async def send_webhook(
                 f"({type(e).__name__}: {str(e)})"
             )
             return False
+
+
+async def send_webhook_with_retry(
+    webhook_url: str,
+    agent_run_id: str,
+    result=None,
+    error: Optional[Dict[str, str]] = None,
+    max_retries: int = 3,
+    backoff_factor: float = 2.0
+) -> Dict[str, Any]:
+    """
+    Envía webhook con exponential backoff retry.
+
+    Args:
+        webhook_url: URL del callback
+        agent_run_id: ID de la ejecución
+        result: AgentExecutionResult (si éxito)
+        error: Dict con error (si fallo)
+        max_retries: Número máximo de reintentos (default: 3)
+        backoff_factor: Factor de backoff exponencial (default: 2.0)
+
+    Returns:
+        {
+            "success": bool,
+            "attempts": int,
+            "final_status_code": Optional[int],
+            "error": Optional[str]
+        }
+
+    Examples:
+        >>> # Ejemplo con fallo y retry exitoso
+        >>> result = await send_webhook_with_retry(
+        ...     "https://example.com/callback",
+        ...     "run-123",
+        ...     result=execution_result
+        ... )
+        >>> print(result)
+        {"success": True, "attempts": 2, "final_status_code": 200, "error": None}
+    """
+    import asyncio
+
+    attempt_count = 0
+
+    for attempt in range(max_retries):
+        attempt_count = attempt + 1
+
+        # Intentar enviar webhook
+        success = await send_webhook(webhook_url, agent_run_id, result, error)
+
+        if success:
+            logger.info(
+                f"Webhook enviado exitosamente después de {attempt_count} intento(s): "
+                f"{agent_run_id} -> {webhook_url}"
+            )
+            return {
+                "success": True,
+                "attempts": attempt_count,
+                "final_status_code": 200,
+                "error": None
+            }
+
+        # Si no es el último intento, hacer backoff
+        if attempt < max_retries - 1:
+            delay = backoff_factor ** attempt
+            logger.warning(
+                f"Webhook falló (intento {attempt_count}/{max_retries}). "
+                f"Reintentando en {delay}s..."
+            )
+            await asyncio.sleep(delay)
+
+    # Todos los intentos fallaron
+    logger.error(
+        f"Webhook falló después de {max_retries} intentos: "
+        f"{agent_run_id} -> {webhook_url}"
+    )
+    return {
+        "success": False,
+        "attempts": attempt_count,
+        "final_status_code": None,
+        "error": "Max retries exceeded"
+    }

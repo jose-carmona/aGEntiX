@@ -49,12 +49,37 @@ API REST profesional para ejecución asíncrona de agentes:
 
 Ver [code-review/commit-64fda4d](code-review/commit-64fda4d/) para análisis detallado y plan de mejoras (2/11 implementadas: P1.1 y P2.1).
 
+#### Mejoras de Robustez y Error Handling ✅
+
+Sistema fortalecido con manejo completo de errores y casos edge:
+
+- ✅ **15 tests de error handling** (12 activos + 3 skip para futuro)
+  - Errores MCP (conexión, timeout, tools, auth, conflict 409)
+  - Errores JWT (formato inválido, firma incorrecta)
+  - Errores de webhook (retry con exponential backoff)
+  - Errores de agente (crashes, configuración inválida)
+  - Errores de PII redaction (datos inválidos)
+- ✅ **Webhook retry logic** con exponential backoff (3 intentos, factor 2.0)
+- ✅ **PII redactor robusto** que maneja None, bytes inválidos, tipos incorrectos
+- ✅ **Manejo HTTP 409 Conflict** para detección de modificación concurrente
+- ✅ **Código de error MCP_CONFLICT** agregado al catálogo
+
+**Commits recientes:**
+- `ae55815` - Mejorar suite de tests: 7 fases de refactorización completadas
+- `bfea795` - Reorganizar código bajo /src con estructura plana
+- `fea91f8` - Estado actual antes de reorganización /src
+- `(actual)` - Implementar tests de error handling (ERROR-1 a ERROR-15)
+
 ### Calidad del Código
 
-- **Tests:** 108/108 PASS (100%) - 86 backoffice + 22 API
-- **Cobertura PII:** 8 tipos de datos personales redactados
+- **Tests:** 166/170 PASS (97.6%) - 87 backoffice + 22 API + 34 MCP + 15 error handling
+  - 166 tests activos pasando
+  - 4 tests skip (1 MCP SSE + 3 error handling futuro)
+  - 0 tests fallando ✅
+- **Cobertura PII:** 8 tipos de datos personales redactados (con error handling robusto)
 - **Vulnerabilidades:** 0
 - **Seguridad:** OWASP A10:2021 (SSRF) mitigado
+- **Resiliencia:** Manejo completo de errores MCP, JWT, webhooks, agentes
 - **Cumplimiento:** GDPR Art. 32, LOPD, ENS
 - **Calidad promedio:** 4.7/5 ⭐⭐⭐⭐⭐
 

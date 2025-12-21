@@ -58,6 +58,7 @@ ERROR_CODES = {
     "MCP_TOOL_NOT_FOUND": "Tool no encontrada en servidor MCP",
     "MCP_AUTH_ERROR": "Error de autenticación con servidor MCP",
     "MCP_SERVER_UNAVAILABLE": "Servidor MCP no disponible",
+    "MCP_CONFLICT": "Conflicto de modificación concurrente",
     "MCP_UNEXPECTED_ERROR": "Error inesperado en cliente MCP",
 
     # Errores de validación

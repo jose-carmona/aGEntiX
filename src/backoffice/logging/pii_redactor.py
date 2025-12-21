@@ -1,7 +1,10 @@
 # backoffice/logging/pii_redactor.py
 
 import re
+import logging
 from typing import Dict, Pattern
+
+logger = logging.getLogger(__name__)
 
 
 class PIIRedactor:
@@ -29,19 +32,51 @@ class PIIRedactor:
         """
         Redacta todos los patrones de PII en el texto.
 
+        Maneja casos edge:
+        - None input → "[REDACTION-FAILED: None input]"
+        - Bytes input → intenta decode UTF-8, fallback a error
+        - Tipo inválido → "[REDACTION-FAILED: {tipo}]"
+        - Exception durante redacción → "[REDACTION-FAILED]"
+
         Args:
             text: Texto que puede contener PII
 
         Returns:
-            Texto con PII redactada
+            Texto con PII redactada o mensaje de error
 
         Examples:
             >>> PIIRedactor.redact("DNI: 12345678A")
             'DNI: [DNI-REDACTED]'
             >>> PIIRedactor.redact("Email: juan@example.com")
             'Email: [EMAIL-REDACTED]'
+            >>> PIIRedactor.redact(None)
+            '[REDACTION-FAILED: None input]'
         """
-        redacted = text
-        for pii_type, pattern in cls.PATTERNS.items():
-            redacted = pattern.sub(f'[{pii_type.upper()}-REDACTED]', redacted)
-        return redacted
+        try:
+            # Validar None
+            if text is None:
+                logger.warning("PII redaction recibió None")
+                return "[REDACTION-FAILED: None input]"
+
+            # Validar bytes - intentar decode
+            if isinstance(text, bytes):
+                try:
+                    text = text.decode('utf-8')
+                except UnicodeDecodeError as e:
+                    logger.warning(f"Failed to decode bytes for PII redaction: {e}")
+                    return "[REDACTION-FAILED: invalid encoding]"
+
+            # Validar tipo string
+            if not isinstance(text, str):
+                logger.warning(f"Invalid type for PII redaction: {type(text)}")
+                return f"[REDACTION-FAILED: {type(text).__name__}]"
+
+            # Redacción normal
+            redacted = text
+            for pii_type, pattern in cls.PATTERNS.items():
+                redacted = pattern.sub(f'[{pii_type.upper()}-REDACTED]', redacted)
+            return redacted
+
+        except Exception as e:
+            logger.warning(f"PII redaction failed: {type(e).__name__}: {e}")
+            return "[REDACTION-FAILED]"
