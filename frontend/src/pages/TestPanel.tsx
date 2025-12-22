@@ -5,6 +5,7 @@ import { AgentSelector } from '../components/test-panel/AgentSelector';
 import { IntegratedExecutionForm } from '../components/test-panel/IntegratedExecutionForm';
 import { ResultsViewer } from '../components/test-panel/ResultsViewer';
 import { ExecutionHistory } from '../components/test-panel/ExecutionHistory';
+import { ErrorBoundary } from '../components/ErrorBoundary';
 import { useAgentExecution } from '../hooks/useAgentExecution';
 import type { JWTClaims, ExecutionHistoryItem, AgentConfig } from '../types/agent';
 
@@ -130,11 +131,19 @@ export const TestPanel: React.FC = () => {
           />
 
           {/* Formulario integrado de ejecución */}
-          <IntegratedExecutionForm
-            selectedAgentId={selectedAgentId}
-            isExecuting={isExecuting}
-            onExecute={handleExecute}
-          />
+          <ErrorBoundary>
+            <IntegratedExecutionForm
+              selectedAgentId={selectedAgentId}
+              isExecuting={isExecuting}
+              executionError={error}
+              onExecute={handleExecute}
+              onResetError={() => {
+                if (error) {
+                  reset();
+                }
+              }}
+            />
+          </ErrorBoundary>
 
           {/* Botón de cancelar si está ejecutando */}
           {isExecuting && (
@@ -168,17 +177,21 @@ export const TestPanel: React.FC = () => {
         {/* Columna derecha: Resultados e Historial */}
         <div className="space-y-6">
           {/* Resultados */}
-          <ResultsViewer
-            execution={execution}
-            isExecuting={isExecuting}
-            error={error}
-            onReset={handleReset}
-          />
+          <ErrorBoundary>
+            <ResultsViewer
+              execution={execution}
+              isExecuting={isExecuting}
+              error={error}
+              onReset={handleReset}
+            />
+          </ErrorBoundary>
 
           {/* Historial */}
-          <ExecutionHistory
-            history={executionHistory}
-          />
+          <ErrorBoundary>
+            <ExecutionHistory
+              history={executionHistory}
+            />
+          </ErrorBoundary>
         </div>
       </div>
 

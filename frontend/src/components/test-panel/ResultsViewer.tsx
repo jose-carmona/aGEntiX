@@ -21,6 +21,49 @@ export const ResultsViewer: React.FC<ResultsViewerProps> = ({
   const [showFullResult, setShowFullResult] = useState(false);
   const [showFullError, setShowFullError] = useState(false);
 
+  /**
+   * Convierte un error a string de manera segura para renderizado
+   * Maneja strings, objetos, arrays de errores de validación de Pydantic
+   */
+  const formatErrorForDisplay = (err: any): string => {
+    if (!err) return 'Error desconocido';
+
+    // Si ya es un string, retornarlo
+    if (typeof err === 'string') return err;
+
+    // Si es un array (errores de validación de Pydantic)
+    if (Array.isArray(err)) {
+      return err.map((e: any) => {
+        if (typeof e === 'string') return e;
+        const field = e.loc ? e.loc.join('.') : 'campo';
+        const message = e.msg || 'error de validación';
+        return `${field}: ${message}`;
+      }).join('\n');
+    }
+
+    // Si es un objeto con propiedades de error de Pydantic
+    if (err.loc && err.msg) {
+      const field = Array.isArray(err.loc) ? err.loc.join('.') : 'campo';
+      return `${field}: ${err.msg}`;
+    }
+
+    // Si es un objeto con mensaje
+    if (err.message) return err.message;
+    if (err.detail) {
+      // Si detail es un string
+      if (typeof err.detail === 'string') return err.detail;
+      // Si detail es un array, recursión
+      if (Array.isArray(err.detail)) return formatErrorForDisplay(err.detail);
+    }
+
+    // Si es un objeto genérico, intentar JSON.stringify
+    try {
+      return JSON.stringify(err, null, 2);
+    } catch {
+      return 'Error al formatear mensaje de error';
+    }
+  };
+
   const getStatusBadgeClass = (status: AgentExecution['status']) => {
     const baseClasses = 'px-3 py-1 text-sm font-medium rounded-full';
     switch (status) {
@@ -126,7 +169,7 @@ export const ResultsViewer: React.FC<ResultsViewerProps> = ({
             </svg>
             <div className="flex-1">
               <p className="text-sm font-medium text-red-800 mb-1">Error</p>
-              <p className="text-sm text-red-700">{error}</p>
+              <p className="text-sm text-red-700 whitespace-pre-wrap">{formatErrorForDisplay(error)}</p>
             </div>
           </div>
         </div>
@@ -242,12 +285,14 @@ export const ResultsViewer: React.FC<ResultsViewerProps> = ({
               <p className="text-sm font-medium text-gray-900 mb-2">Error:</p>
               <div className="bg-red-50 border border-red-200 rounded-lg p-4 overflow-x-auto">
                 <pre className="text-xs font-mono text-red-800 whitespace-pre-wrap">
-                  {showFullError
-                    ? JSON.stringify(execution.error, null, 2)
-                    : JSON.stringify(execution.error, null, 2).slice(0, 500)
-                  }
+                  {(() => {
+                    const formattedError = formatErrorForDisplay(execution.error);
+                    return showFullError
+                      ? formattedError
+                      : formattedError.slice(0, 500);
+                  })()}
                 </pre>
-                {JSON.stringify(execution.error).length > 500 && (
+                {formatErrorForDisplay(execution.error).length > 500 && (
                   <button
                     onClick={() => setShowFullError(!showFullError)}
                     className="text-xs text-red-600 hover:text-red-700 mt-2"

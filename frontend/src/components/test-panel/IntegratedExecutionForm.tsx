@@ -10,13 +10,17 @@ import { Input } from '../ui/Input';
 interface IntegratedExecutionFormProps {
   selectedAgentId: string | null;
   isExecuting: boolean;
+  executionError: string | null; // Error del hook de ejecución
   onExecute: (jwtToken: string, jwtClaims: JWTClaims, expedienteId: string, tareaId: string, agentConfig: AgentConfig) => Promise<void>;
+  onResetError?: () => void; // Callback para resetear errores de ejecución
 }
 
 export const IntegratedExecutionForm: React.FC<IntegratedExecutionFormProps> = ({
   selectedAgentId,
   isExecuting,
-  onExecute
+  executionError,
+  onExecute,
+  onResetError
 }) => {
   // Estados del formulario
   const [expedienteId, setExpedienteId] = useState('EXP-2024-001');
@@ -33,7 +37,8 @@ export const IntegratedExecutionForm: React.FC<IntegratedExecutionFormProps> = (
   const [expedienteError, setExpedienteError] = useState<string | null>(null);
   const [contextoError, setContextoError] = useState<string | null>(null);
   const [isGeneratingToken, setIsGeneratingToken] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [localError, setLocalError] = useState<string | null>(null);
+  const [errorType, setErrorType] = useState<'validation' | 'jwt' | 'config' | 'execution' | null>(null);
 
   // Cargar configuración guardada y permisos disponibles
   useEffect(() => {
@@ -45,6 +50,17 @@ export const IntegratedExecutionForm: React.FC<IntegratedExecutionFormProps> = (
   useEffect(() => {
     saveConfiguration();
   }, [expedienteId, expTipo, tareaId, tareaNombre, permisos, expHours, contextoAdicional]);
+
+  // Resetear errores cuando el usuario cambia configuraciones
+  useEffect(() => {
+    if (localError) {
+      setLocalError(null);
+      setErrorType(null);
+    }
+    if (executionError && onResetError) {
+      onResetError();
+    }
+  }, [expedienteId, expTipo, tareaId, tareaNombre, permisos, selectedAgentId]);
 
   const loadSavedConfiguration = () => {
     try {
@@ -143,21 +159,61 @@ export const IntegratedExecutionForm: React.FC<IntegratedExecutionFormProps> = (
     }
   };
 
+  /**
+   * Parsea errores de validación de FastAPI/Pydantic (422)
+   */
+  const parseValidationError = (detail: any): string => {
+    try {
+      // Si detail es un array (errores de validación Pydantic)
+      if (Array.isArray(detail)) {
+        const errors = detail.map((err: any) => {
+          const field = err.loc ? err.loc.join('.') : 'campo';
+          const message = err.msg || 'error de validación';
+          return `${field}: ${message}`;
+        });
+        return errors.join('; ');
+      }
+
+      // Si detail es un string
+      if (typeof detail === 'string') {
+        return detail;
+      }
+
+      // Si detail es un objeto con mensaje
+      if (detail?.message) {
+        return detail.message;
+      }
+
+      return JSON.stringify(detail);
+    } catch {
+      return 'Error de validación desconocido';
+    }
+  };
+
   const handleExecute = async () => {
+    // Limpiar errores previos
+    setLocalError(null);
+    setErrorType(null);
+    if (onResetError) {
+      onResetError();
+    }
+
     // Validar formulario
     const isExpedienteValid = validateExpedienteId(expedienteId);
     const isContextoValid = validateContexto(contextoAdicional);
 
     if (!isExpedienteValid || !isContextoValid) {
+      setLocalError('Por favor, corrige los errores de validación antes de continuar');
+      setErrorType('validation');
       return;
     }
 
     if (!selectedAgentId) {
-      setError('Debes seleccionar un agente primero');
+      setLocalError('Debes seleccionar un agente primero');
+      setErrorType('validation');
       return;
     }
 
-    setError(null);
     setIsGeneratingToken(true);
 
     try {
@@ -185,20 +241,49 @@ export const IntegratedExecutionForm: React.FC<IntegratedExecutionFormProps> = (
         agentConfig
       );
 
+      // Si llegamos aquí sin errores, limpiamos cualquier error previo
+      setLocalError(null);
+      setErrorType(null);
+
     } catch (err: any) {
       console.error('Error during execution:', err);
 
-      let errorMessage = 'Error al ejecutar el agente';
+      let errorMessage = 'Error desconocido';
+      let type: 'jwt' | 'config' | 'execution' | 'validation' = 'execution';
 
-      if (err.response?.status === 401) {
-        errorMessage = 'No autorizado. Por favor, inicia sesión nuevamente.';
-      } else if (err.response?.data?.detail) {
-        errorMessage = err.response.data.detail;
-      } else if (err.message) {
-        errorMessage = err.message;
+      try {
+        // Determinar el tipo de error basado en el código HTTP
+        if (err.response?.status === 401) {
+          errorMessage = 'No autorizado. Por favor, inicia sesión nuevamente.';
+          type = 'jwt';
+        } else if (err.response?.status === 422) {
+          // Error de validación de FastAPI/Pydantic
+          errorMessage = parseValidationError(err.response.data?.detail);
+          type = 'validation';
+        } else if (err.response?.status === 400) {
+          const detail = err.response.data?.detail;
+          errorMessage = typeof detail === 'string' ? detail : parseValidationError(detail);
+
+          // Determinar subtipo basado en el mensaje
+          if (errorMessage.toLowerCase().includes('jwt') || errorMessage.toLowerCase().includes('token')) {
+            type = 'jwt';
+          } else if (errorMessage.toLowerCase().includes('agente') || errorMessage.toLowerCase().includes('config')) {
+            type = 'config';
+          }
+        } else if (err.response?.data?.detail) {
+          errorMessage = typeof err.response.data.detail === 'string'
+            ? err.response.data.detail
+            : parseValidationError(err.response.data.detail);
+        } else if (err.message) {
+          errorMessage = err.message;
+        }
+      } catch (parseError) {
+        console.error('Error parsing error message:', parseError);
+        errorMessage = 'Error al procesar la respuesta del servidor';
       }
 
-      setError(errorMessage);
+      setLocalError(errorMessage);
+      setErrorType(type);
     } finally {
       setIsGeneratingToken(false);
     }
@@ -223,9 +308,51 @@ export const IntegratedExecutionForm: React.FC<IntegratedExecutionFormProps> = (
         </p>
       </div>
 
-      {error && (
-        <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-          {error}
+      {/* Mostrar errores locales (JWT, Config, Validación) */}
+      {localError && (
+        <div className="mb-4 bg-red-50 border border-red-200 rounded-lg p-4">
+          <div className="flex items-start gap-3">
+            <svg className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-1">
+                <p className="text-sm font-semibold text-red-900">
+                  {errorType === 'validation' && 'Error de Validación'}
+                  {errorType === 'jwt' && 'Error de Autenticación (JWT)'}
+                  {errorType === 'config' && 'Error de Configuración'}
+                  {!errorType && 'Error'}
+                </p>
+                <span className="text-xs px-2 py-0.5 rounded bg-red-100 text-red-800 font-medium">
+                  {errorType === 'validation' && 'VALIDACIÓN'}
+                  {errorType === 'jwt' && 'JWT'}
+                  {errorType === 'config' && 'CONFIG'}
+                  {!errorType && 'DESCONOCIDO'}
+                </span>
+              </div>
+              <p className="text-sm text-red-700">{localError}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Mostrar errores de ejecución del agente (desde el hook) */}
+      {executionError && !localError && (
+        <div className="mb-4 bg-red-50 border border-red-200 rounded-lg p-4">
+          <div className="flex items-start gap-3">
+            <svg className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-1">
+                <p className="text-sm font-semibold text-red-900">Error de Ejecución</p>
+                <span className="text-xs px-2 py-0.5 rounded bg-red-100 text-red-800 font-medium">
+                  EJECUCIÓN
+                </span>
+              </div>
+              <p className="text-sm text-red-700">{executionError}</p>
+            </div>
+          </div>
         </div>
       )}
 
