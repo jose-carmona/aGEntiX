@@ -8,13 +8,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Current Project Status
 
-**Current Phase:** Paso 3 - Frontend Dashboard (Fase 1 - Autenticación) ✅ COMPLETED
+**Current Phase:** Paso 3 - Frontend Dashboard (Fase 2 - Dashboard de Métricas) ✅ COMPLETED
 
 ### Completed Phases
 
 #### Paso 1 - Back-Office Mock with Multi-MCP Architecture ✅
 #### Paso 2 - API REST con FastAPI ✅
 #### Paso 3 - Fase 1: Sistema de Autenticación Frontend ✅
+#### Paso 3 - Fase 2: Dashboard de Métricas ✅
 
 ### Implemented Features (Paso 1 - Back-Office)
 
@@ -75,6 +76,33 @@ See `code-review/commit-c039abe/` for detailed analysis and improvement plan (10
   - API client with interceptors
 
 **Documentation:** `/doc/paso-3-fase-1-autenticacion.md`
+
+### Implemented Features (Paso 3 - Fase 2: Dashboard de Métricas)
+
+- ✅ **Dashboard de Métricas**: Complete metrics visualization system
+  - 8 KPIs principales (Total, Hoy, Tasa de Éxito, Tiempo Promedio, PII, MCP, Latencia, Llamadas)
+  - 4 gráficos interactivos (Histórico Ejecuciones, Por Tipo de Agente, PII Distribución, PII Histórico)
+  - Auto-refresh cada 10 segundos
+  - Exportación CSV/JSON
+- ✅ **Componentes de Dashboard**:
+  - MetricsCard (tarjetas KPI reutilizables)
+  - AgentExecutionsChart (gráficos de líneas/barras)
+  - PIIRedactionChart (gráficos donut/circular)
+  - SystemHealthStatus (estado de servidores MCP y servicios externos)
+- ✅ **Hook useMetrics**:
+  - Auto-refresh configurable
+  - Polling paralelo de métricas, historial ejecuciones e historial PII
+  - Manejo de estados (loading, error, data)
+- ✅ **Servicio de Métricas**:
+  - Abstracción mock/API con flag de migración
+  - Funciones de exportación CSV/JSON
+  - Datos mock realistas para desarrollo
+- ✅ **Performance**:
+  - Bundle gzipped: 195KB (< 500KB requerido)
+  - Gráficos responsivos con Recharts
+  - Formateo de fechas con date-fns (locale español)
+
+**Documentation:** `/doc/paso-3-fase-2-dashboard-metricas.md`
 
 ## Quick Reference for Common Tasks
 

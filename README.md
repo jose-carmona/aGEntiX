@@ -10,7 +10,7 @@ GEX es la aplicación central de gestión administrativa desarrollada por Eprins
 
 ## Estado del Proyecto
 
-**Fase actual:** Paso 3 - Frontend Dashboard (Fase 1: Autenticación) ✅ COMPLETADO
+**Fase actual:** Paso 3 - Frontend Dashboard (Fase 2: Dashboard de Métricas) ✅ COMPLETADO
 
 ### Implementado
 
@@ -77,6 +77,37 @@ Dashboard web con autenticación para gestión y monitorización del sistema:
   - TestPanel (placeholder para Fase 4)
 
 Ver [doc/paso-3-fase-1-autenticacion.md](doc/paso-3-fase-1-autenticacion.md) para documentación completa, problemas resueltos y próximas fases.
+
+#### Paso 3 - Fase 2: Dashboard de Métricas ✅
+
+Sistema completo de visualización de métricas en tiempo real:
+
+- ✅ **8 KPIs Principales** (supera requisito de 6):
+  - Total de Ejecuciones, Ejecuciones Hoy, Tasa de Éxito, Tiempo Promedio
+  - PII Redactados, Servidores MCP, Latencia P95, Llamadas MCP/s
+- ✅ **4 Gráficos Interactivos** (supera requisito de 3):
+  - Histórico de Ejecuciones (24h) - Líneas/Barras seleccionable
+  - Ejecuciones por Tipo de Agente - Barras
+  - Distribución de PII - Donut/Circular seleccionable
+  - Histórico de PII (24h) - Barras apiladas
+- ✅ **Auto-Refresh**: Actualización automática cada 10 segundos
+- ✅ **Exportación de Datos**: CSV y JSON
+- ✅ **Componentes de Dashboard**:
+  - `MetricsCard` - Tarjetas KPI reutilizables
+  - `AgentExecutionsChart` - Gráficos de ejecuciones
+  - `PIIRedactionChart` - Gráficos de PII
+  - `SystemHealthStatus` - Estado de servidores MCP y servicios externos
+- ✅ **Hook useMetrics**:
+  - Auto-refresh configurable
+  - Polling paralelo de métricas, historial ejecuciones e historial PII
+  - Manejo de estados (loading, error, data)
+- ✅ **Performance**:
+  - Bundle gzipped: 195KB (< 500KB requerido ✓)
+  - Gráficos responsivos con Recharts
+  - Formateo de fechas con date-fns (locale español)
+- ✅ **Datos Mock**: Sistema de datos mock para desarrollo con variaciones aleatorias
+
+Ver [doc/paso-3-fase-2-dashboard-metricas.md](doc/paso-3-fase-2-dashboard-metricas.md) para documentación técnica completa.
 
 #### Mejoras de Robustez y Error Handling ✅
 
@@ -374,7 +405,7 @@ python -m uvicorn server_http:app --reload --port 8000
 - Serás redirigido al dashboard
 
 **Próximas fases del dashboard:**
-- Fase 2: Dashboard de Métricas (gráficos, KPIs, auto-refresh)
+- ✅ Fase 2: Dashboard de Métricas (gráficos, KPIs, auto-refresh) - COMPLETADO
 - Fase 3: Visor de Logs en tiempo real
 - Fase 4: Panel de Pruebas de Agentes
 
@@ -517,24 +548,38 @@ aGEntiX/
 │   ├── src/
 │   │   ├── components/
 │   │   │   ├── auth/                # Autenticación (Login, ProtectedRoute, Logout)
+│   │   │   ├── dashboard/           # Componentes del dashboard (Fase 2)
+│   │   │   │   ├── MetricsCard.tsx          # Tarjetas KPI
+│   │   │   │   ├── AgentExecutionsChart.tsx # Gráficos de ejecuciones
+│   │   │   │   ├── PIIRedactionChart.tsx    # Gráficos de PII
+│   │   │   │   └── SystemHealthStatus.tsx   # Estado del sistema
 │   │   │   ├── layout/              # Layout (Header, Sidebar)
 │   │   │   └── ui/                  # Componentes UI (Card, Button, Input)
 │   │   ├── contexts/
 │   │   │   └── AuthContext.tsx      # Contexto de autenticación
+│   │   ├── hooks/
+│   │   │   ├── useAuth.ts           # Hook de autenticación
+│   │   │   └── useMetrics.ts        # Hook de métricas con auto-refresh
+│   │   ├── mocks/
+│   │   │   └── metrics.mock.ts      # Datos mock para desarrollo
 │   │   ├── pages/
 │   │   │   ├── Login.tsx            # Página de login
-│   │   │   ├── Dashboard.tsx        # Dashboard principal
+│   │   │   ├── Dashboard.tsx        # Dashboard principal con métricas
 │   │   │   ├── Logs.tsx             # Visor de logs (Fase 3)
 │   │   │   └── TestPanel.tsx        # Panel de pruebas (Fase 4)
 │   │   ├── services/
 │   │   │   ├── api.ts               # Cliente HTTP con interceptors
-│   │   │   └── authService.ts       # Servicio de autenticación
+│   │   │   ├── authService.ts       # Servicio de autenticación
+│   │   │   └── metricsService.ts    # Servicio de métricas
 │   │   ├── types/                   # Tipos TypeScript
+│   │   │   ├── auth.ts              # Tipos de autenticación
+│   │   │   ├── metrics.ts           # Tipos de métricas (ampliado)
+│   │   │   └── ...                  # Otros tipos
 │   │   ├── App.tsx                  # Componente principal
 │   │   └── main.tsx                 # Entry point
 │   ├── vite.config.ts               # Configuración Vite
 │   ├── tailwind.config.js           # Configuración TailwindCSS
-│   ├── package.json                 # Dependencias npm
+│   ├── package.json                 # Dependencias npm (recharts, date-fns)
 │   └── .env                         # VITE_API_URL
 │
 ├── src/                             # Código fuente Python (estructura plana)
@@ -718,14 +763,7 @@ await mcp_registry.call_tool("firmar_documento", {
 
 ## Próximos Pasos
 
-### Paso 3 - Fase 2: Dashboard de Métricas (En Progreso)
-- Endpoint `GET /api/v1/dashboard/metrics`
-- Gráficos interactivos con Recharts
-- KPIs del sistema (ejecuciones, tasa de éxito, performance)
-- Auto-refresh cada 10 segundos
-- Exportación de datos a CSV
-
-### Paso 3 - Fase 3: Visor de Logs
+### Paso 3 - Fase 3: Visor de Logs (Siguiente)
 - Endpoint `GET /api/v1/logs` con filtros
 - Endpoint `GET /api/v1/logs/stream` (SSE)
 - Sistema de filtros (nivel, componente, agente, fecha)

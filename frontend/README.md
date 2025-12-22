@@ -9,7 +9,8 @@ Dashboard de administración para el sistema de agentes aGEntiX.
 - **TailwindCSS** para estilos
 - **React Router** para navegación
 - **Axios** para peticiones HTTP
-- **React Query** para gestión de estado del servidor
+- **Recharts** para gráficos interactivos
+- **date-fns** para formateo de fechas (locale español)
 
 ## Requisitos Previos
 
@@ -73,13 +74,32 @@ frontend/
 ├── src/
 │   ├── components/
 │   │   ├── auth/          # Componentes de autenticación
+│   │   ├── dashboard/     # Componentes del dashboard (Fase 2)
+│   │   │   ├── MetricsCard.tsx          # Tarjetas KPI
+│   │   │   ├── AgentExecutionsChart.tsx # Gráficos de ejecuciones
+│   │   │   ├── PIIRedactionChart.tsx    # Gráficos de PII
+│   │   │   └── SystemHealthStatus.tsx   # Estado del sistema
 │   │   ├── layout/        # Layout principal (Header, Sidebar)
 │   │   └── ui/            # Componentes UI reutilizables
 │   ├── contexts/          # Contextos de React (AuthContext)
 │   ├── hooks/             # Custom hooks
+│   │   ├── useAuth.ts     # Hook de autenticación
+│   │   └── useMetrics.ts  # Hook de métricas con auto-refresh
+│   ├── mocks/             # Datos mock para desarrollo
+│   │   └── metrics.mock.ts
 │   ├── pages/             # Páginas de la aplicación
+│   │   ├── Login.tsx      # Página de login
+│   │   ├── Dashboard.tsx  # Dashboard con métricas (Fase 2)
+│   │   ├── Logs.tsx       # Visor de logs (Fase 3)
+│   │   └── TestPanel.tsx  # Panel de pruebas (Fase 4)
 │   ├── services/          # Servicios API
+│   │   ├── api.ts         # Cliente HTTP con interceptors
+│   │   ├── authService.ts # Servicio de autenticación
+│   │   └── metricsService.ts # Servicio de métricas
 │   ├── types/             # Tipos TypeScript
+│   │   ├── auth.ts        # Tipos de autenticación
+│   │   ├── metrics.ts     # Tipos de métricas (ampliado)
+│   │   └── ...
 │   ├── utils/             # Utilidades
 │   ├── App.tsx            # Componente principal
 │   ├── main.tsx           # Entry point
@@ -117,9 +137,56 @@ La Fase 1 está completamente implementada e incluye:
 
 ### Páginas
 - Login (funcional)
-- Dashboard (placeholder)
-- Logs (placeholder)
-- TestPanel (placeholder)
+- Dashboard (con métricas completas - Fase 2)
+- Logs (placeholder - Fase 3)
+- TestPanel (placeholder - Fase 4)
+
+## Fase 2: Dashboard de Métricas ✅
+
+La Fase 2 está completamente implementada e incluye:
+
+### Sistema de Métricas
+- **8 KPIs Principales** (supera requisito de 6):
+  - Total de Ejecuciones, Ejecuciones Hoy, Tasa de Éxito, Tiempo Promedio
+  - PII Redactados, Servidores MCP, Latencia P95, Llamadas MCP/s
+
+- **4 Gráficos Interactivos** (supera requisito de 3):
+  - Histórico de Ejecuciones (24h) - Líneas/Barras seleccionable
+  - Ejecuciones por Tipo de Agente - Barras
+  - Distribución de PII - Donut/Circular seleccionable
+  - Histórico de PII (24h) - Barras apiladas
+
+- **Auto-Refresh**: Actualización automática cada 10 segundos
+- **Exportación**: Descarga de métricas en formato CSV y JSON
+
+### Componentes del Dashboard
+- **MetricsCard**: Tarjetas KPI reutilizables con colores y tendencias
+- **AgentExecutionsChart**: Gráfico de líneas/barras para histórico de ejecuciones
+- **AgentTypeChart**: Gráfico de barras por tipo de agente
+- **PIIRedactionChart**: Gráfico donut/circular de distribución de PII
+- **PIIHistoryChart**: Gráfico de barras apiladas de histórico de PII
+- **PIILegend**: Leyenda personalizada con valores y porcentajes
+- **SystemHealthStatus**: Estado completo de servidores MCP y servicios externos
+
+### Hook useMetrics
+- Auto-refresh configurable (default: 10 segundos)
+- Polling paralelo de: métricas, historial ejecuciones, historial PII
+- Manejo de estados: loading, error, data
+- Función `refetch()` para actualización manual
+
+### Servicio de Métricas
+- Abstracción mock/API con flag `USE_MOCK_DATA`
+- Funciones de exportación CSV/JSON
+- Datos mock con variaciones aleatorias
+- Simulación de latencia de red
+
+### Performance
+- **Bundle gzipped**: 195KB (< 500KB requerido ✓)
+- Gráficos responsivos con Recharts
+- Formateo de fechas con date-fns (locale español)
+- Compilación TypeScript sin errores
+
+**Documentación completa**: Ver `/doc/paso-3-fase-2-dashboard-metricas.md`
 
 ## Autenticación
 
@@ -147,12 +214,7 @@ Este token está configurado en el backend (`.env` → `API_ADMIN_TOKEN`).
 
 ## Próximas Fases
 
-### Fase 2: Dashboard de Métricas
-- Gráficos interactivos
-- KPIs del sistema
-- Auto-refresh de métricas
-
-### Fase 3: Visor de Logs
+### Fase 3: Visor de Logs (Siguiente)
 - Sistema de filtros
 - Búsqueda de texto completo
 - Streaming de logs en tiempo real
