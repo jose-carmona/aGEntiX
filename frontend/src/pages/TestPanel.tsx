@@ -1,28 +1,19 @@
 // pages/TestPanel.tsx
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AgentSelector } from '../components/test-panel/AgentSelector';
-import { ExecutionForm } from '../components/test-panel/ExecutionForm';
-import { JWTGenerator } from '../components/test-panel/JWTGenerator';
+import { IntegratedExecutionForm } from '../components/test-panel/IntegratedExecutionForm';
 import { ResultsViewer } from '../components/test-panel/ResultsViewer';
 import { ExecutionHistory } from '../components/test-panel/ExecutionHistory';
 import { useAgentExecution } from '../hooks/useAgentExecution';
-import { getAgentConfig } from '../services/agentService';
 import type { JWTClaims, ExecutionHistoryItem, AgentConfig } from '../types/agent';
 
 const STORAGE_KEY_PREFIX = 'agentix_test_panel_';
 const MAX_HISTORY_ITEMS = 10;
 
 export const TestPanel: React.FC = () => {
-  // Estado del formulario
+  // Estado básico
   const [selectedAgentId, setSelectedAgentId] = useState<string | null>(null);
-  const [expedienteId, setExpedienteId] = useState('');
-  const [permisos, setPermisos] = useState<string[]>(['consulta']);
-  const [contextoAdicional, setContextoAdicional] = useState('');
-
-  // Estado del JWT
-  const [generatedJWT, setGeneratedJWT] = useState<string | null>(null);
-  const [jwtClaims, setJWTClaims] = useState<JWTClaims | null>(null);
 
   // Historial de ejecuciones
   const [executionHistory, setExecutionHistory] = useState<ExecutionHistoryItem[]>([]);
@@ -37,16 +28,10 @@ export const TestPanel: React.FC = () => {
     reset
   } = useAgentExecution();
 
-  // Cargar configuración guardada al montar
+  // Cargar historial al montar
   useEffect(() => {
-    loadSavedConfiguration();
     loadExecutionHistory();
   }, []);
-
-  // Guardar configuración cuando cambia
-  useEffect(() => {
-    saveConfiguration();
-  }, [selectedAgentId, expedienteId, permisos, contextoAdicional]);
 
   // Agregar ejecución al historial cuando completa
   useEffect(() => {
@@ -54,33 +39,6 @@ export const TestPanel: React.FC = () => {
       addToHistory(execution);
     }
   }, [execution?.status, execution?.agent_run_id]);
-
-  const loadSavedConfiguration = () => {
-    try {
-      const saved = localStorage.getItem(`${STORAGE_KEY_PREFIX}config`);
-      if (saved) {
-        const config = JSON.parse(saved);
-        setExpedienteId(config.expedienteId || '');
-        setPermisos(config.permisos || ['consulta']);
-        setContextoAdicional(config.contextoAdicional || '');
-      }
-    } catch (err) {
-      console.error('Error loading saved configuration:', err);
-    }
-  };
-
-  const saveConfiguration = () => {
-    try {
-      const config = {
-        expedienteId,
-        permisos,
-        contextoAdicional
-      };
-      localStorage.setItem(`${STORAGE_KEY_PREFIX}config`, JSON.stringify(config));
-    } catch (err) {
-      console.error('Error saving configuration:', err);
-    }
-  };
 
   const loadExecutionHistory = () => {
     try {
@@ -124,46 +82,29 @@ export const TestPanel: React.FC = () => {
     });
   };
 
-  const handleTokenGenerated = useCallback((token: string, claims: JWTClaims) => {
-    setGeneratedJWT(token);
-    setJWTClaims(claims);
-  }, []);
+  const handleExecute = async (
+    jwtToken: string,
+    _jwtClaims: JWTClaims,
+    expedienteId: string,
+    tareaId: string,
+    agentConfig: AgentConfig
+  ) => {
+    await execute({
+      expediente_id: expedienteId,
+      tarea_id: tareaId,
+      agent_config: agentConfig,
+      webhook_url: '', // Opcional en testing
+      timeout_seconds: 300 // 5 minutos
+    }, jwtToken);
+  };
 
-  const handleExecute = useCallback(async () => {
-    if (!selectedAgentId || !generatedJWT || !expedienteId) {
-      return;
-    }
-
-    try {
-      // Obtener configuración del agente
-      const agentConfig: AgentConfig = await getAgentConfig(selectedAgentId);
-
-      // TODO: Parsear contexto adicional si existe y agregarlo al agent_config
-      // Por ahora se ignora el contexto adicional ya que no está en la interfaz ExecuteAgentRequest
-
-      // Ejecutar agente
-      await execute({
-        expediente_id: expedienteId,
-        tarea_id: jwtClaims?.tarea_id || 'TAREA-TEST-001',
-        agent_config: agentConfig,
-        webhook_url: '', // Opcional en testing
-        timeout_seconds: 300 // 5 minutos
-      }, generatedJWT);
-
-    } catch (err) {
-      console.error('Error executing agent:', err);
-    }
-  }, [selectedAgentId, generatedJWT, expedienteId, contextoAdicional, jwtClaims, execute]);
-
-  const handleReset = useCallback(() => {
+  const handleReset = () => {
     reset();
-    setGeneratedJWT(null);
-    setJWTClaims(null);
-  }, [reset]);
+  };
 
-  const handleCancel = useCallback(() => {
+  const handleCancel = () => {
     cancel();
-  }, [cancel]);
+  };
 
   return (
     <div className="p-6">
@@ -188,24 +129,11 @@ export const TestPanel: React.FC = () => {
             disabled={isExecuting}
           />
 
-          {/* Formulario de ejecución */}
-          <ExecutionForm
-            expedienteId={expedienteId}
-            onExpedienteIdChange={setExpedienteId}
-            permisos={permisos}
-            onPermisosChange={setPermisos}
-            contextoAdicional={contextoAdicional}
-            onContextoAdicionalChange={setContextoAdicional}
-            onExecute={handleExecute}
+          {/* Formulario integrado de ejecución */}
+          <IntegratedExecutionForm
+            selectedAgentId={selectedAgentId}
             isExecuting={isExecuting}
-            disabled={!generatedJWT}
-          />
-
-          {/* Generador de JWT */}
-          <JWTGenerator
-            expedienteId={expedienteId}
-            permisos={permisos}
-            onTokenGenerated={handleTokenGenerated}
+            onExecute={handleExecute}
           />
 
           {/* Botón de cancelar si está ejecutando */}
@@ -266,10 +194,12 @@ export const TestPanel: React.FC = () => {
             </p>
             <ol className="text-sm text-blue-800 space-y-1 list-decimal list-inside">
               <li>Selecciona el agente que deseas probar</li>
-              <li>Configura el ID de expediente y permisos deseados</li>
-              <li>Genera un token JWT de prueba (válido por 1 hora)</li>
-              <li>Ejecuta el agente y observa los resultados en tiempo real</li>
-              <li>Revisa el historial de ejecuciones en el panel lateral</li>
+              <li>Configura el ID de expediente y datos de la tarea BPMN</li>
+              <li>Selecciona los permisos que deseas incluir en el token JWT</li>
+              <li>Opcionalmente, añade contexto adicional para el agente</li>
+              <li>Haz clic en "Ejecutar Agente" (el token JWT se genera automáticamente)</li>
+              <li>Observa los resultados en tiempo real en el panel lateral</li>
+              <li>Revisa el historial de ejecuciones previas</li>
             </ol>
           </div>
         </div>
