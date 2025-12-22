@@ -79,26 +79,36 @@ frontend/
 │   │   │   ├── AgentExecutionsChart.tsx # Gráficos de ejecuciones
 │   │   │   ├── PIIRedactionChart.tsx    # Gráficos de PII
 │   │   │   └── SystemHealthStatus.tsx   # Estado del sistema
+│   │   ├── logs/          # Componentes de logs (Fase 3)
+│   │   │   ├── LogEntry.tsx             # Entrada de log expandible
+│   │   │   ├── LogFilters.tsx           # Panel de filtros
+│   │   │   ├── LogSearch.tsx            # Búsqueda de texto
+│   │   │   └── LogsViewer.tsx           # Contenedor principal
 │   │   ├── layout/        # Layout principal (Header, Sidebar)
 │   │   └── ui/            # Componentes UI reutilizables
 │   ├── contexts/          # Contextos de React (AuthContext)
 │   ├── hooks/             # Custom hooks
 │   │   ├── useAuth.ts     # Hook de autenticación
-│   │   └── useMetrics.ts  # Hook de métricas con auto-refresh
+│   │   ├── useMetrics.ts  # Hook de métricas con auto-refresh
+│   │   ├── useLogs.ts     # Hook de logs con paginación (Fase 3)
+│   │   └── useLogStream.ts # Hook de streaming SSE (Fase 3)
 │   ├── mocks/             # Datos mock para desarrollo
-│   │   └── metrics.mock.ts
+│   │   ├── metrics.mock.ts # Datos mock de métricas
+│   │   └── logs.mock.ts    # 2000 logs mock (Fase 3)
 │   ├── pages/             # Páginas de la aplicación
 │   │   ├── Login.tsx      # Página de login
 │   │   ├── Dashboard.tsx  # Dashboard con métricas (Fase 2)
-│   │   ├── Logs.tsx       # Visor de logs (Fase 3)
+│   │   ├── Logs.tsx       # Visor de logs completo (Fase 3)
 │   │   └── TestPanel.tsx  # Panel de pruebas (Fase 4)
 │   ├── services/          # Servicios API
 │   │   ├── api.ts         # Cliente HTTP con interceptors
 │   │   ├── authService.ts # Servicio de autenticación
-│   │   └── metricsService.ts # Servicio de métricas
+│   │   ├── metricsService.ts # Servicio de métricas
+│   │   └── logsService.ts    # Servicio de logs con exportación (Fase 3)
 │   ├── types/             # Tipos TypeScript
 │   │   ├── auth.ts        # Tipos de autenticación
-│   │   ├── metrics.ts     # Tipos de métricas (ampliado)
+│   │   ├── metrics.ts     # Tipos de métricas
+│   │   ├── logs.ts        # Tipos de logs (Fase 3)
 │   │   └── ...
 │   ├── utils/             # Utilidades
 │   ├── App.tsx            # Componente principal
@@ -188,6 +198,72 @@ La Fase 2 está completamente implementada e incluye:
 
 **Documentación completa**: Ver `/doc/paso-3-fase-2-dashboard-metricas.md`
 
+## Fase 3: Visor de Logs en Tiempo Real ✅
+
+La Fase 3 está completamente implementada e incluye:
+
+### Sistema de Logs
+- **Visualización Avanzada**:
+  - Logs con colores por nivel de severidad (INFO=azul, WARNING=amarillo, ERROR=rojo, CRITICAL=rojo oscuro, DEBUG=gris)
+  - Formato expandible/colapsable para ver detalles (error stacktrace, contexto JSON)
+  - Timestamp formateado en zona horaria local (español)
+  - Resaltado automático de PII redactado con badges morados
+  - Metadata visible (agent_run_id, duration_ms)
+
+- **Sistema de Filtros Avanzado** (5+ filtros):
+  - Filtro por nivel de log (multi-selección)
+  - Filtro por componente (multi-selección)
+  - Filtro por agente (multi-selección)
+  - Filtro por expediente_id (texto con debounce 500ms)
+  - Filtro por rango de fechas (datetime-local)
+  - Persistencia automática en sessionStorage
+  - Panel colapsable/expandible con indicador de filtros activos
+
+- **Búsqueda de Texto Completo**:
+  - Búsqueda en mensaje, contexto JSON y errores
+  - Debounce de 300ms
+  - Indicador visual de búsqueda activa
+  - Botón para limpiar búsqueda
+
+- **Streaming en Tiempo Real**:
+  - Conexión SSE para logs en tiempo real (simulado)
+  - Toggle activar/desactivar streaming
+  - Buffer limitado a 100 logs
+  - Auto-scroll automático cuando está activo
+  - Indicador visual de conexión activa (pulsante)
+
+- **Paginación y Rendimiento**:
+  - Infinite scroll con Intersection Observer
+  - Botón "Cargar más" manual
+  - Soporta 2000+ logs sin degradación
+  - Estados de carga y error con reintentos
+  - Contador de logs mostrados/totales
+
+- **Exportación de Datos**:
+  - Formato JSON (pretty-printed)
+  - Formato JSON Lines (.jsonl - una línea por log)
+  - Formato CSV (campos principales)
+  - Respeta filtros activos
+  - Descarga inmediata con timestamp en nombre
+
+### Componentes de Logs
+- **LogEntry**: Entrada de log individual con expand/collapse
+- **LogFilters**: Panel completo de filtros con multi-selección
+- **LogSearch**: Barra de búsqueda con debounce
+- **LogsViewer**: Contenedor principal con infinite scroll
+
+### Hooks de Logs
+- **useLogs**: Gestión de estado con paginación y filtros
+- **useLogStream**: Streaming SSE con buffer y auto-scroll
+
+### Servicio de Logs
+- Abstracción mock/API con flag `USE_MOCK_DATA`
+- Funciones de filtrado y exportación (JSON/JSONL/CSV)
+- Conexión SSE para streaming en tiempo real
+- 2000 logs mock para testing de performance
+
+**Documentación completa**: Ver `/doc/paso-3-fase-3-visor-logs.md`
+
 ## Autenticación
 
 El sistema usa un token de administración simple para acceder al dashboard.
@@ -214,12 +290,7 @@ Este token está configurado en el backend (`.env` → `API_ADMIN_TOKEN`).
 
 ## Próximas Fases
 
-### Fase 3: Visor de Logs (Siguiente)
-- Sistema de filtros
-- Búsqueda de texto completo
-- Streaming de logs en tiempo real
-
-### Fase 4: Panel de Pruebas de Agentes
+### Fase 4: Panel de Pruebas de Agentes (Siguiente)
 - Selector de agentes
 - Generador de JWT
 - Visualizador de resultados

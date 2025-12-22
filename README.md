@@ -10,7 +10,7 @@ GEX es la aplicación central de gestión administrativa desarrollada por Eprins
 
 ## Estado del Proyecto
 
-**Fase actual:** Paso 3 - Frontend Dashboard (Fase 2: Dashboard de Métricas) ✅ COMPLETADO
+**Fase actual:** Paso 3 - Frontend Dashboard (Fase 3: Visor de Logs) ✅ COMPLETADO
 
 ### Implementado
 
@@ -49,65 +49,28 @@ API REST profesional para ejecución asíncrona de agentes:
 
 Ver [code-review/commit-64fda4d](code-review/commit-64fda4d/) para análisis detallado y plan de mejoras (2/11 implementadas: P1.1 y P2.1).
 
-#### Paso 3 - Fase 1: Sistema de Autenticación Frontend ✅
+#### Paso 3: Dashboard Web Frontend ✅
 
-Dashboard web con autenticación para gestión y monitorización del sistema:
+Dashboard web profesional para gestión y monitorización del sistema aGEntiX con React + TypeScript.
 
-- ✅ **Frontend React + TypeScript** con Vite y TailwindCSS
-- ✅ **Sistema de Autenticación Dual**:
-  - Token de Admin (API_ADMIN_TOKEN) para acceso al dashboard
-  - JWT de Agente (ya existente) para ejecutar agentes
-- ✅ **Endpoints de Autenticación**:
-  - `POST /api/v1/auth/validate-admin-token` - Validar token de admin
-  - Middleware de protección de endpoints del dashboard
-- ✅ **Componentes UI Base**:
-  - Login page con validación y manejo de errores
-  - Layout con Header y Sidebar
-  - ProtectedRoute para rutas privadas
-  - Card, Button, Input (componentes reutilizables)
-- ✅ **Configuración para Desarrollo**:
-  - Vite configurado para GitHub Codespaces (`host: true`)
-  - CORS configurado para frontend (puerto 5173)
-  - Tipos TypeScript para `import.meta.env`
-  - Interceptor HTTP con token automático
-- ✅ **Páginas Implementadas**:
-  - Login (funcional) con token: `agentix-admin-dev-token-2024`
-  - Dashboard (placeholder para Fase 2)
-  - Logs (placeholder para Fase 3)
-  - TestPanel (placeholder para Fase 4)
+**Fases completadas:**
+- ✅ **Fase 1: Sistema de Autenticación** - Login con token de admin, rutas protegidas, interceptor HTTP
+- ✅ **Fase 2: Dashboard de Métricas** - 8 KPIs, 4 gráficos interactivos, auto-refresh, exportación CSV/JSON
+- ✅ **Fase 3: Visor de Logs** - Filtros avanzados, búsqueda, streaming SSE, exportación, 2000+ logs sin degradación
 
-Ver [doc/paso-3-fase-1-autenticacion.md](doc/paso-3-fase-1-autenticacion.md) para documentación completa, problemas resueltos y próximas fases.
+**Tecnologías:** React 18, TypeScript, Vite, TailwindCSS, Recharts, date-fns, Axios
 
-#### Paso 3 - Fase 2: Dashboard de Métricas ✅
+**Documentación detallada:** Ver [frontend/README.md](frontend/README.md) para:
+- Instalación y configuración
+- Estructura completa del proyecto
+- Descripción detallada de cada fase
+- Componentes, hooks y servicios implementados
+- Scripts disponibles y desarrollo
 
-Sistema completo de visualización de métricas en tiempo real:
-
-- ✅ **8 KPIs Principales** (supera requisito de 6):
-  - Total de Ejecuciones, Ejecuciones Hoy, Tasa de Éxito, Tiempo Promedio
-  - PII Redactados, Servidores MCP, Latencia P95, Llamadas MCP/s
-- ✅ **4 Gráficos Interactivos** (supera requisito de 3):
-  - Histórico de Ejecuciones (24h) - Líneas/Barras seleccionable
-  - Ejecuciones por Tipo de Agente - Barras
-  - Distribución de PII - Donut/Circular seleccionable
-  - Histórico de PII (24h) - Barras apiladas
-- ✅ **Auto-Refresh**: Actualización automática cada 10 segundos
-- ✅ **Exportación de Datos**: CSV y JSON
-- ✅ **Componentes de Dashboard**:
-  - `MetricsCard` - Tarjetas KPI reutilizables
-  - `AgentExecutionsChart` - Gráficos de ejecuciones
-  - `PIIRedactionChart` - Gráficos de PII
-  - `SystemHealthStatus` - Estado de servidores MCP y servicios externos
-- ✅ **Hook useMetrics**:
-  - Auto-refresh configurable
-  - Polling paralelo de métricas, historial ejecuciones e historial PII
-  - Manejo de estados (loading, error, data)
-- ✅ **Performance**:
-  - Bundle gzipped: 195KB (< 500KB requerido ✓)
-  - Gráficos responsivos con Recharts
-  - Formateo de fechas con date-fns (locale español)
-- ✅ **Datos Mock**: Sistema de datos mock para desarrollo con variaciones aleatorias
-
-Ver [doc/paso-3-fase-2-dashboard-metricas.md](doc/paso-3-fase-2-dashboard-metricas.md) para documentación técnica completa.
+**Documentos técnicos específicos:**
+- [doc/paso-3-fase-1-autenticacion.md](doc/paso-3-fase-1-autenticacion.md) - Sistema de autenticación
+- [doc/paso-3-fase-2-dashboard-metricas.md](doc/paso-3-fase-2-dashboard-metricas.md) - Dashboard de métricas
+- [doc/paso-3-fase-3-visor-logs.md](doc/paso-3-fase-3-visor-logs.md) - Visor de logs
 
 #### Mejoras de Robustez y Error Handling ✅
 
@@ -373,9 +336,9 @@ El proyecto incluye un **script unificado v2.0** con configuración declarativa 
 
 ### Opción A: Dashboard Web (Recomendado - Paso 3)
 
-La forma más intuitiva de usar aGEntiX es mediante el dashboard web:
+La forma más intuitiva de usar aGEntiX es mediante el dashboard web.
 
-#### 1. Iniciar Servidores
+**Inicio rápido:**
 
 ```bash
 # Terminal 1: Backend API (puerto 8080)
@@ -383,31 +346,20 @@ python -m uvicorn src.api.main:app --reload --port 8080
 
 # Terminal 2: Frontend Dashboard (puerto 5173)
 cd frontend && npm run dev
-
-# Terminal 3 (opcional): Servidor MCP Expedientes (puerto 8000)
-cd src/mcp_mock/mcp_expedientes
-python -m uvicorn server_http:app --reload --port 8000
 ```
 
-#### 2. Acceder al Dashboard
+**Acceso:**
+- GitHub Codespaces: Panel PORTS → Puerto 5173 → Abrir en navegador
+- Local: `http://localhost:5173`
 
-- **GitHub Codespaces:**
-  - Ve al panel **PORTS** en VS Code
-  - Puerto **5173** → Haz clic en el ícono de globo 🌐
+**Login:** Token de desarrollo: `agentix-admin-dev-token-2024`
 
-- **Local:**
-  - `http://localhost:5173`
-
-#### 3. Login
-
-- **Token de desarrollo:** `agentix-admin-dev-token-2024`
-- Introduce el token en la página de login
-- Serás redirigido al dashboard
-
-**Próximas fases del dashboard:**
-- ✅ Fase 2: Dashboard de Métricas (gráficos, KPIs, auto-refresh) - COMPLETADO
-- Fase 3: Visor de Logs en tiempo real
-- Fase 4: Panel de Pruebas de Agentes
+**📖 Documentación completa del frontend:** Ver [frontend/README.md](frontend/README.md) para:
+- Instalación detallada y configuración
+- Descripción de las 3 fases completadas (Autenticación, Métricas, Logs)
+- Guía de uso de cada funcionalidad
+- Scripts disponibles y desarrollo
+- Estructura del proyecto
 
 ### Opción B: API REST (Programático)
 
@@ -544,43 +496,21 @@ python -m mcp_expedientes.generate_token EXP-2024-001
 
 ```
 aGEntiX/
-├── frontend/                        # Dashboard Web (Paso 3)
+├── frontend/                        # Dashboard Web (Paso 3) - Ver frontend/README.md
 │   ├── src/
-│   │   ├── components/
-│   │   │   ├── auth/                # Autenticación (Login, ProtectedRoute, Logout)
-│   │   │   ├── dashboard/           # Componentes del dashboard (Fase 2)
-│   │   │   │   ├── MetricsCard.tsx          # Tarjetas KPI
-│   │   │   │   ├── AgentExecutionsChart.tsx # Gráficos de ejecuciones
-│   │   │   │   ├── PIIRedactionChart.tsx    # Gráficos de PII
-│   │   │   │   └── SystemHealthStatus.tsx   # Estado del sistema
-│   │   │   ├── layout/              # Layout (Header, Sidebar)
-│   │   │   └── ui/                  # Componentes UI (Card, Button, Input)
-│   │   ├── contexts/
-│   │   │   └── AuthContext.tsx      # Contexto de autenticación
-│   │   ├── hooks/
-│   │   │   ├── useAuth.ts           # Hook de autenticación
-│   │   │   └── useMetrics.ts        # Hook de métricas con auto-refresh
-│   │   ├── mocks/
-│   │   │   └── metrics.mock.ts      # Datos mock para desarrollo
-│   │   ├── pages/
-│   │   │   ├── Login.tsx            # Página de login
-│   │   │   ├── Dashboard.tsx        # Dashboard principal con métricas
-│   │   │   ├── Logs.tsx             # Visor de logs (Fase 3)
-│   │   │   └── TestPanel.tsx        # Panel de pruebas (Fase 4)
-│   │   ├── services/
-│   │   │   ├── api.ts               # Cliente HTTP con interceptors
-│   │   │   ├── authService.ts       # Servicio de autenticación
-│   │   │   └── metricsService.ts    # Servicio de métricas
-│   │   ├── types/                   # Tipos TypeScript
-│   │   │   ├── auth.ts              # Tipos de autenticación
-│   │   │   ├── metrics.ts           # Tipos de métricas (ampliado)
-│   │   │   └── ...                  # Otros tipos
-│   │   ├── App.tsx                  # Componente principal
-│   │   └── main.tsx                 # Entry point
-│   ├── vite.config.ts               # Configuración Vite
-│   ├── tailwind.config.js           # Configuración TailwindCSS
-│   ├── package.json                 # Dependencias npm (recharts, date-fns)
-│   └── .env                         # VITE_API_URL
+│   │   ├── components/              # auth/, dashboard/, logs/, layout/, ui/
+│   │   ├── contexts/                # AuthContext
+│   │   ├── hooks/                   # useAuth, useMetrics, useLogs, useLogStream
+│   │   ├── mocks/                   # Datos mock (metrics, logs)
+│   │   ├── pages/                   # Login, Dashboard, Logs, TestPanel
+│   │   ├── services/                # API clients (auth, metrics, logs)
+│   │   ├── types/                   # TypeScript types
+│   │   └── utils/                   # Utilidades
+│   ├── vite.config.ts
+│   ├── tailwind.config.js
+│   ├── package.json
+│   ├── .env                         # VITE_API_URL
+│   └── README.md                    # 📖 Documentación completa del frontend
 │
 ├── src/                             # Código fuente Python (estructura plana)
 │   ├── api/                         # API REST con FastAPI (Paso 2)
@@ -763,14 +693,7 @@ await mcp_registry.call_tool("firmar_documento", {
 
 ## Próximos Pasos
 
-### Paso 3 - Fase 3: Visor de Logs (Siguiente)
-- Endpoint `GET /api/v1/logs` con filtros
-- Endpoint `GET /api/v1/logs/stream` (SSE)
-- Sistema de filtros (nivel, componente, agente, fecha)
-- Búsqueda de texto completo
-- Resaltado de PII redactado
-
-### Paso 3 - Fase 4: Panel de Pruebas de Agentes
+### Paso 3 - Fase 4: Panel de Pruebas de Agentes (Siguiente)
 - Endpoint `POST /api/v1/auth/generate-jwt`
 - Selector de agentes disponibles
 - Generador de JWT de prueba
