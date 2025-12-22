@@ -3,7 +3,7 @@ import { LogEntry, LogFilters, LogsResponse, ExportOptions } from '../types/logs
 import { mockLogs, largeMockDataset } from '../mocks/logs.mock';
 
 // Flag para cambiar entre mock y API real
-const USE_MOCK_DATA = true;
+const USE_MOCK_DATA = false;
 
 /**
  * Filtra logs según los criterios especificados

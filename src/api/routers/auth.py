@@ -14,7 +14,7 @@ IMPORTANTE:
 """
 
 import logging
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Header
 from pydantic import BaseModel
 
 from backoffice.settings import settings
@@ -105,3 +105,50 @@ async def validate_admin_token(request: TokenValidationRequest):
                 "message": "Token inválido"
             }
         )
+
+
+# ============================================================================
+# Dependencies
+# ============================================================================
+
+
+async def verify_admin_token(authorization: str = Header(..., description="Bearer token de admin")):
+    """
+    Dependency para verificar el token de administración en endpoints protegidos.
+
+    Verifica que el header Authorization contenga un Bearer token válido
+    que coincida con API_ADMIN_TOKEN.
+
+    Args:
+        authorization: Header Authorization con formato "Bearer <token>"
+
+    Returns:
+        El token validado
+
+    Raises:
+        HTTPException 401: Si el token no es válido o falta
+
+    Example:
+        ```python
+        @router.get("/protected", dependencies=[Depends(verify_admin_token)])
+        async def protected_endpoint():
+            return {"message": "Acceso permitido"}
+        ```
+    """
+    if not authorization.startswith("Bearer "):
+        logger.warning("Header Authorization sin formato Bearer")
+        raise HTTPException(
+            status_code=401,
+            detail="Token de autorización requerido con formato: Bearer <token>"
+        )
+
+    token = authorization.replace("Bearer ", "")
+
+    if token != settings.API_ADMIN_TOKEN:
+        logger.warning("Token de admin inválido en endpoint protegido")
+        raise HTTPException(
+            status_code=401,
+            detail="Token de administración inválido"
+        )
+
+    return token
