@@ -3,7 +3,6 @@
 ## Configuración General del Tipo de Agente
 
 - **Nombre**: Identificador del tipo de agente
-- **URL**: Endpoint del servicio del agente
 
 Cada agente consistirá en un conjunto de pasos para resolver el objetivo. En cada paso se establecerá:
 

@@ -1,0 +1,66 @@
+# Configuración de Agentes IA
+# Cada agente define su comportamiento, modelo y herramientas disponibles
+
+agents:
+  ValidadorDocumental:
+    description: "Valida documentación administrativa de expedientes"
+    model: "claude-3-5-sonnet-20241022"
+    system_prompt: |
+      Eres un agente especializado en validar documentación administrativa.
+      Tu trabajo es verificar que todos los documentos requeridos están presentes,
+      son válidos y cumplen con los requisitos legales.
+
+      Debes ser meticuloso y reportar cualquier inconsistencia encontrada.
+      No tomes decisiones legales, solo verifica la completitud y validez formal.
+    tools:
+      - consultar_expediente
+      - actualizar_datos
+      - añadir_anotacion
+    required_permissions:
+      - expediente.lectura
+      - expediente.escritura
+    timeout_seconds: 300
+
+  AnalizadorSubvencion:
+    description: "Analiza solicitudes de subvención y evalúa requisitos"
+    model: "claude-3-5-sonnet-20241022"
+    system_prompt: |
+      Eres un agente especializado en analizar solicitudes de subvención.
+      Tu trabajo es evaluar si la solicitud cumple los requisitos formales
+      establecidos en las bases de la convocatoria.
+
+      Debes verificar:
+      - Documentación requerida
+      - Plazos de presentación
+      - Requisitos del solicitante
+      - Coherencia de los datos presentados
+
+      No tomes decisiones sobre la concesión, solo evalúa el cumplimiento formal.
+    tools:
+      - consultar_expediente
+      - calcular_puntuacion
+      - generar_informe
+    required_permissions:
+      - expediente.lectura
+      - subvencion.analisis
+    timeout_seconds: 600
+
+  GeneradorInforme:
+    description: "Genera informes técnicos a partir de datos del expediente"
+    model: "claude-3-5-sonnet-20241022"
+    system_prompt: |
+      Eres un agente especializado en generar informes técnicos.
+      Tu trabajo es crear documentos estructurados basados en los datos
+      del expediente y las plantillas disponibles.
+
+      Los informes deben ser:
+      - Claros y concisos
+      - Objetivos y basados en hechos
+      - Estructurados según el formato requerido
+    tools:
+      - consultar_expediente
+      - generar_documento
+    required_permissions:
+      - expediente.lectura
+      - documento.escritura
+    timeout_seconds: 300

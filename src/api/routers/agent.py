@@ -5,6 +5,7 @@ Endpoints para ejecución y gestión de agentes.
 
 - POST /execute: Ejecuta un agente de forma asíncrona
 - GET /status/{agent_run_id}: Consulta estado de ejecución
+- GET /agents: Lista agentes disponibles
 """
 
 import asyncio
@@ -16,16 +17,52 @@ from fastapi import APIRouter, Header, HTTPException, BackgroundTasks
 from ..models import (
     ExecuteAgentRequest,
     ExecuteAgentResponse,
-    AgentStatusResponse
+    AgentStatusResponse,
+    ListAgentsResponse,
+    AgentInfo
 )
 from ..services.webhook import send_webhook
 from ..services.task_tracker import get_task_tracker
 from backoffice.executor_factory import create_default_executor
 from backoffice.models import AgentConfig
 from backoffice.settings import settings
+from backoffice.config import get_agent_loader
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
+
+
+@router.get(
+    "/agents",
+    response_model=ListAgentsResponse,
+    tags=["Agent"],
+    summary="Listar agentes disponibles",
+    description="Obtiene la lista de agentes configurados y sus descripciones"
+)
+async def list_agents():
+    """
+    Lista los agentes disponibles para ejecución.
+
+    **Uso:**
+    Permite al BPMN descubrir qué agentes están configurados
+    y qué permisos requieren antes de invocarlos.
+
+    **Response:**
+    Lista de agentes con nombre, descripción y permisos requeridos.
+    """
+    agent_loader = get_agent_loader()
+    agents = agent_loader.list_agents()
+
+    return ListAgentsResponse(
+        agents=[
+            AgentInfo(
+                name=agent.name,
+                description=agent.description,
+                required_permissions=agent.required_permissions
+            )
+            for agent in agents
+        ]
+    )
 
 
 @router.post(
@@ -35,7 +72,7 @@ logger = logging.getLogger(__name__)
     tags=["Agent"],
     summary="Ejecutar agente de forma asíncrona",
     description="Inicia la ejecución de un agente y retorna inmediatamente. "
-                "El resultado se enviará al webhook_url cuando termine."
+                "El resultado se enviará al callback_url cuando termine (si se especifica)."
 )
 async def execute_agent(
     request: ExecuteAgentRequest,
@@ -45,19 +82,27 @@ async def execute_agent(
     """
     Ejecuta un agente de forma asíncrona.
 
+    **Request simplificado:**
+    - `agent`: Nombre del agente (debe existir en agents.yaml)
+    - `prompt`: Instrucciones específicas para esta ejecución
+    - `context`: expediente_id y tarea_id
+    - `callback_url`: URL de callback (opcional)
+
     **Flujo:**
     1. Valida JWT presente
-    2. Crea executor con DI
-    3. Registra tarea en tracker
-    4. Inicia ejecución en background
-    5. Retorna 202 Accepted inmediatamente
+    2. Carga configuración del agente desde YAML
+    3. Crea executor con DI
+    4. Registra tarea en tracker
+    5. Inicia ejecución en background
+    6. Retorna 202 Accepted inmediatamente
 
     **Callback:**
-    Cuando el agente termine (éxito o error), se enviará un POST
-    al webhook_url con el resultado completo.
+    Si se especifica callback_url, cuando el agente termine (éxito o error),
+    se enviará un POST con el resultado completo.
 
     **Errores:**
     - 401: Token JWT ausente
+    - 404: Agente no encontrado
     - 400: Request inválido (validación Pydantic)
     """
 
@@ -71,56 +116,76 @@ async def execute_agent(
 
     token = authorization.replace("Bearer ", "")
 
-    # 2. Crear executor con implementaciones por defecto
+    # 2. Cargar configuración del agente desde YAML
+    agent_loader = get_agent_loader()
+
+    if not agent_loader.exists(request.agent):
+        available_agents = agent_loader.list_agent_names()
+        logger.warning(f"Agente no encontrado: {request.agent}")
+        raise HTTPException(
+            status_code=404,
+            detail=f"Agente '{request.agent}' no encontrado. "
+                   f"Agentes disponibles: {available_agents}"
+        )
+
+    agent_definition = agent_loader.get(request.agent)
+
+    # 3. Crear executor con implementaciones por defecto
     executor = create_default_executor(
         mcp_config_path=settings.MCP_CONFIG_PATH,
         jwt_secret=settings.JWT_SECRET,
         jwt_algorithm=settings.JWT_ALGORITHM
     )
 
-    # 3. Convertir request a AgentConfig del backoffice
+    # 4. Construir AgentConfig combinando YAML + request
+    # El prompt del usuario se combina con el system_prompt del YAML
     agent_config = AgentConfig(
-        nombre=request.agent_config.nombre,
-        system_prompt=request.agent_config.system_prompt,
-        modelo=request.agent_config.modelo,
-        prompt_tarea=request.agent_config.prompt_tarea,
-        herramientas=request.agent_config.herramientas
+        nombre=agent_definition.name,
+        system_prompt=agent_definition.system_prompt,
+        modelo=agent_definition.model,
+        prompt_tarea=request.prompt,  # El prompt del usuario
+        herramientas=agent_definition.tools
     )
 
-    # 4. Generar run_id y registrar tarea
+    # 5. Generar run_id y registrar tarea
     agent_run_id = f"RUN-{datetime.now(timezone.utc).strftime('%Y%m%d-%H%M%S-%f')}"
 
     task_tracker = get_task_tracker()
     task_tracker.register(
         agent_run_id=agent_run_id,
-        expediente_id=request.expediente_id,
-        tarea_id=request.tarea_id
+        expediente_id=request.context.expediente_id,
+        tarea_id=request.context.tarea_id
     )
 
     logger.info(
         f"Agente registrado: {agent_run_id} "
-        f"(expediente={request.expediente_id}, tarea={request.tarea_id}, "
-        f"agente={request.agent_config.nombre})"
+        f"(expediente={request.context.expediente_id}, "
+        f"tarea={request.context.tarea_id}, "
+        f"agente={request.agent})"
     )
 
-    # 5. Ejecutar en background
+    # 6. Determinar callback_url y timeout
+    callback_url = str(request.callback_url) if request.callback_url else None
+    timeout_seconds = agent_definition.timeout_seconds
+
+    # 7. Ejecutar en background
     background_tasks.add_task(
         execute_and_callback,
         executor=executor,
         token=token,
-        expediente_id=request.expediente_id,
-        tarea_id=request.tarea_id,
+        expediente_id=request.context.expediente_id,
+        tarea_id=request.context.tarea_id,
         agent_config=agent_config,
         agent_run_id=agent_run_id,
-        webhook_url=str(request.webhook_url),  # Convertir HttpUrl a str
-        timeout_seconds=request.timeout_seconds
+        callback_url=callback_url,
+        timeout_seconds=timeout_seconds
     )
 
-    # 6. Retornar 202 Accepted inmediatamente
+    # 8. Retornar 202 Accepted inmediatamente
     return ExecuteAgentResponse(
         agent_run_id=agent_run_id,
         message="Ejecución de agente iniciada",
-        webhook_url=str(request.webhook_url)  # Convertir HttpUrl a str
+        callback_url=callback_url
     )
 
 
@@ -131,7 +196,7 @@ async def execute_and_callback(
     tarea_id: str,
     agent_config: AgentConfig,
     agent_run_id: str,
-    webhook_url: str,
+    callback_url: Optional[str],
     timeout_seconds: int
 ):
     """
@@ -146,7 +211,7 @@ async def execute_and_callback(
         tarea_id: ID de la tarea BPMN
         agent_config: Configuración del agente
         agent_run_id: ID único de esta ejecución
-        webhook_url: URL para callback
+        callback_url: URL para callback (puede ser None)
         timeout_seconds: Timeout máximo
     """
     task_tracker = get_task_tracker()
@@ -170,13 +235,14 @@ async def execute_and_callback(
             f"(success={result.success})"
         )
 
-        # Enviar webhook
-        webhook_sent = await send_webhook(webhook_url, agent_run_id, result=result)
+        # Enviar webhook solo si hay callback_url
+        if callback_url:
+            webhook_sent = await send_webhook(callback_url, agent_run_id, result=result)
 
-        if not webhook_sent:
-            logger.warning(
-                f"Webhook NO enviado (pero agente completó): {agent_run_id}"
-            )
+            if not webhook_sent:
+                logger.warning(
+                    f"Webhook NO enviado (pero agente completó): {agent_run_id}"
+                )
 
     except asyncio.TimeoutError:
         # Timeout
@@ -192,7 +258,9 @@ async def execute_and_callback(
         }
 
         task_tracker.mark_failed(agent_run_id, error)
-        await send_webhook(webhook_url, agent_run_id, error=error)
+
+        if callback_url:
+            await send_webhook(callback_url, agent_run_id, error=error)
 
     except Exception as e:
         # Error inesperado
@@ -209,7 +277,9 @@ async def execute_and_callback(
         }
 
         task_tracker.mark_failed(agent_run_id, error)
-        await send_webhook(webhook_url, agent_run_id, error=error)
+
+        if callback_url:
+            await send_webhook(callback_url, agent_run_id, error=error)
 
 
 @router.get(

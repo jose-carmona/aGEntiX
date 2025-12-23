@@ -15,38 +15,12 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-class AgentConfigRequest(BaseModel):
-    """Configuración de agente para ejecución"""
+# =============================================================================
+# Modelos de Request para Ejecución de Agentes (Simplificado)
+# =============================================================================
 
-    nombre: str = Field(
-        ...,
-        example="ValidadorDocumental",
-        description="Nombre del agente a ejecutar"
-    )
-    system_prompt: str = Field(
-        ...,
-        example="Eres un validador de documentación administrativa",
-        description="Prompt del sistema para el agente"
-    )
-    modelo: str = Field(
-        ...,
-        example="claude-3-5-sonnet-20241022",
-        description="Modelo de LLM a utilizar"
-    )
-    prompt_tarea: str = Field(
-        ...,
-        example="Valida que todos los documentos estén presentes y sean válidos",
-        description="Prompt específico de la tarea"
-    )
-    herramientas: List[str] = Field(
-        ...,
-        example=["consultar_expediente", "actualizar_datos"],
-        description="Lista de herramientas MCP que puede usar el agente"
-    )
-
-
-class ExecuteAgentRequest(BaseModel):
-    """Request para ejecutar un agente"""
+class AgentContext(BaseModel):
+    """Contexto mínimo para la ejecución del agente"""
 
     expediente_id: str = Field(
         ...,
@@ -58,43 +32,51 @@ class ExecuteAgentRequest(BaseModel):
         example="TAREA-VALIDAR-DOC",
         description="ID de la tarea BPMN"
     )
-    agent_config: AgentConfigRequest = Field(
+
+
+class ExecuteAgentRequest(BaseModel):
+    """
+    Request simplificado para ejecutar un agente.
+
+    Solo requiere el nombre del agente, el prompt específico y el contexto.
+    La configuración del agente (model, system_prompt, tools) se carga
+    automáticamente desde agents.yaml en el servidor.
+    """
+
+    agent: str = Field(
         ...,
-        description="Configuración del agente"
+        example="ValidadorDocumental",
+        description="Nombre del agente a ejecutar (debe existir en agents.yaml)"
     )
-    webhook_url: HttpUrl = Field(
+    prompt: str = Field(
         ...,
+        example="Valida los documentos del expediente y verifica el NIF del solicitante",
+        description="Instrucciones específicas para esta ejecución"
+    )
+    context: AgentContext = Field(
+        ...,
+        description="Contexto de ejecución (expediente_id, tarea_id)"
+    )
+    callback_url: Optional[HttpUrl] = Field(
+        None,
         example="https://bpmn.example.com/api/v1/tasks/callback",
-        description="URL donde enviar el resultado cuando termine"
-    )
-    timeout_seconds: int = Field(
-        300,
-        ge=10,
-        le=600,
-        description="Timeout máximo de ejecución en segundos (10-600)"
+        description="URL donde enviar el resultado cuando termine (opcional)"
     )
 
-    @field_validator('webhook_url')
+    @field_validator('callback_url')
     @classmethod
-    def validate_webhook_url(cls, v: HttpUrl) -> HttpUrl:
+    def validate_callback_url(cls, v: Optional[HttpUrl]) -> Optional[HttpUrl]:
         """
-        Valida webhook_url para prevenir SSRF (Server-Side Request Forgery).
+        Valida callback_url para prevenir SSRF (Server-Side Request Forgery).
 
         Restricciones de seguridad:
         - Solo HTTPS en producción (HTTP permitido en desarrollo)
         - No localhost/127.0.0.1/::1/0.0.0.0
         - No IPs privadas (10.x, 172.16-31.x, 192.168.x)
-        - Puertos no estándar generan warning
-
-        Args:
-            v: HttpUrl a validar
-
-        Returns:
-            HttpUrl validado
-
-        Raises:
-            ValueError: Si la URL no cumple restricciones de seguridad
         """
+        if v is None:
+            return v
+
         from backoffice.settings import settings
 
         # Extraer hostname (remover corchetes de IPv6 si existen)
@@ -106,7 +88,7 @@ class ExecuteAgentRequest(BaseModel):
         localhost_variants = ["localhost", "127.0.0.1", "::1", "0.0.0.0"]
         if hostname in localhost_variants:
             raise ValueError(
-                f"webhook_url no puede apuntar a localhost ({hostname}). "
+                f"callback_url no puede apuntar a localhost ({hostname}). "
                 "Esto podría ser un intento de SSRF (Server-Side Request Forgery)."
             )
 
@@ -115,26 +97,26 @@ class ExecuteAgentRequest(BaseModel):
             ip = ipaddress.ip_address(hostname)
             if ip.is_loopback:
                 raise ValueError(
-                    f"webhook_url no puede apuntar a loopback: {hostname}. "
+                    f"callback_url no puede apuntar a loopback: {hostname}. "
                     "Direcciones loopback no están permitidas por seguridad (SSRF)."
                 )
             if ip.is_private:
                 raise ValueError(
-                    f"webhook_url no puede apuntar a IP privada: {hostname}. "
+                    f"callback_url no puede apuntar a IP privada: {hostname}. "
                     "IPs privadas (10.x, 172.16-31.x, 192.168.x) no están permitidas "
                     "por seguridad (SSRF)."
                 )
         except ValueError as e:
             # Si no es una IP válida, es un hostname (OK)
             # Pero re-raise si es un error de validación que lanzamos nosotros
-            if "webhook_url no puede" in str(e):
+            if "callback_url no puede" in str(e):
                 raise
 
         # 3. Validar scheme (HTTPS en producción) - después de localhost/private
         if settings.LOG_LEVEL == "INFO":  # Producción
             if v.scheme != "https":
                 raise ValueError(
-                    "webhook_url debe usar HTTPS en producción. "
+                    "callback_url debe usar HTTPS en producción. "
                     "HTTP solo permitido en desarrollo (LOG_LEVEL=DEBUG)."
                 )
 
@@ -142,12 +124,16 @@ class ExecuteAgentRequest(BaseModel):
         standard_ports = [80, 443, 8080, 8443]
         if v.port and v.port not in standard_ports:
             logger.warning(
-                f"webhook_url usa puerto no estándar: {v.port}. "
+                f"callback_url usa puerto no estándar: {v.port}. "
                 f"Puertos estándar: {standard_ports}"
             )
 
         return v
 
+
+# =============================================================================
+# Modelos de Response para Ejecución de Agentes
+# =============================================================================
 
 class ExecuteAgentResponse(BaseModel):
     """Response al iniciar ejecución de agente"""
@@ -166,10 +152,10 @@ class ExecuteAgentResponse(BaseModel):
         example="Ejecución de agente iniciada",
         description="Mensaje informativo"
     )
-    webhook_url: str = Field(
-        ...,
+    callback_url: Optional[str] = Field(
+        None,
         example="https://bpmn.example.com/api/v1/tasks/callback",
-        description="URL donde se enviará el resultado"
+        description="URL donde se enviará el resultado (si se especificó)"
     )
 
 
@@ -184,7 +170,7 @@ class AgentStatusResponse(BaseModel):
     status: str = Field(
         ...,
         example="running",
-        description="Estado: running, completed, failed"
+        description="Estado: pending, running, completed, failed"
     )
     expediente_id: str = Field(
         ...,
@@ -224,6 +210,43 @@ class AgentStatusResponse(BaseModel):
         description="Detalle del error (si falló)"
     )
 
+
+# =============================================================================
+# Modelos para Listado de Agentes
+# =============================================================================
+
+class AgentInfo(BaseModel):
+    """Información de un agente disponible"""
+
+    name: str = Field(
+        ...,
+        example="ValidadorDocumental",
+        description="Nombre del agente"
+    )
+    description: str = Field(
+        ...,
+        example="Valida documentación administrativa de expedientes",
+        description="Descripción del agente"
+    )
+    required_permissions: List[str] = Field(
+        default_factory=list,
+        example=["expediente.lectura", "expediente.escritura"],
+        description="Permisos requeridos en el JWT"
+    )
+
+
+class ListAgentsResponse(BaseModel):
+    """Response con lista de agentes disponibles"""
+
+    agents: List[AgentInfo] = Field(
+        ...,
+        description="Lista de agentes disponibles"
+    )
+
+
+# =============================================================================
+# Modelos de Health y Webhook
+# =============================================================================
 
 class HealthResponse(BaseModel):
     """Response del health check"""

@@ -7,6 +7,9 @@ reales en el Paso 3.
 
 Filosofía: Los tests de contrato NO validan comportamiento, validan ESTRUCTURA.
 Si alguno de estos tests falla, significa que se rompió backward compatibility.
+
+NOTA: El Paso 4 simplificó el API de ejecución de agentes. Los tests de contrato
+han sido actualizados para reflejar el nuevo formato simplificado.
 """
 
 import pytest
@@ -195,59 +198,62 @@ def test_contract_mcp_client_registry_interface():
 
 
 # ==============================================================================
-# CONTRACT-5: API POST /api/v1/agent/execute
+# CONTRACT-5: API POST /api/v1/agent/execute (Simplificado - Paso 4)
 # ==============================================================================
 
 def test_contract_api_execute_request_response():
     """
-    Test: Contrato de API es estable (OpenAPI spec)
+    Test: Contrato de API simplificado es estable (OpenAPI spec)
+
+    NOTA: El Paso 4 simplificó el API de ejecución de agentes.
+    El nuevo formato usa: agent, prompt, context, callback_url (opcional).
 
     Si este test falla:
     - Se cambió la estructura de request/response de API
     - Clientes externos se romperán
     - ACCIÓN: Versionar API (v2), mantener v1 compatible
     """
-    from src.api.models import ExecuteAgentRequest, AgentConfigRequest
+    from src.api.models import ExecuteAgentRequest, AgentContext
     from pydantic import BaseModel
 
-    # Verificar ExecuteAgentRequest
+    # Verificar ExecuteAgentRequest (formato simplificado)
     assert issubclass(ExecuteAgentRequest, BaseModel)
     request_fields = ExecuteAgentRequest.model_fields
 
-    # Campos obligatorios del request
-    assert 'expediente_id' in request_fields
-    assert 'tarea_id' in request_fields
-    assert 'agent_config' in request_fields
-    assert 'webhook_url' in request_fields
+    # Campos obligatorios del request simplificado
+    assert 'agent' in request_fields, "Campo 'agent' requerido"
+    assert 'prompt' in request_fields, "Campo 'prompt' requerido"
+    assert 'context' in request_fields, "Campo 'context' requerido"
 
-    # Verificar AgentConfigRequest
-    assert issubclass(AgentConfigRequest, BaseModel)
-    config_fields = AgentConfigRequest.model_fields
+    # Campo opcional
+    assert 'callback_url' in request_fields, "Campo 'callback_url' (opcional) requerido"
 
-    # Campos obligatorios de la configuración
-    assert 'nombre' in config_fields
-    assert 'system_prompt' in config_fields
-    assert 'modelo' in config_fields
+    # Verificar AgentContext
+    assert issubclass(AgentContext, BaseModel)
+    context_fields = AgentContext.model_fields
+
+    # Campos obligatorios del contexto
+    assert 'expediente_id' in context_fields
+    assert 'tarea_id' in context_fields
 
     # Verificar que models son serializables
-    sample_config = AgentConfigRequest(
-        nombre="TestAgent",
-        system_prompt="Test prompt",
-        modelo="test-model",
-        prompt_tarea="Task prompt",
-        herramientas=["tool1"]
+    sample_context = AgentContext(
+        expediente_id="EXP-TEST-001",
+        tarea_id="TAREA-001"
     )
     sample_request = ExecuteAgentRequest(
-        expediente_id="EXP-TEST-001",
-        tarea_id="TAREA-001",
-        agent_config=sample_config,
-        webhook_url="https://example.com/webhook"
+        agent="ValidadorDocumental",
+        prompt="Valida los documentos del expediente",
+        context=sample_context,
+        callback_url="https://example.com/webhook"
     )
 
     # Serialización a JSON
     request_dict = sample_request.model_dump()
     assert isinstance(request_dict, dict)
-    assert request_dict['expediente_id'] == "EXP-TEST-001"
+    assert request_dict['agent'] == "ValidadorDocumental"
+    assert request_dict['prompt'] == "Valida los documentos del expediente"
+    assert request_dict['context']['expediente_id'] == "EXP-TEST-001"
 
 
 # ==============================================================================
@@ -493,18 +499,20 @@ def test_contract_pydantic_models_json_serializable():
     claims_parsed = json.loads(claims_json)
     assert claims_parsed['exp_id'] == "EXP-001"
 
-    # API Models
-    from src.api.models import AgentConfigRequest
-    config = AgentConfigRequest(
-        nombre="Test",
-        system_prompt="Test",
-        modelo="test",
-        prompt_tarea="Test",
-        herramientas=["tool1"]
+    # API Models (formato simplificado)
+    from src.api.models import ExecuteAgentRequest, AgentContext
+    context = AgentContext(
+        expediente_id="EXP-001",
+        tarea_id="TAREA-001"
     )
-    config_json = config.model_dump_json()
-    config_parsed = json.loads(config_json)
-    assert config_parsed['nombre'] == "Test"
+    request = ExecuteAgentRequest(
+        agent="ValidadorDocumental",
+        prompt="Test prompt",
+        context=context
+    )
+    request_json = request.model_dump_json()
+    request_parsed = json.loads(request_json)
+    assert request_parsed['agent'] == "ValidadorDocumental"
 
     # WebhookPayload
     from src.api.models import WebhookPayload
@@ -520,12 +528,12 @@ def test_contract_pydantic_models_json_serializable():
 
 
 # ==============================================================================
-# CONTRACT-12: Backward Compatibility
+# CONTRACT-12: Backward Compatibility (Formato Simplificado)
 # ==============================================================================
 
 def test_contract_backward_compatibility_optional_fields():
     """
-    Test: Campos nuevos son opcionales, modelos aceptan requests antiguos
+    Test: Campos opcionales funcionan correctamente
 
     Si este test falla:
     - Se agregó un campo obligatorio nuevo
@@ -533,7 +541,6 @@ def test_contract_backward_compatibility_optional_fields():
     - ACCIÓN: Hacer campo opcional con valor por defecto
     """
     # Test: AgentExecutionResult puede crearse solo con campos mínimos
-    # (simula cliente antiguo que no conoce campos nuevos)
     minimal_result = AgentExecutionResult(
         success=True,
         agent_run_id="RUN-001",
@@ -543,26 +550,32 @@ def test_contract_backward_compatibility_optional_fields():
     )
     assert minimal_result.success is True
 
-    # Test: API request puede omitir campos opcionales futuros
-    from src.api.models import AgentConfigRequest, ExecuteAgentRequest
+    # Test: API request con callback_url opcional
+    from src.api.models import ExecuteAgentRequest, AgentContext
 
-    minimal_config = AgentConfigRequest(
-        nombre="Test",
-        system_prompt="Test",
-        modelo="test",
-        prompt_tarea="Test",
-        herramientas=[]
-    )
-
-    minimal_request = ExecuteAgentRequest(
+    context = AgentContext(
         expediente_id="EXP-001",
-        tarea_id="TAREA-001",
-        agent_config=minimal_config,
-        webhook_url="https://example.com/webhook"
+        tarea_id="TAREA-001"
     )
 
-    # Si llegamos aquí, backward compatibility está OK
-    assert minimal_request.expediente_id == "EXP-001"
+    # Sin callback_url (es opcional)
+    minimal_request = ExecuteAgentRequest(
+        agent="ValidadorDocumental",
+        prompt="Test prompt",
+        context=context
+    )
+
+    assert minimal_request.agent == "ValidadorDocumental"
+    assert minimal_request.callback_url is None
+
+    # Con callback_url
+    full_request = ExecuteAgentRequest(
+        agent="ValidadorDocumental",
+        prompt="Test prompt",
+        context=context,
+        callback_url="https://example.com/webhook"
+    )
+    assert full_request.callback_url is not None
 
     # Test: WebhookPayload con campos mínimos
     from src.api.models import WebhookPayload
@@ -577,3 +590,74 @@ def test_contract_backward_compatibility_optional_fields():
     # Campos opcionales pueden ser None
     assert minimal_webhook.resultado is None
     assert minimal_webhook.error is None
+
+
+# ==============================================================================
+# CONTRACT-13: Agent Config Loader (Nuevo en Paso 4)
+# ==============================================================================
+
+def test_contract_agent_config_loader():
+    """
+    Test: AgentConfigLoader carga agentes correctamente
+
+    Este contrato asegura que la configuración de agentes
+    desde YAML funciona correctamente.
+    """
+    from src.backoffice.config import AgentConfigLoader, AgentDefinition
+
+    # Verificar métodos principales
+    assert hasattr(AgentConfigLoader, 'get')
+    assert hasattr(AgentConfigLoader, 'list_agents')
+    assert hasattr(AgentConfigLoader, 'list_agent_names')
+    assert hasattr(AgentConfigLoader, 'exists')
+
+    # Verificar estructura de AgentDefinition
+    from pydantic import BaseModel
+    assert issubclass(AgentDefinition, BaseModel)
+
+    fields = AgentDefinition.model_fields
+    required_fields = {'name', 'description', 'model', 'system_prompt', 'tools'}
+    for field in required_fields:
+        assert field in fields, f"Campo '{field}' falta en AgentDefinition"
+
+
+# ==============================================================================
+# CONTRACT-14: List Agents API (Nuevo en Paso 4)
+# ==============================================================================
+
+def test_contract_list_agents_response():
+    """
+    Test: Response de GET /api/v1/agent/agents es estable
+
+    Este contrato asegura que el endpoint de listado de agentes
+    retorna la estructura esperada.
+    """
+    from src.api.models import ListAgentsResponse, AgentInfo
+    from pydantic import BaseModel
+
+    # Verificar modelos
+    assert issubclass(ListAgentsResponse, BaseModel)
+    assert issubclass(AgentInfo, BaseModel)
+
+    # Verificar campos de AgentInfo
+    agent_fields = AgentInfo.model_fields
+    assert 'name' in agent_fields
+    assert 'description' in agent_fields
+    assert 'required_permissions' in agent_fields
+
+    # Verificar campos de ListAgentsResponse
+    response_fields = ListAgentsResponse.model_fields
+    assert 'agents' in response_fields
+
+    # Verificar serialización
+    sample_agent = AgentInfo(
+        name="TestAgent",
+        description="Test description",
+        required_permissions=["perm1", "perm2"]
+    )
+    sample_response = ListAgentsResponse(agents=[sample_agent])
+
+    response_dict = sample_response.model_dump()
+    assert isinstance(response_dict, dict)
+    assert len(response_dict['agents']) == 1
+    assert response_dict['agents'][0]['name'] == "TestAgent"
