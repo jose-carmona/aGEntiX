@@ -342,7 +342,7 @@ La forma más intuitiva de usar aGEntiX es mediante el dashboard web.
 
 ```bash
 # Terminal 1: Backend API (puerto 8080)
-python -m uvicorn src.api.main:app --reload --port 8080
+./run-api.sh
 
 # Terminal 2: Frontend Dashboard (puerto 5173)
 cd frontend && npm run dev

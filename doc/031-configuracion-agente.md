@@ -3,14 +3,19 @@
 ## Configuración General del Tipo de Agente
 
 - **Nombre**: Identificador del tipo de agente
-- **System prompt**: Instrucciones base del agente
 - **URL**: Endpoint del servicio del agente
+
+Cada agente consistirá en un conjunto de pasos para resolver el objetivo. En cada paso se establecerá:
+
+- **System prompt**: Instrucciones base para el modelo
 - **Modelo LLM**: Modelo de lenguaje a utilizar
-- **Herramientas disponibles**: Capacidades que puede usar el agente
+
+La configuración dependerá de si el agente está implementado en CrewAI o en LangChain.
 
 ## Configuración Específica para la acción GEX
 
 - **Prompt**: Instrucciones específicas para la acción
+- **Herramientas disponibles**: Capacidades que puede usar el agente
 
 ## Observaciones
 

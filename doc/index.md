@@ -54,12 +54,6 @@
 - [Aspectos ausentes en la documentación](problemas/108-aspectos-ausentes.md)
 - [Prioridades de mejora y roadmap](problemas/109-prioridades-mejora.md)
 
-## Prompts de Implementación
-
-- [Paso 1: Esqueleto Back-Office (Mock Funcional)](../prompts/step-1-backoffice-skeleton.md)
-- [Crítica del Paso 1: Problemas y Correcciones](../prompts/step-1-critique.md)
-- [Fix: Validación Temprana de JWT en Servidor MCP HTTP](../prompts/fix-mcp-http-jwt-validation.md)
-
 ## Meta
 
 - [Método de documentación utilizado](zettelkasten.md)
