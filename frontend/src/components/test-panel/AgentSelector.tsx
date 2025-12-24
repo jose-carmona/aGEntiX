@@ -27,12 +27,13 @@ export const AgentSelector: React.FC<AgentSelectorProps> = ({
   const loadAgents = async () => {
     try {
       setLoading(true);
+      setError(null);
       const availableAgents = await getAvailableAgents();
       setAgents(availableAgents);
 
       // Si no hay agente seleccionado, seleccionar el primero
       if (!selectedAgentId && availableAgents.length > 0) {
-        onAgentSelect(availableAgents[0].id);
+        onAgentSelect(availableAgents[0].name);
       }
     } catch (err) {
       console.error('Error loading agents:', err);
@@ -42,26 +43,18 @@ export const AgentSelector: React.FC<AgentSelectorProps> = ({
     }
   };
 
-  const selectedAgent = agents.find(a => a.id === selectedAgentId);
-
-  const getEstadoBadgeClass = (estado: AgentInfo['estado']) => {
-    const baseClasses = 'px-2 py-1 text-xs font-medium rounded';
-    switch (estado) {
-      case 'disponible':
-        return `${baseClasses} bg-green-100 text-green-800`;
-      case 'ocupado':
-        return `${baseClasses} bg-yellow-100 text-yellow-800`;
-      case 'inactivo':
-        return `${baseClasses} bg-gray-100 text-gray-800`;
-      default:
-        return `${baseClasses} bg-gray-100 text-gray-800`;
-    }
-  };
+  const selectedAgent = agents.find(a => a.name === selectedAgentId);
 
   if (loading) {
     return (
       <Card className="p-6">
-        <div className="text-center text-gray-600">Cargando agentes...</div>
+        <div className="flex items-center justify-center gap-3 text-gray-600">
+          <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+          </svg>
+          <span>Cargando agentes...</span>
+        </div>
       </Card>
     );
   }
@@ -69,7 +62,15 @@ export const AgentSelector: React.FC<AgentSelectorProps> = ({
   if (error) {
     return (
       <Card className="p-6">
-        <div className="text-center text-red-600">{error}</div>
+        <div className="text-center">
+          <div className="text-red-600 mb-2">{error}</div>
+          <button
+            onClick={loadAgents}
+            className="text-sm text-blue-600 hover:text-blue-800 underline"
+          >
+            Reintentar
+          </button>
+        </div>
       </Card>
     );
   }
@@ -81,7 +82,7 @@ export const AgentSelector: React.FC<AgentSelectorProps> = ({
           Seleccionar Agente
         </h3>
         <p className="text-sm text-gray-600">
-          Elige el agente que deseas probar en modo testing.
+          Elige el agente que deseas probar. La configuración se carga desde el servidor.
         </p>
       </div>
 
@@ -89,12 +90,12 @@ export const AgentSelector: React.FC<AgentSelectorProps> = ({
       <div className="space-y-3">
         {agents.map((agent) => (
           <button
-            key={agent.id}
-            onClick={() => !disabled && onAgentSelect(agent.id)}
+            key={agent.name}
+            onClick={() => !disabled && onAgentSelect(agent.name)}
             disabled={disabled}
             className={`
               w-full text-left p-4 rounded-lg border-2 transition-all
-              ${selectedAgentId === agent.id
+              ${selectedAgentId === agent.name
                 ? 'border-blue-500 bg-blue-50'
                 : 'border-gray-200 bg-white hover:border-blue-300'
               }
@@ -104,20 +105,26 @@ export const AgentSelector: React.FC<AgentSelectorProps> = ({
             <div className="flex items-start justify-between mb-2">
               <div className="flex-1">
                 <h4 className="font-semibold text-gray-900 mb-1">
-                  {agent.nombre}
+                  {agent.name}
                 </h4>
                 <p className="text-sm text-gray-600">
-                  {agent.descripcion}
+                  {agent.description}
                 </p>
               </div>
-              <span className={getEstadoBadgeClass(agent.estado)}>
-                {agent.estado}
+              <span className="px-2 py-1 text-xs font-medium rounded bg-green-100 text-green-800">
+                disponible
               </span>
             </div>
-            <div className="flex items-center gap-2 text-xs text-gray-500">
-              <span className="font-mono bg-gray-100 px-2 py-1 rounded">
-                {agent.tipo}
-              </span>
+            {/* Permisos requeridos */}
+            <div className="flex flex-wrap gap-1 mt-2">
+              {agent.required_permissions.map((perm) => (
+                <span
+                  key={perm}
+                  className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded"
+                >
+                  {perm}
+                </span>
+              ))}
             </div>
           </button>
         ))}
@@ -142,10 +149,10 @@ export const AgentSelector: React.FC<AgentSelectorProps> = ({
             </svg>
             <div className="flex-1">
               <p className="text-sm font-medium text-blue-900 mb-1">
-                Agente seleccionado: {selectedAgent.nombre}
+                Agente seleccionado: {selectedAgent.name}
               </p>
               <p className="text-xs text-blue-700">
-                Este agente será ejecutado con el expediente y permisos que configures a continuación.
+                Este agente requiere los permisos: {selectedAgent.required_permissions.join(', ')}
               </p>
             </div>
           </div>

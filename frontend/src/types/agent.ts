@@ -1,21 +1,22 @@
 // ============================================================================
-// Agent Configuration
+// Agent Configuration (Simplificado - Paso 4)
 // ============================================================================
 
-export interface AgentConfig {
-  nombre: string;
-  system_prompt: string;
-  modelo: string;
-  prompt_tarea: string;
-  herramientas: string[];
+/**
+ * Información de un agente disponible (desde GET /api/v1/agent/agents)
+ */
+export interface AgentInfo {
+  name: string;
+  description: string;
+  required_permissions: string[];
 }
 
-export interface AgentInfo {
-  id: string;
-  nombre: string;
-  descripcion: string;
-  estado: 'disponible' | 'ocupado' | 'inactivo';
-  tipo: 'ValidadorDocumental' | 'AnalizadorSubvencion' | 'GeneradorInforme';
+/**
+ * Contexto de ejecución del agente
+ */
+export interface AgentContext {
+  expediente_id: string;
+  tarea_id: string;
 }
 
 // ============================================================================
@@ -53,15 +54,28 @@ export interface GenerateJWTResponse {
 }
 
 // ============================================================================
-// Agent Execution
+// Agent Execution (Simplificado - Paso 4)
 // ============================================================================
 
+/**
+ * Request simplificado para ejecutar un agente
+ * La configuración del agente (model, system_prompt, tools) se carga desde agents.yaml
+ */
 export interface ExecuteAgentRequest {
-  expediente_id: string;
-  tarea_id: string;
-  agent_config: AgentConfig;
-  webhook_url: string;
-  timeout_seconds: number;
+  agent: string;           // Nombre del agente (ej: "ValidadorDocumental")
+  prompt: string;          // Instrucciones específicas para esta ejecución
+  context: AgentContext;   // Contexto con expediente_id y tarea_id
+  callback_url?: string;   // URL de callback opcional
+}
+
+/**
+ * Respuesta del endpoint execute
+ */
+export interface ExecuteAgentResponse {
+  agent_run_id: string;
+  status: string;
+  message: string;
+  callback_url: string | null;
 }
 
 export interface AgentExecution {

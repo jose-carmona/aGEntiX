@@ -1,4 +1,5 @@
 // pages/TestPanel.tsx
+// Paso 4: Panel de pruebas con API simplificada
 
 import React, { useState, useEffect } from 'react';
 import { AgentSelector } from '../components/test-panel/AgentSelector';
@@ -7,7 +8,7 @@ import { ResultsViewer } from '../components/test-panel/ResultsViewer';
 import { ExecutionHistory } from '../components/test-panel/ExecutionHistory';
 import { ErrorBoundary } from '../components/ErrorBoundary';
 import { useAgentExecution } from '../hooks/useAgentExecution';
-import type { JWTClaims, ExecutionHistoryItem, AgentConfig } from '../types/agent';
+import type { JWTClaims, ExecutionHistoryItem, ExecuteAgentRequest } from '../types/agent';
 
 const STORAGE_KEY_PREFIX = 'agentix_test_panel_';
 const MAX_HISTORY_ITEMS = 10;
@@ -83,20 +84,15 @@ export const TestPanel: React.FC = () => {
     });
   };
 
+  /**
+   * Handler de ejecución con API simplificada (Paso 4)
+   */
   const handleExecute = async (
     jwtToken: string,
     _jwtClaims: JWTClaims,
-    expedienteId: string,
-    tareaId: string,
-    agentConfig: AgentConfig
+    request: ExecuteAgentRequest
   ) => {
-    await execute({
-      expediente_id: expedienteId,
-      tarea_id: tareaId,
-      agent_config: agentConfig,
-      webhook_url: '', // Opcional en testing
-      timeout_seconds: 300 // 5 minutos
-    }, jwtToken);
+    await execute(request, jwtToken);
   };
 
   const handleReset = () => {
@@ -115,7 +111,7 @@ export const TestPanel: React.FC = () => {
           Panel de Pruebas de Agentes
         </h1>
         <p className="text-gray-600">
-          Ejecuta agentes en modo testing con tokens JWT generados dinámicamente.
+          Ejecuta agentes con la API simplificada. Solo necesitas: agente, prompt y contexto.
         </p>
       </div>
 
@@ -203,17 +199,12 @@ export const TestPanel: React.FC = () => {
           </svg>
           <div className="flex-1">
             <p className="text-sm font-medium text-blue-900 mb-2">
-              Flujo de trabajo para testing de agentes:
+              API Simplificada (Paso 4):
             </p>
-            <ol className="text-sm text-blue-800 space-y-1 list-decimal list-inside">
-              <li>Selecciona el agente que deseas probar</li>
-              <li>Configura el ID de expediente y datos de la tarea BPMN</li>
-              <li>Selecciona los permisos que deseas incluir en el token JWT</li>
-              <li>Opcionalmente, añade contexto adicional para el agente</li>
-              <li>Haz clic en "Ejecutar Agente" (el token JWT se genera automáticamente)</li>
-              <li>Observa los resultados en tiempo real en el panel lateral</li>
-              <li>Revisa el historial de ejecuciones previas</li>
-            </ol>
+            <div className="text-sm text-blue-800 space-y-1">
+              <p><strong>Request:</strong> <code className="bg-blue-100 px-1 rounded">agent</code>, <code className="bg-blue-100 px-1 rounded">prompt</code>, <code className="bg-blue-100 px-1 rounded">context</code></p>
+              <p>La configuración del agente (modelo, system_prompt, tools) se carga automáticamente desde <code className="bg-blue-100 px-1 rounded">agents.yaml</code></p>
+            </div>
           </div>
         </div>
       </div>

@@ -1,8 +1,9 @@
 // components/test-panel/IntegratedExecutionForm.tsx
+// Paso 4: Formulario simplificado para ejecución de agentes
 
 import React, { useState, useEffect } from 'react';
-import { getAvailablePermissions, generateJWT, getAgentConfig } from '../../services/agentService';
-import type { Permission, GenerateJWTRequest, JWTClaims, AgentConfig } from '../../types/agent';
+import { getAvailablePermissions, generateJWT } from '../../services/agentService';
+import type { Permission, GenerateJWTRequest, JWTClaims, ExecuteAgentRequest } from '../../types/agent';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
@@ -10,9 +11,9 @@ import { Input } from '../ui/Input';
 interface IntegratedExecutionFormProps {
   selectedAgentId: string | null;
   isExecuting: boolean;
-  executionError: string | null; // Error del hook de ejecución
-  onExecute: (jwtToken: string, jwtClaims: JWTClaims, expedienteId: string, tareaId: string, agentConfig: AgentConfig) => Promise<void>;
-  onResetError?: () => void; // Callback para resetear errores de ejecución
+  executionError: string | null;
+  onExecute: (jwtToken: string, jwtClaims: JWTClaims, request: ExecuteAgentRequest) => Promise<void>;
+  onResetError?: () => void;
 }
 
 export const IntegratedExecutionForm: React.FC<IntegratedExecutionFormProps> = ({
@@ -27,18 +28,24 @@ export const IntegratedExecutionForm: React.FC<IntegratedExecutionFormProps> = (
   const [expTipo, setExpTipo] = useState('SUBVENCIONES');
   const [tareaId, setTareaId] = useState('TAREA-TEST-001');
   const [tareaNombre, setTareaNombre] = useState('VALIDAR_DOCUMENTACION');
+  const [prompt, setPrompt] = useState('');
   const [permisos, setPermisos] = useState<string[]>(['consulta']);
   const [expHours, setExpHours] = useState(1);
-  const [contextoAdicional, setContextoAdicional] = useState('');
 
   // Estados de validación y UI
   const [availablePermissions, setAvailablePermissions] = useState<Permission[]>([]);
   const [loadingPermissions, setLoadingPermissions] = useState(true);
   const [expedienteError, setExpedienteError] = useState<string | null>(null);
-  const [contextoError, setContextoError] = useState<string | null>(null);
   const [isGeneratingToken, setIsGeneratingToken] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
-  const [errorType, setErrorType] = useState<'validation' | 'jwt' | 'config' | 'execution' | null>(null);
+  const [errorType, setErrorType] = useState<'validation' | 'jwt' | 'execution' | null>(null);
+
+  // Prompts predeterminados por agente
+  const defaultPrompts: Record<string, string> = {
+    'ValidadorDocumental': 'Valida los documentos del expediente y verifica que toda la documentación esté completa',
+    'AnalizadorSubvencion': 'Analiza la solicitud de subvención y verifica el cumplimiento de requisitos',
+    'GeneradorInforme': 'Genera un informe técnico resumiendo el estado del expediente'
+  };
 
   // Cargar configuración guardada y permisos disponibles
   useEffect(() => {
@@ -46,10 +53,17 @@ export const IntegratedExecutionForm: React.FC<IntegratedExecutionFormProps> = (
     loadPermissions();
   }, []);
 
+  // Actualizar prompt predeterminado cuando cambia el agente
+  useEffect(() => {
+    if (selectedAgentId && defaultPrompts[selectedAgentId]) {
+      setPrompt(defaultPrompts[selectedAgentId]);
+    }
+  }, [selectedAgentId]);
+
   // Guardar configuración cuando cambia
   useEffect(() => {
     saveConfiguration();
-  }, [expedienteId, expTipo, tareaId, tareaNombre, permisos, expHours, contextoAdicional]);
+  }, [expedienteId, expTipo, tareaId, tareaNombre, permisos, expHours]);
 
   // Resetear errores cuando el usuario cambia configuraciones
   useEffect(() => {
@@ -64,7 +78,7 @@ export const IntegratedExecutionForm: React.FC<IntegratedExecutionFormProps> = (
 
   const loadSavedConfiguration = () => {
     try {
-      const saved = localStorage.getItem('agentix_test_panel_config');
+      const saved = localStorage.getItem('agentix_test_panel_config_v2');
       if (saved) {
         const config = JSON.parse(saved);
         setExpedienteId(config.expedienteId || 'EXP-2024-001');
@@ -73,7 +87,6 @@ export const IntegratedExecutionForm: React.FC<IntegratedExecutionFormProps> = (
         setTareaNombre(config.tareaNombre || 'VALIDAR_DOCUMENTACION');
         setPermisos(config.permisos || ['consulta']);
         setExpHours(config.expHours || 1);
-        setContextoAdicional(config.contextoAdicional || '');
       }
     } catch (err) {
       console.error('Error loading saved configuration:', err);
@@ -88,10 +101,9 @@ export const IntegratedExecutionForm: React.FC<IntegratedExecutionFormProps> = (
         tareaId,
         tareaNombre,
         permisos,
-        expHours,
-        contextoAdicional
+        expHours
       };
-      localStorage.setItem('agentix_test_panel_config', JSON.stringify(config));
+      localStorage.setItem('agentix_test_panel_config_v2', JSON.stringify(config));
     } catch (err) {
       console.error('Error saving configuration:', err);
     }
@@ -123,32 +135,10 @@ export const IntegratedExecutionForm: React.FC<IntegratedExecutionFormProps> = (
     return true;
   };
 
-  const validateContexto = (value: string): boolean => {
-    if (!value) {
-      setContextoError(null);
-      return true;
-    }
-
-    try {
-      JSON.parse(value);
-      setContextoError(null);
-      return true;
-    } catch (err) {
-      setContextoError('JSON inválido');
-      return false;
-    }
-  };
-
   const handleExpedienteIdChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setExpedienteId(value);
     validateExpedienteId(value);
-  };
-
-  const handleContextoChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const value = e.target.value;
-    setContextoAdicional(value);
-    validateContexto(value);
   };
 
   const handlePermisoToggle = (permisoId: string) => {
@@ -159,12 +149,8 @@ export const IntegratedExecutionForm: React.FC<IntegratedExecutionFormProps> = (
     }
   };
 
-  /**
-   * Parsea errores de validación de FastAPI/Pydantic (422)
-   */
   const parseValidationError = (detail: any): string => {
     try {
-      // Si detail es un array (errores de validación Pydantic)
       if (Array.isArray(detail)) {
         const errors = detail.map((err: any) => {
           const field = err.loc ? err.loc.join('.') : 'campo';
@@ -173,17 +159,12 @@ export const IntegratedExecutionForm: React.FC<IntegratedExecutionFormProps> = (
         });
         return errors.join('; ');
       }
-
-      // Si detail es un string
       if (typeof detail === 'string') {
         return detail;
       }
-
-      // Si detail es un objeto con mensaje
       if (detail?.message) {
         return detail.message;
       }
-
       return JSON.stringify(detail);
     } catch {
       return 'Error de validación desconocido';
@@ -200,9 +181,8 @@ export const IntegratedExecutionForm: React.FC<IntegratedExecutionFormProps> = (
 
     // Validar formulario
     const isExpedienteValid = validateExpedienteId(expedienteId);
-    const isContextoValid = validateContexto(contextoAdicional);
 
-    if (!isExpedienteValid || !isContextoValid) {
+    if (!isExpedienteValid) {
       setLocalError('Por favor, corrige los errores de validación antes de continuar');
       setErrorType('validation');
       return;
@@ -210,6 +190,12 @@ export const IntegratedExecutionForm: React.FC<IntegratedExecutionFormProps> = (
 
     if (!selectedAgentId) {
       setLocalError('Debes seleccionar un agente primero');
+      setErrorType('validation');
+      return;
+    }
+
+    if (!prompt.trim()) {
+      setLocalError('El prompt es requerido');
       setErrorType('validation');
       return;
     }
@@ -229,16 +215,22 @@ export const IntegratedExecutionForm: React.FC<IntegratedExecutionFormProps> = (
 
       const jwtResponse = await generateJWT(jwtRequest);
 
-      // 2. Obtener configuración del agente
-      const agentConfig = await getAgentConfig(selectedAgentId);
+      // 2. Construir request simplificado (Paso 4)
+      const executeRequest: ExecuteAgentRequest = {
+        agent: selectedAgentId,
+        prompt: prompt,
+        context: {
+          expediente_id: expedienteId,
+          tarea_id: tareaId
+        }
+        // callback_url omitido para testing
+      };
 
       // 3. Ejecutar agente
       await onExecute(
         jwtResponse.token,
         jwtResponse.claims,
-        expedienteId,
-        tareaId,
-        agentConfig
+        executeRequest
       );
 
       // Si llegamos aquí sin errores, limpiamos cualquier error previo
@@ -249,26 +241,20 @@ export const IntegratedExecutionForm: React.FC<IntegratedExecutionFormProps> = (
       console.error('Error during execution:', err);
 
       let errorMessage = 'Error desconocido';
-      let type: 'jwt' | 'config' | 'execution' | 'validation' = 'execution';
+      let type: 'jwt' | 'execution' | 'validation' = 'execution';
 
       try {
-        // Determinar el tipo de error basado en el código HTTP
         if (err.response?.status === 401) {
           errorMessage = 'No autorizado. Por favor, inicia sesión nuevamente.';
           type = 'jwt';
         } else if (err.response?.status === 422) {
-          // Error de validación de FastAPI/Pydantic
           errorMessage = parseValidationError(err.response.data?.detail);
           type = 'validation';
         } else if (err.response?.status === 400) {
           const detail = err.response.data?.detail;
           errorMessage = typeof detail === 'string' ? detail : parseValidationError(detail);
-
-          // Determinar subtipo basado en el mensaje
           if (errorMessage.toLowerCase().includes('jwt') || errorMessage.toLowerCase().includes('token')) {
             type = 'jwt';
-          } else if (errorMessage.toLowerCase().includes('agente') || errorMessage.toLowerCase().includes('config')) {
-            type = 'config';
           }
         } else if (err.response?.data?.detail) {
           errorMessage = typeof err.response.data.detail === 'string'
@@ -292,8 +278,8 @@ export const IntegratedExecutionForm: React.FC<IntegratedExecutionFormProps> = (
   const canExecute =
     selectedAgentId &&
     expedienteId &&
+    prompt.trim() &&
     !expedienteError &&
-    !contextoError &&
     !isExecuting &&
     !isGeneratingToken;
 
@@ -304,12 +290,12 @@ export const IntegratedExecutionForm: React.FC<IntegratedExecutionFormProps> = (
           Configuración de Ejecución
         </h3>
         <p className="text-sm text-gray-600">
-          Configura los parámetros necesarios para ejecutar el agente. El token JWT se generará automáticamente.
+          Configura los parámetros del expediente y el prompt. El token JWT se genera automáticamente.
         </p>
       </div>
 
-      {/* Mostrar errores locales (JWT, Config, Validación) */}
-      {localError && (
+      {/* Mostrar errores */}
+      {(localError || executionError) && (
         <div className="mb-4 bg-red-50 border border-red-200 rounded-lg p-4">
           <div className="flex items-start gap-3">
             <svg className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -319,38 +305,12 @@ export const IntegratedExecutionForm: React.FC<IntegratedExecutionFormProps> = (
               <div className="flex items-center gap-2 mb-1">
                 <p className="text-sm font-semibold text-red-900">
                   {errorType === 'validation' && 'Error de Validación'}
-                  {errorType === 'jwt' && 'Error de Autenticación (JWT)'}
-                  {errorType === 'config' && 'Error de Configuración'}
+                  {errorType === 'jwt' && 'Error de Autenticación'}
+                  {errorType === 'execution' && 'Error de Ejecución'}
                   {!errorType && 'Error'}
                 </p>
-                <span className="text-xs px-2 py-0.5 rounded bg-red-100 text-red-800 font-medium">
-                  {errorType === 'validation' && 'VALIDACIÓN'}
-                  {errorType === 'jwt' && 'JWT'}
-                  {errorType === 'config' && 'CONFIG'}
-                  {!errorType && 'DESCONOCIDO'}
-                </span>
               </div>
-              <p className="text-sm text-red-700">{localError}</p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Mostrar errores de ejecución del agente (desde el hook) */}
-      {executionError && !localError && (
-        <div className="mb-4 bg-red-50 border border-red-200 rounded-lg p-4">
-          <div className="flex items-start gap-3">
-            <svg className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <div className="flex-1">
-              <div className="flex items-center gap-2 mb-1">
-                <p className="text-sm font-semibold text-red-900">Error de Ejecución</p>
-                <span className="text-xs px-2 py-0.5 rounded bg-red-100 text-red-800 font-medium">
-                  EJECUCIÓN
-                </span>
-              </div>
-              <p className="text-sm text-red-700">{executionError}</p>
+              <p className="text-sm text-red-700">{localError || executionError}</p>
             </div>
           </div>
         </div>
@@ -363,7 +323,7 @@ export const IntegratedExecutionForm: React.FC<IntegratedExecutionFormProps> = (
             1. Datos del Expediente
           </h4>
 
-          <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
             {/* Expediente ID */}
             <div>
               <label htmlFor="expediente-id" className="block text-sm font-medium text-gray-700 mb-2">
@@ -381,9 +341,6 @@ export const IntegratedExecutionForm: React.FC<IntegratedExecutionFormProps> = (
               {expedienteError && (
                 <p className="mt-1 text-sm text-red-600">{expedienteError}</p>
               )}
-              <p className="mt-1 text-xs text-gray-500">
-                Formato: EXP-YYYY-NNN (ejemplo: EXP-2024-001)
-              </p>
             </div>
 
             {/* Tipo de Expediente */}
@@ -399,21 +356,17 @@ export const IntegratedExecutionForm: React.FC<IntegratedExecutionFormProps> = (
                 placeholder="SUBVENCIONES"
                 disabled={isExecuting || isGeneratingToken}
               />
-              <p className="mt-1 text-xs text-gray-500">
-                Tipo de expediente (ej: SUBVENCIONES, LICENCIAS, etc.)
-              </p>
             </div>
           </div>
         </div>
 
-        {/* Sección: Datos de la Tarea BPMN */}
+        {/* Sección: Datos de la Tarea */}
         <div>
           <h4 className="text-sm font-semibold text-gray-700 mb-3 pb-2 border-b">
             2. Datos de la Tarea BPMN
           </h4>
 
-          <div className="space-y-4">
-            {/* Tarea ID */}
+          <div className="grid grid-cols-2 gap-4">
             <div>
               <label htmlFor="tarea-id" className="block text-sm font-medium text-gray-700 mb-2">
                 ID de Tarea
@@ -426,12 +379,8 @@ export const IntegratedExecutionForm: React.FC<IntegratedExecutionFormProps> = (
                 placeholder="TAREA-TEST-001"
                 disabled={isExecuting || isGeneratingToken}
               />
-              <p className="mt-1 text-xs text-gray-500">
-                Identificador de la tarea BPMN
-              </p>
             </div>
 
-            {/* Tarea Nombre */}
             <div>
               <label htmlFor="tarea-nombre" className="block text-sm font-medium text-gray-700 mb-2">
                 Nombre de Tarea
@@ -444,28 +393,50 @@ export const IntegratedExecutionForm: React.FC<IntegratedExecutionFormProps> = (
                 placeholder="VALIDAR_DOCUMENTACION"
                 disabled={isExecuting || isGeneratingToken}
               />
-              <p className="mt-1 text-xs text-gray-500">
-                Nombre descriptivo de la tarea (ej: VALIDAR_DOCUMENTACION)
-              </p>
             </div>
+          </div>
+        </div>
+
+        {/* Sección: Prompt del Agente */}
+        <div>
+          <h4 className="text-sm font-semibold text-gray-700 mb-3 pb-2 border-b">
+            3. Instrucciones para el Agente *
+          </h4>
+
+          <div>
+            <label htmlFor="prompt" className="block text-sm font-medium text-gray-700 mb-2">
+              Prompt
+            </label>
+            <textarea
+              id="prompt"
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+              placeholder="Escribe las instrucciones específicas para el agente..."
+              disabled={isExecuting || isGeneratingToken}
+              rows={3}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-500"
+            />
+            <p className="mt-1 text-xs text-gray-500">
+              Estas instrucciones se combinarán con el system_prompt del agente
+            </p>
           </div>
         </div>
 
         {/* Sección: Permisos JWT */}
         <div>
           <h4 className="text-sm font-semibold text-gray-700 mb-3 pb-2 border-b">
-            3. Permisos del Token JWT
+            4. Permisos del Token JWT
           </h4>
 
           {loadingPermissions ? (
             <div className="text-sm text-gray-600">Cargando permisos...</div>
           ) : (
-            <div className="space-y-2">
+            <div className="grid grid-cols-2 gap-2">
               {availablePermissions.map((permiso) => (
                 <label
                   key={permiso.id}
                   className={`
-                    flex items-start p-3 rounded-lg border cursor-pointer transition-colors
+                    flex items-center p-2 rounded-lg border cursor-pointer transition-colors
                     ${permisos.includes(permiso.id)
                       ? 'border-blue-300 bg-blue-50'
                       : 'border-gray-200 hover:border-gray-300'
@@ -478,45 +449,34 @@ export const IntegratedExecutionForm: React.FC<IntegratedExecutionFormProps> = (
                     checked={permisos.includes(permiso.id)}
                     onChange={() => handlePermisoToggle(permiso.id)}
                     disabled={isExecuting || isGeneratingToken}
-                    className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                   />
-                  <div className="ml-3 flex-1">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium text-gray-900">
-                        {permiso.nombre}
-                      </span>
-                      <span className={`
-                        text-xs px-2 py-0.5 rounded
-                        ${permiso.category === 'lectura' ? 'bg-green-100 text-green-800' : ''}
-                        ${permiso.category === 'escritura' ? 'bg-yellow-100 text-yellow-800' : ''}
-                        ${permiso.category === 'admin' ? 'bg-red-100 text-red-800' : ''}
-                      `}>
-                        {permiso.category}
-                      </span>
-                    </div>
-                    <p className="text-xs text-gray-600 mt-1">
-                      {permiso.descripcion}
-                    </p>
+                  <div className="ml-2">
+                    <span className="text-sm font-medium text-gray-900">
+                      {permiso.nombre}
+                    </span>
+                    <span className={`
+                      ml-2 text-xs px-1.5 py-0.5 rounded
+                      ${permiso.category === 'lectura' ? 'bg-green-100 text-green-800' : ''}
+                      ${permiso.category === 'escritura' ? 'bg-yellow-100 text-yellow-800' : ''}
+                      ${permiso.category === 'admin' ? 'bg-red-100 text-red-800' : ''}
+                    `}>
+                      {permiso.category}
+                    </span>
                   </div>
                 </label>
               ))}
             </div>
           )}
-          <p className="mt-2 text-xs text-gray-500">
-            {permisos.length === 0
-              ? 'Si no seleccionas ninguno, se usará "consulta" por defecto'
-              : `${permisos.length} permiso(s) seleccionado(s)`
-            }
-          </p>
         </div>
 
         {/* Sección: Configuración del Token */}
         <div>
           <h4 className="text-sm font-semibold text-gray-700 mb-3 pb-2 border-b">
-            4. Configuración del Token
+            5. Configuración del Token
           </h4>
 
-          <div>
+          <div className="w-1/2">
             <label htmlFor="exp-hours" className="block text-sm font-medium text-gray-700 mb-2">
               Horas hasta expiración
             </label>
@@ -529,42 +489,6 @@ export const IntegratedExecutionForm: React.FC<IntegratedExecutionFormProps> = (
               onChange={(e) => setExpHours(parseInt(e.target.value) || 1)}
               disabled={isExecuting || isGeneratingToken}
             />
-            <p className="mt-1 text-xs text-gray-500">
-              El token JWT expirará después de {expHours} hora(s)
-            </p>
-          </div>
-        </div>
-
-        {/* Sección: Contexto del Agente */}
-        <div>
-          <h4 className="text-sm font-semibold text-gray-700 mb-3 pb-2 border-b">
-            5. Contexto Adicional para el Agente (Opcional)
-          </h4>
-
-          <div>
-            <label htmlFor="contexto" className="block text-sm font-medium text-gray-700 mb-2">
-              Contexto Adicional (JSON)
-            </label>
-            <textarea
-              id="contexto"
-              value={contextoAdicional}
-              onChange={handleContextoChange}
-              placeholder='{"clave": "valor"}'
-              disabled={isExecuting || isGeneratingToken}
-              rows={4}
-              className={`
-                w-full px-3 py-2 border rounded-md font-mono text-sm
-                focus:ring-2 focus:ring-blue-500 focus:border-blue-500
-                disabled:bg-gray-50 disabled:text-gray-500
-                ${contextoError ? 'border-red-300' : 'border-gray-300'}
-              `}
-            />
-            {contextoError && (
-              <p className="mt-1 text-sm text-red-600">{contextoError}</p>
-            )}
-            <p className="mt-1 text-xs text-gray-500">
-              JSON válido con información de contexto adicional para el agente
-            </p>
           </div>
         </div>
 
@@ -577,40 +501,16 @@ export const IntegratedExecutionForm: React.FC<IntegratedExecutionFormProps> = (
           {isGeneratingToken ? (
             <span className="flex items-center justify-center gap-2">
               <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                <circle
-                  className="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                  fill="none"
-                />
-                <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                />
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
               </svg>
               Generando token JWT...
             </span>
           ) : isExecuting ? (
             <span className="flex items-center justify-center gap-2">
               <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                <circle
-                  className="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                  fill="none"
-                />
-                <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                />
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
               </svg>
               Ejecutando agente...
             </span>
@@ -619,19 +519,12 @@ export const IntegratedExecutionForm: React.FC<IntegratedExecutionFormProps> = (
           )}
         </Button>
 
-        {/* Información de ayuda */}
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <div className="flex items-start gap-3">
-            <svg className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <div className="flex-1">
-              <p className="text-xs text-blue-800">
-                Al hacer clic en "Ejecutar Agente", se generará automáticamente un token JWT con los datos configurados
-                y se ejecutará el agente seleccionado.
-              </p>
-            </div>
-          </div>
+        {/* Info de ayuda */}
+        <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
+          <p className="text-xs text-gray-600">
+            <strong>API Simplificada (Paso 4):</strong> Solo se envía el nombre del agente, prompt y contexto.
+            La configuración del agente (modelo, system_prompt, tools) se carga automáticamente desde el servidor.
+          </p>
         </div>
       </div>
     </Card>

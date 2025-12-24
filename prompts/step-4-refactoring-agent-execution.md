@@ -281,24 +281,29 @@ Permite al BPMN descubrir qué agentes están disponibles:
 
 ## Plan de Implementación
 
-### Fase 1: Preparación
+### Fase 1: Preparación ✅
 
-- [ ] Crear fichero `agents.yaml` con configuración de agentes
-- [ ] Implementar `AgentConfigLoader` para leer el YAML
-- [ ] Añadir tests unitarios para el loader
+- [x] Crear fichero `agents.yaml` con configuración de agentes
+- [x] Implementar `AgentConfigLoader` para leer el YAML
+- [x] Añadir tests unitarios para el loader (18 tests)
 
-### Fase 2: Modificar API
+### Fase 2: Modificar API ✅
 
-- [ ] Modificar modelos Pydantic (`ExecuteAgentRequest`, `AgentContext`)
-- [ ] Actualizar endpoint `POST /api/v1/agent/execute`
-- [ ] Implementar endpoint `GET /api/v1/agent/agents`
-- [ ] Añadir tests de integración
+- [x] Modificar modelos Pydantic (`ExecuteAgentRequest`, `AgentContext`)
+- [x] Actualizar endpoint `POST /api/v1/agent/execute`
+- [x] Implementar endpoint `GET /api/v1/agent/agents`
+- [x] Añadir tests de integración
 
-### Fase 3: Integración
+### Fase 3: Integración ✅
 
-- [ ] Modificar `AgentExecutor` para usar la nueva configuración
-- [ ] Actualizar el Panel de Pruebas del frontend
-- [ ] Actualizar documentación
+- [x] `AgentExecutor` ya funciona correctamente (no necesita modificación)
+- [x] Actualizar Panel de Pruebas del frontend
+  - Tipos TypeScript actualizados
+  - `agentService.ts` usando API real `/api/v1/agent/agents`
+  - `AgentSelector` muestra agentes desde backend
+  - `IntegratedExecutionForm` simplificado (solo prompt, sin agent_config)
+  - `TestPanel` con nueva interfaz simplificada
+- [x] Actualizar documentación
 
 ### Fase 4: Validación
 

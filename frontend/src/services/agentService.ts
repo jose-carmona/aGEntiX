@@ -5,6 +5,7 @@ import type {
   GenerateJWTRequest,
   GenerateJWTResponse,
   ExecuteAgentRequest,
+  ExecuteAgentResponse,
   AgentExecution,
   AgentInfo,
   Permission,
@@ -25,18 +26,23 @@ export const generateJWT = async (request: GenerateJWTRequest): Promise<Generate
 };
 
 // ============================================================================
-// Agent Execution
+// Agent Execution (Simplificado - Paso 4)
 // ============================================================================
 
 /**
  * Ejecuta un agente con el JWT proporcionado
- * El JWT debe incluirse en el header Authorization
+ *
+ * Request simplificado:
+ * - agent: Nombre del agente (ej: "ValidadorDocumental")
+ * - prompt: Instrucciones específicas
+ * - context: { expediente_id, tarea_id }
+ * - callback_url: URL de callback (opcional)
  */
 export const executeAgent = async (
   request: ExecuteAgentRequest,
   jwt: string
-): Promise<{ agent_run_id: string; status: string }> => {
-  const response = await api.post(
+): Promise<ExecuteAgentResponse> => {
+  const response = await api.post<ExecuteAgentResponse>(
     '/api/v1/agent/execute',
     request,
     {
@@ -68,71 +74,16 @@ export const getAgentStatus = async (
 };
 
 // ============================================================================
-// Agent Information (Mock Data)
+// Agent Information (Paso 4 - Usando API real)
 // ============================================================================
 
 /**
- * Obtiene la lista de agentes disponibles
- * TODO: Implementar endpoint real en backend cuando esté disponible
+ * Obtiene la lista de agentes disponibles desde el backend
+ * GET /api/v1/agent/agents
  */
 export const getAvailableAgents = async (): Promise<AgentInfo[]> => {
-  // Mock data - en producción esto vendría del backend
-  return Promise.resolve([
-    {
-      id: 'validador-documental',
-      nombre: 'Validador Documental',
-      descripcion: 'Valida la documentación presentada en un expediente según requisitos normativos',
-      estado: 'disponible',
-      tipo: 'ValidadorDocumental'
-    },
-    {
-      id: 'analizador-subvencion',
-      nombre: 'Analizador de Subvenciones',
-      descripcion: 'Analiza solicitudes de subvenciones y verifica cumplimiento de requisitos',
-      estado: 'disponible',
-      tipo: 'AnalizadorSubvencion'
-    },
-    {
-      id: 'generador-informe',
-      nombre: 'Generador de Informes',
-      descripcion: 'Genera informes técnicos y resúmenes de expedientes',
-      estado: 'disponible',
-      tipo: 'GeneradorInforme'
-    }
-  ]);
-};
-
-/**
- * Obtiene la configuración de un agente específico
- * TODO: Implementar endpoint real en backend cuando esté disponible
- */
-export const getAgentConfig = (agentId: string): Promise<any> => {
-  // Mock data - configuraciones predefinidas para los 3 agentes
-  const configs: Record<string, any> = {
-    'validador-documental': {
-      nombre: 'ValidadorDocumental',
-      system_prompt: 'Eres un agente validador de documentación administrativa.',
-      modelo: 'claude-3-5-sonnet-20241022',
-      prompt_tarea: 'Valida la documentación del expediente {exp_id}',
-      herramientas: ['leer_expediente', 'leer_documentos', 'validar_documento']
-    },
-    'analizador-subvencion': {
-      nombre: 'AnalizadorSubvencion',
-      system_prompt: 'Eres un agente analizador de solicitudes de subvenciones.',
-      modelo: 'claude-3-5-sonnet-20241022',
-      prompt_tarea: 'Analiza la solicitud de subvención del expediente {exp_id}',
-      herramientas: ['leer_expediente', 'analizar_requisitos', 'calcular_puntuacion']
-    },
-    'generador-informe': {
-      nombre: 'GeneradorInforme',
-      system_prompt: 'Eres un agente generador de informes técnicos.',
-      modelo: 'claude-3-5-sonnet-20241022',
-      prompt_tarea: 'Genera un informe del expediente {exp_id}',
-      herramientas: ['leer_expediente', 'generar_informe', 'guardar_documento']
-    }
-  };
-
-  return Promise.resolve(configs[agentId] || configs['validador-documental']);
+  const response = await api.get<{ agents: AgentInfo[] }>('/api/v1/agent/agents');
+  return response.data.agents;
 };
 
 // ============================================================================
