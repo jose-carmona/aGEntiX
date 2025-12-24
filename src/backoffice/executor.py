@@ -17,6 +17,7 @@ from .protocols import (
     AuditLoggerFactoryProtocol,
     AgentRegistryProtocol
 )
+from .settings import settings
 
 
 class AgentExecutor:
@@ -86,10 +87,11 @@ class AgentExecutor:
 
         try:
             # 0. Crear logger temprano para capturar todos los eventos
+            # Usar LOG_DIR de settings en lugar de derivar de mcp_config_path
             logger = self.logger_factory.create(
                 expediente_id=expediente_id,
                 agent_run_id=agent_run_id,
-                log_dir=str(self.mcp_config_path.rsplit('/', 2)[0] + "/logs/agent_runs")
+                log_dir=settings.LOG_DIR
             )
 
             logger.log(f"Iniciando ejecución de agente {agent_config.nombre}")

@@ -15,19 +15,20 @@ class AuditLogger:
     de escribirse a disco para cumplir con GDPR/LOPD/ENS.
     """
 
-    def __init__(self, expediente_id: str, agent_run_id: str, log_dir: Path):
+    def __init__(self, expediente_id: str, agent_run_id: str, log_dir: Path | str):
         """
         Inicializa el logger de auditoría.
 
         Args:
             expediente_id: ID del expediente
             agent_run_id: ID único de esta ejecución del agente
-            log_dir: Directorio base para logs
+            log_dir: Directorio base para logs (Path o string)
         """
         self.expediente_id = expediente_id
         self.agent_run_id = agent_run_id
-        self.log_dir = log_dir
-        self.log_file = log_dir / expediente_id / f"{agent_run_id}.log"
+        # Convertir a Path si es string para evitar TypeError con operador /
+        self.log_dir = Path(log_dir) if isinstance(log_dir, str) else log_dir
+        self.log_file = self.log_dir / expediente_id / f"{agent_run_id}.log"
         self.log_file.parent.mkdir(parents=True, exist_ok=True)
         self._entries = []
 
