@@ -22,11 +22,15 @@ Uso desde CLI:
     python generate_token.py --help
 """
 
+import os
 import jwt
 import uuid
 import argparse
 from datetime import datetime, timedelta
-from typing import List
+from typing import List, Optional
+
+# Secreto por defecto: usar variable de entorno JWT_SECRET si está definida
+DEFAULT_JWT_SECRET = os.environ.get("JWT_SECRET", "test-secret-key")
 
 
 def generate_test_token(
@@ -36,7 +40,7 @@ def generate_test_token(
     tarea_nombre: str = "TAREA_TEST",
     permisos: List[str] = None,
     mcp_servers: List[str] = None,
-    secret: str = "test-secret-key",
+    secret: Optional[str] = None,
     exp_hours: int = 1
 ) -> str:
     """
@@ -49,7 +53,7 @@ def generate_test_token(
         tarea_nombre: Nombre de la tarea
         permisos: Lista de permisos (ej: ["consulta"] o ["consulta", "gestion"])
         mcp_servers: Lista de MCP servers autorizados (default: solo expedientes)
-        secret: Clave secreta para firma (default: test-secret-key)
+        secret: Clave secreta para firma (default: JWT_SECRET de entorno o test-secret-key)
         exp_hours: Horas hasta expiración (default: 1)
 
     Returns:
@@ -60,6 +64,10 @@ def generate_test_token(
 
     if mcp_servers is None:
         mcp_servers = ["agentix-mcp-expedientes"]
+
+    # Usar secreto proporcionado o el default (de variable de entorno)
+    if secret is None:
+        secret = DEFAULT_JWT_SECRET
 
     now = datetime.utcnow()
     payload = {
@@ -79,17 +87,19 @@ def generate_test_token(
     return jwt.encode(payload, secret, algorithm="HS256")
 
 
-def decode_token(token: str, secret: str = "test-secret-key") -> dict:
+def decode_token(token: str, secret: Optional[str] = None) -> dict:
     """
     Decodifica un token JWT para inspección (sin validar expiración).
 
     Args:
         token: Token JWT a decodificar
-        secret: Clave secreta
+        secret: Clave secreta (default: JWT_SECRET de entorno)
 
     Returns:
         Payload decodificado del token
     """
+    if secret is None:
+        secret = DEFAULT_JWT_SECRET
     return jwt.decode(
         token,
         secret,
@@ -98,17 +108,19 @@ def decode_token(token: str, secret: str = "test-secret-key") -> dict:
     )
 
 
-def format_token_info(token: str, secret: str = "test-secret-key") -> str:
+def format_token_info(token: str, secret: Optional[str] = None) -> str:
     """
     Formatea la información de un token para visualización.
 
     Args:
         token: Token JWT
-        secret: Clave secreta
+        secret: Clave secreta (default: JWT_SECRET de entorno)
 
     Returns:
         String formateado con la información del token
     """
+    if secret is None:
+        secret = DEFAULT_JWT_SECRET
     payload = decode_token(token, secret)
 
     lines = [
@@ -221,8 +233,8 @@ Ejemplos:
     parser.add_argument(
         "--secret",
         type=str,
-        default="test-secret-key",
-        help="Clave secreta para firma (default: test-secret-key)"
+        default=None,
+        help=f"Clave secreta para firma (default: JWT_SECRET del entorno o 'test-secret-key')"
     )
 
     parser.add_argument(

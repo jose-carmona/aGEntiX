@@ -22,6 +22,13 @@
 
 set -e
 
+# Cargar variables de entorno desde .env si existe
+if [ -f .env ]; then
+    set -a
+    source .env
+    set +a
+fi
+
 # Colores para output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
