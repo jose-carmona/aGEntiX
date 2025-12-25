@@ -116,6 +116,8 @@ async def execute_agent(
 
     token = authorization.replace("Bearer ", "")
 
+    logger.info(f"token JWT recibido para ejecución de agente {token[:50]}")
+
     # 2. Cargar configuración del agente desde YAML
     agent_loader = get_agent_loader()
 
