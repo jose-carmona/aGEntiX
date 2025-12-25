@@ -74,17 +74,18 @@ generate_token() {
     echo -e "${CYAN}1. Generando Token JWT${NC}"
     echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 
+    # Usar el generador centralizado de JWT (backoffice.auth.jwt_generator)
     TOKEN=$(python3 -c "
 import sys
 sys.path.insert(0, 'src')
-from mcp_mock.mcp_expedientes.generate_token import generate_test_token
+from backoffice.auth.jwt_generator import generate_jwt
 
-token = generate_test_token(
-    exp_id='${EXPEDIENTE_ID}',
+result = generate_jwt(
+    expediente_id='${EXPEDIENTE_ID}',
     tarea_id='${TAREA_ID}',
     permisos=['consulta', 'gestion']
 )
-print(token)
+print(result.token)
 ")
 
     if [ -z "$TOKEN" ]; then

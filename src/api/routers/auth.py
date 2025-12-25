@@ -11,17 +11,19 @@ IMPORTANTE:
 - El token de admin es un string simple, NO es JWT
 - Se usa SOLO para proteger el dashboard web (métricas, logs, panel de pruebas)
 - Los endpoints de agentes usan JWT separado con 10 claims validados
+
+GENERACIÓN DE JWT:
+- Usa backoffice.auth.jwt_generator (punto centralizado)
+- La validación usa backoffice.auth.jwt_validator
 """
 
 import logging
-import jwt
-import uuid
-from datetime import datetime, timedelta
-from typing import List, Optional, Union
+from typing import List, Optional
 from fastapi import APIRouter, HTTPException, Header, Depends
 from pydantic import BaseModel, Field
 
 from backoffice.settings import settings
+from backoffice.auth.jwt_generator import generate_jwt as generate_jwt_token
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -259,6 +261,9 @@ async def generate_jwt(
     Este endpoint requiere autenticación de admin (Bearer token) y genera
     un JWT válido con los claims necesarios para ejecutar agentes.
 
+    IMPORTANTE: Delega a backoffice.auth.jwt_generator para centralizar
+    la generación de tokens JWT en un único punto.
+
     Args:
         request: Parámetros para generar el JWT
         _token: Token de admin (inyectado por dependency)
@@ -273,36 +278,15 @@ async def generate_jwt(
     logger.info(f"Generando JWT de prueba para expediente: {request.exp_id}")
 
     try:
-        # Determinar audiencia (mcp_servers)
-        mcp_servers = request.mcp_servers or ["agentix-mcp-expedientes"]
-
-        # Generar timestamps
-        now = datetime.utcnow()
-        iat = int(now.timestamp())
-        exp = int((now + timedelta(hours=request.exp_hours)).timestamp())
-        nbf = int(now.timestamp())
-
-        # Construir payload del JWT
-        payload = {
-            "sub": "Automático",
-            "iat": iat,
-            "exp": exp,
-            "nbf": nbf,
-            "iss": "agentix-bpmn",
-            "aud": mcp_servers if len(mcp_servers) > 1 else mcp_servers[0],
-            "jti": str(uuid.uuid4()),
-            "exp_id": request.exp_id,
-            "exp_tipo": request.exp_tipo,
-            "tarea_id": request.tarea_id,
-            "tarea_nombre": request.tarea_nombre,
-            "permisos": request.permisos
-        }
-
-        # Firmar token con el secret del sistema
-        token = jwt.encode(
-            payload,
-            settings.JWT_SECRET,
-            algorithm=settings.JWT_ALGORITHM
+        # Usar el generador centralizado de JWT
+        result = generate_jwt_token(
+            expediente_id=request.exp_id,
+            tarea_id=request.tarea_id,
+            permisos=request.permisos,
+            expediente_tipo=request.exp_tipo,
+            tarea_nombre=request.tarea_nombre,
+            audiences=request.mcp_servers,
+            expiration_hours=request.exp_hours
         )
 
         logger.info(
@@ -311,8 +295,8 @@ async def generate_jwt(
         )
 
         return GenerateJWTResponse(
-            token=token,
-            claims=payload
+            token=result.token,
+            claims=result.claims
         )
 
     except Exception as e:

@@ -1,36 +1,51 @@
 #!/usr/bin/env python3
 """
-Generador de tokens JWT para testing del MCP Mock de Expedientes.
+DEPRECADO: Usar backoffice.auth.jwt_generator en su lugar.
 
-Este script permite generar tokens JWT válidos para probar el servidor MCP.
-Puede usarse tanto como librería Python como desde la línea de comandos.
+Este módulo se mantiene por retrocompatibilidad pero redirige todas
+las llamadas al generador centralizado en backoffice.auth.jwt_generator.
 
-Uso como librería:
-    from generate_token import generate_test_token
+Para generar tokens JWT, usar:
 
-    token = generate_test_token(
-        exp_id="EXP-2024-001",
-        exp_tipo="SUBVENCIONES",
-        tarea_id="TAREA-001",
-        tarea_nombre="VALIDAR_DOCUMENTACION",
+    from backoffice.auth.jwt_generator import generate_jwt
+
+    result = generate_jwt(
+        expediente_id="EXP-2024-001",
         permisos=["consulta", "gestion"]
     )
+    print(result.token)
 
-Uso desde CLI:
-    python generate_token.py --exp-id EXP-2024-001 --permisos consulta gestion
-    python generate_token.py --exp-id EXP-2024-001 --formato raw
-    python generate_token.py --help
+El módulo centralizado:
+- Usa la configuración de settings.py (JWT_SECRET, etc.)
+- Garantiza consistencia con la validación (jwt_validator.py)
+- Provee funciones adicionales como format_jwt_info()
 """
 
-import os
-import jwt
-import uuid
+import warnings
 import argparse
-from datetime import datetime, timedelta
 from typing import List, Optional
 
-# Secreto por defecto: usar variable de entorno JWT_SECRET si está definida
-DEFAULT_JWT_SECRET = os.environ.get("JWT_SECRET", "test-secret-key")
+# Importar del módulo centralizado
+import sys
+sys.path.insert(0, str(__file__).replace('/mcp_mock/mcp_expedientes/generate_token.py', ''))
+
+from backoffice.auth.jwt_generator import (
+    generate_jwt,
+    decode_jwt_unsafe,
+    format_jwt_info,
+    GeneratedJWT,
+    JWTGeneratorConfig
+)
+
+
+def _emit_deprecation_warning():
+    """Emite warning de deprecación."""
+    warnings.warn(
+        "generate_token.py está DEPRECADO. "
+        "Usar backoffice.auth.jwt_generator.generate_jwt() en su lugar.",
+        DeprecationWarning,
+        stacklevel=3
+    )
 
 
 def generate_test_token(
@@ -44,7 +59,10 @@ def generate_test_token(
     exp_hours: int = 1
 ) -> str:
     """
+    DEPRECADO: Usar backoffice.auth.jwt_generator.generate_jwt()
+
     Genera un JWT de prueba válido para testing.
+    Esta función es un wrapper de retrocompatibilidad.
 
     Args:
         exp_id: ID del expediente (ej: "EXP-2024-001")
@@ -53,138 +71,107 @@ def generate_test_token(
         tarea_nombre: Nombre de la tarea
         permisos: Lista de permisos (ej: ["consulta"] o ["consulta", "gestion"])
         mcp_servers: Lista de MCP servers autorizados (default: solo expedientes)
-        secret: Clave secreta para firma (default: JWT_SECRET de entorno o test-secret-key)
+        secret: IGNORADO - usa JWT_SECRET de settings
         exp_hours: Horas hasta expiración (default: 1)
 
     Returns:
         Token JWT firmado
     """
-    if permisos is None:
-        permisos = ["consulta"]
+    _emit_deprecation_warning()
 
-    if mcp_servers is None:
-        mcp_servers = ["agentix-mcp-expedientes"]
+    # El parámetro secret se ignora - siempre usa settings.JWT_SECRET
+    if secret is not None:
+        warnings.warn(
+            "El parámetro 'secret' es ignorado. Se usa JWT_SECRET de settings.",
+            DeprecationWarning,
+            stacklevel=2
+        )
 
-    # Usar secreto proporcionado o el default (de variable de entorno)
-    if secret is None:
-        secret = DEFAULT_JWT_SECRET
+    result = generate_jwt(
+        expediente_id=exp_id,
+        tarea_id=tarea_id,
+        permisos=permisos,
+        expediente_tipo=exp_tipo,
+        tarea_nombre=tarea_nombre,
+        audiences=mcp_servers,
+        expiration_hours=exp_hours
+    )
 
-    now = datetime.utcnow()
-    payload = {
-        "sub": "Automático",
-        "iat": int(now.timestamp()),
-        "exp": int((now + timedelta(hours=exp_hours)).timestamp()),
-        "nbf": int(now.timestamp()),
-        "iss": "agentix-bpmn",
-        "aud": mcp_servers if len(mcp_servers) > 1 else mcp_servers[0],
-        "jti": str(uuid.uuid4()),
-        "exp_id": exp_id,
-        "exp_tipo": exp_tipo,
-        "tarea_id": tarea_id,
-        "tarea_nombre": tarea_nombre,
-        "permisos": permisos
-    }
-    return jwt.encode(payload, secret, algorithm="HS256")
+    return result.token
 
 
 def decode_token(token: str, secret: Optional[str] = None) -> dict:
     """
+    DEPRECADO: Usar backoffice.auth.jwt_generator.decode_jwt_unsafe()
+
     Decodifica un token JWT para inspección (sin validar expiración).
 
     Args:
         token: Token JWT a decodificar
-        secret: Clave secreta (default: JWT_SECRET de entorno)
+        secret: IGNORADO - usa JWT_SECRET de settings
 
     Returns:
         Payload decodificado del token
     """
-    if secret is None:
-        secret = DEFAULT_JWT_SECRET
-    return jwt.decode(
-        token,
-        secret,
-        algorithms=["HS256"],
-        options={"verify_exp": False}
-    )
+    _emit_deprecation_warning()
+
+    if secret is not None:
+        warnings.warn(
+            "El parámetro 'secret' es ignorado. Se usa JWT_SECRET de settings.",
+            DeprecationWarning,
+            stacklevel=2
+        )
+
+    return decode_jwt_unsafe(token)
 
 
 def format_token_info(token: str, secret: Optional[str] = None) -> str:
     """
+    DEPRECADO: Usar backoffice.auth.jwt_generator.format_jwt_info()
+
     Formatea la información de un token para visualización.
 
     Args:
         token: Token JWT
-        secret: Clave secreta (default: JWT_SECRET de entorno)
+        secret: IGNORADO - usa JWT_SECRET de settings
 
     Returns:
         String formateado con la información del token
     """
-    if secret is None:
-        secret = DEFAULT_JWT_SECRET
-    payload = decode_token(token, secret)
+    _emit_deprecation_warning()
 
-    lines = [
-        "=" * 60,
-        "TOKEN JWT GENERADO",
-        "=" * 60,
-        "",
-        "Claims:",
-        f"  Subject (sub):        {payload.get('sub')}",
-        f"  Emisor (iss):         {payload.get('iss')}",
-        f"  Audiencia (aud):      {payload.get('aud')}",
-        f"  Token ID (jti):       {payload.get('jti')}",
-        "",
-        "Claims de Expediente:",
-        f"  Expediente ID:        {payload.get('exp_id')}",
-        f"  Tipo:                 {payload.get('exp_tipo')}",
-        "",
-        "Claims de Tarea BPMN:",
-        f"  Tarea ID:             {payload.get('tarea_id')}",
-        f"  Tarea Nombre:         {payload.get('tarea_nombre')}",
-        "",
-        "Permisos:",
-        f"  {', '.join(payload.get('permisos', []))}",
-        "",
-        "Timestamps:",
-        f"  Emitido (iat):        {datetime.fromtimestamp(payload.get('iat')).isoformat()}",
-        f"  Válido desde (nbf):   {datetime.fromtimestamp(payload.get('nbf')).isoformat()}",
-        f"  Expira (exp):         {datetime.fromtimestamp(payload.get('exp')).isoformat()}",
-        "",
-        "Token completo:",
-        f"  {token}",
-        "",
-        "=" * 60
-    ]
+    if secret is not None:
+        warnings.warn(
+            "El parámetro 'secret' es ignorado. Se usa JWT_SECRET de settings.",
+            DeprecationWarning,
+            stacklevel=2
+        )
 
-    return "\n".join(lines)
+    return format_jwt_info(token)
 
 
 def main():
-    """Punto de entrada para uso desde línea de comandos"""
+    """
+    DEPRECADO: Este CLI se mantiene por retrocompatibilidad.
+
+    Uso recomendado:
+        python -c "from backoffice.auth.jwt_generator import generate_jwt, format_jwt_info; ..."
+    """
     parser = argparse.ArgumentParser(
-        description="Genera tokens JWT para testing del MCP Mock de Expedientes",
+        description=(
+            "DEPRECADO: Usar backoffice.auth.jwt_generator\n\n"
+            "Este script se mantiene por retrocompatibilidad."
+        ),
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
-Ejemplos:
+DEPRECADO - Usar el módulo centralizado:
 
-  # Token básico con solo lectura
-  python generate_token.py --exp-id EXP-2024-001
-
-  # Token con permisos de lectura y escritura
-  python generate_token.py --exp-id EXP-2024-001 --permisos consulta gestion
-
-  # Token para múltiples MCP servers
-  python generate_token.py --exp-id EXP-2024-001 \\
-    --mcp-servers agentix-mcp-expedientes agentix-mcp-normativa
-
-  # Token con expiración personalizada (24 horas)
-  python generate_token.py --exp-id EXP-2024-001 --exp-hours 24
-
-  # Solo el token (sin formato, útil para scripts)
-  python generate_token.py --exp-id EXP-2024-001 --formato raw
-
-  # Decodificar un token existente
-  python generate_token.py --decode "eyJhbGc..."
+  python -c "
+  import sys; sys.path.insert(0, 'src')
+  from backoffice.auth.jwt_generator import generate_jwt, format_jwt_info
+  result = generate_jwt(expediente_id='EXP-2024-001')
+  print(format_jwt_info(result.token))
+  "
         """
     )
 
@@ -234,7 +221,7 @@ Ejemplos:
         "--secret",
         type=str,
         default=None,
-        help=f"Clave secreta para firma (default: JWT_SECRET del entorno o 'test-secret-key')"
+        help="IGNORADO - siempre usa JWT_SECRET de settings"
     )
 
     parser.add_argument(
@@ -260,10 +247,17 @@ Ejemplos:
 
     args = parser.parse_args()
 
+    # Mostrar warning de deprecación
+    print("=" * 60)
+    print("ADVERTENCIA: Este script está DEPRECADO")
+    print("Usar: backoffice.auth.jwt_generator")
+    print("=" * 60)
+    print()
+
     # Modo decodificación
     if args.decode:
         try:
-            print(format_token_info(args.decode, args.secret))
+            print(format_jwt_info(args.decode))
         except Exception as e:
             print(f"Error al decodificar token: {e}")
             return 1
@@ -273,23 +267,22 @@ Ejemplos:
     if not args.exp_id:
         parser.error("--exp-id es requerido (o usa --decode para decodificar un token)")
 
-    # Generar token
-    token = generate_test_token(
-        exp_id=args.exp_id,
-        exp_tipo=args.exp_tipo,
+    # Generar token usando el módulo centralizado
+    result = generate_jwt(
+        expediente_id=args.exp_id,
         tarea_id=args.tarea_id,
-        tarea_nombre=args.tarea_nombre,
         permisos=args.permisos,
-        mcp_servers=args.mcp_servers,
-        secret=args.secret,
-        exp_hours=args.exp_hours
+        expediente_tipo=args.exp_tipo,
+        tarea_nombre=args.tarea_nombre,
+        audiences=args.mcp_servers,
+        expiration_hours=args.exp_hours
     )
 
     # Mostrar según formato
     if args.formato == "raw":
-        print(token)
+        print(result.token)
     else:
-        print(format_token_info(token, args.secret))
+        print(format_jwt_info(result.token))
 
     return 0
 
