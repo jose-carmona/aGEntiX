@@ -11,10 +11,13 @@ export const api = axios.create({
 });
 
 // Interceptor para añadir token a todas las peticiones
+// IMPORTANTE: No sobrescribir si ya existe un Authorization header (ej: JWT para /execute)
 api.interceptors.request.use(
   (config) => {
     const token = storage.getToken();
-    if (token && config.url !== '/api/v1/auth/validate-admin-token') {
+    const hasExistingAuth = config.headers.Authorization || config.headers.authorization;
+
+    if (token && !hasExistingAuth && config.url !== '/api/v1/auth/validate-admin-token') {
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
