@@ -249,6 +249,23 @@ python -m generate_token EXP-2024-001
 
 ## Important Implementation Details
 
+### Dual Token Authentication
+
+The system uses **two different tokens**:
+
+| Token | Purpose | Type | Endpoints |
+|-------|---------|------|-----------|
+| **Admin Token** | Dashboard access | Fixed string | `/generate-jwt`, `/agents`, `/logs`, `/metrics` |
+| **JWT Token** | Agent execution | Signed JWT | `/execute`, `/status/{id}` |
+
+**Key points:**
+- Admin token is stored in `localStorage`, configured via `API_ADMIN_TOKEN` in `.env`
+- JWT is generated per execution via `/generate-jwt` (requires admin token)
+- JWT is NOT persisted, only kept in memory during execution
+- Public endpoints (`/health`, `/metrics`) require no authentication
+
+See `/doc/060-autenticacion-dual.md` for full documentation.
+
 ### JWT Validation
 
 The system validates 10 JWT claims:

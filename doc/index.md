@@ -41,6 +41,12 @@
 - [Propagación de permisos: BPMN → Agente → MCP → API](052-propagacion-permisos.md)
 - [Mitigación de Prompt Injection](053-mitigacion-prompt-injection.md)
 
+## Autenticación
+
+- [Sistema de Autenticación Dual](060-autenticacion-dual.md)
+- [Token Administrativo](061-token-admin.md)
+- [Token JWT de Ejecución](062-token-jwt.md)
+
 ## Análisis Crítico y Problemas Identificados
 
 - [Introducción a la problemática general](problemas/100-problematica-general.md)
