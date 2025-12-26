@@ -317,7 +317,7 @@ async def handle_rpc(request: Request) -> JSONResponse:
             result = {
                 "resources": [
                     {
-                        "uri": r.uri,
+                        "uri": str(r.uri),
                         "name": r.name,
                         "description": r.description,
                         "mimeType": r.mimeType
