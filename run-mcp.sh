@@ -24,12 +24,11 @@ echo "Reload: $MCP_RELOAD"
 echo "=========================================="
 echo ""
 
-cd "${SCRIPT_DIR}/src/mcp_mock/mcp_expedientes"
 
 if [ "$MCP_RELOAD" = "true" ]; then
     echo "Modo: DESARROLLO (auto-reload activado)"
-    uvicorn server_http:app --host $MCP_HOST --port $MCP_PORT --reload
+    uvicorn src.mcp_mock.mcp_expedientes.server_http:app --host $MCP_HOST --port $MCP_PORT --reload
 else
     echo "Modo: PRODUCCIÓN"
-    uvicorn server_http:app --host $MCP_HOST --port $MCP_PORT
+    uvicorn src.mcp_mock.mcp_expedientes.server_http:app --host $MCP_HOST --port $MCP_PORT
 fi
