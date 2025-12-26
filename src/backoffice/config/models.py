@@ -22,7 +22,7 @@ class MCPServerConfig(BaseModel):
     auth: MCPAuthConfig
     timeout: int = 30
     enabled: bool = True  # Permite habilitar/deshabilitar MCPs
-    endpoint: str = "/sse"  # Endpoint para JSON-RPC (configurable)
+    endpoint: str = "/rpc"  # Endpoint para JSON-RPC (configurable)
 
 
 class MCPServersConfig(BaseModel):

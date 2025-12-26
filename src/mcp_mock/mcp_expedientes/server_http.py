@@ -61,6 +61,7 @@ Testing manual con curl:
 """
 
 import logging
+import json
 from starlette.applications import Starlette
 from starlette.routing import Route
 from starlette.requests import Request
@@ -69,6 +70,8 @@ from starlette.exceptions import HTTPException
 from mcp.server.sse import SseServerTransport
 from .server import create_server, get_server_info
 from .auth import validate_jwt, AuthError
+from .tools import list_tools, call_tool
+from .resources import list_resources, get_resource
 
 # Configurar logging
 logging.basicConfig(
@@ -166,6 +169,248 @@ async def handle_sse(request: Request) -> Response:
     return Response()
 
 
+async def handle_rpc(request: Request) -> JSONResponse:
+    """
+    Endpoint HTTP simple para JSON-RPC (sin SSE).
+
+    Este endpoint permite comunicación request-response directa,
+    sin necesidad de establecer una conexión SSE.
+
+    Métodos soportados:
+    - tools/list: Lista las tools disponibles
+    - tools/call: Ejecuta una tool
+    - resources/list: Lista los resources disponibles
+    - resources/read: Lee un resource
+
+    Args:
+        request: Petición HTTP con body JSON-RPC
+
+    Returns:
+        Respuesta JSON-RPC
+    """
+    # 1. Extraer y validar token JWT
+    auth_header = request.headers.get("Authorization", "")
+
+    if not auth_header.startswith("Bearer "):
+        logger.warning("Request /rpc sin token JWT")
+        return JSONResponse(
+            status_code=401,
+            content={
+                "jsonrpc": "2.0",
+                "id": None,
+                "error": {
+                    "code": -32001,
+                    "message": "Se requiere token JWT en header Authorization: Bearer <token>"
+                }
+            }
+        )
+
+    token = auth_header[7:]
+
+    try:
+        await validate_jwt(token, server_id=context.server_id)
+        logger.info(f"✅ Token JWT válido en /rpc (primeros 20 chars): {token[:20]}...")
+    except AuthError as e:
+        logger.warning(f"❌ Token JWT inválido en /rpc: {e.message}")
+        return JSONResponse(
+            status_code=e.status_code,
+            content={
+                "jsonrpc": "2.0",
+                "id": None,
+                "error": {
+                    "code": -32001,
+                    "message": e.message
+                }
+            }
+        )
+
+    # 2. Parsear body JSON-RPC
+    try:
+        body = await request.json()
+    except Exception as e:
+        logger.error(f"Error parseando JSON: {e}")
+        return JSONResponse(
+            status_code=400,
+            content={
+                "jsonrpc": "2.0",
+                "id": None,
+                "error": {
+                    "code": -32700,
+                    "message": "Parse error: JSON inválido"
+                }
+            }
+        )
+
+    # Validar estructura JSON-RPC
+    if not isinstance(body, dict):
+        return JSONResponse(
+            status_code=400,
+            content={
+                "jsonrpc": "2.0",
+                "id": None,
+                "error": {
+                    "code": -32600,
+                    "message": "Invalid Request: se esperaba objeto JSON"
+                }
+            }
+        )
+
+    request_id = body.get("id")
+    method = body.get("method")
+    params = body.get("params", {})
+
+    logger.info(f"📥 RPC Request: method={method}, id={request_id}")
+
+    # 3. Almacenar token en contexto para las operaciones
+    context.set_token(token)
+
+    # 4. Ejecutar método
+    try:
+        if method == "tools/list":
+            tools = await list_tools()
+            result = {
+                "tools": [
+                    {
+                        "name": t.name,
+                        "description": t.description,
+                        "inputSchema": t.inputSchema
+                    }
+                    for t in tools
+                ]
+            }
+
+        elif method == "tools/call":
+            tool_name = params.get("name")
+            tool_args = params.get("arguments", {})
+
+            if not tool_name:
+                return JSONResponse(
+                    status_code=400,
+                    content={
+                        "jsonrpc": "2.0",
+                        "id": request_id,
+                        "error": {
+                            "code": -32602,
+                            "message": "Invalid params: falta 'name' de la tool"
+                        }
+                    }
+                )
+
+            # Validar permisos para la tool específica
+            await validate_jwt(
+                token,
+                tool_name=tool_name,
+                tool_args=tool_args,
+                server_id=context.server_id
+            )
+
+            tool_result = await call_tool(tool_name, tool_args)
+            result = {
+                "content": [
+                    {"type": item.type, "text": item.text}
+                    for item in tool_result
+                ]
+            }
+
+        elif method == "resources/list":
+            resources = await list_resources()
+            result = {
+                "resources": [
+                    {
+                        "uri": r.uri,
+                        "name": r.name,
+                        "description": r.description,
+                        "mimeType": r.mimeType
+                    }
+                    for r in resources
+                ]
+            }
+
+        elif method == "resources/read":
+            uri = params.get("uri")
+
+            if not uri:
+                return JSONResponse(
+                    status_code=400,
+                    content={
+                        "jsonrpc": "2.0",
+                        "id": request_id,
+                        "error": {
+                            "code": -32602,
+                            "message": "Invalid params: falta 'uri' del resource"
+                        }
+                    }
+                )
+
+            # Validar permisos para el resource
+            await validate_jwt(
+                token,
+                resource_uri=uri,
+                server_id=context.server_id
+            )
+
+            content = await get_resource(uri)
+            result = {
+                "contents": [
+                    {
+                        "uri": uri,
+                        "mimeType": "application/json",
+                        "text": content
+                    }
+                ]
+            }
+
+        else:
+            logger.warning(f"Método no soportado: {method}")
+            return JSONResponse(
+                status_code=400,
+                content={
+                    "jsonrpc": "2.0",
+                    "id": request_id,
+                    "error": {
+                        "code": -32601,
+                        "message": f"Method not found: {method}"
+                    }
+                }
+            )
+
+        logger.info(f"📤 RPC Response: method={method}, success=true")
+
+        return JSONResponse({
+            "jsonrpc": "2.0",
+            "id": request_id,
+            "result": result
+        })
+
+    except AuthError as e:
+        logger.warning(f"❌ Error de autorización en {method}: {e.message}")
+        return JSONResponse(
+            status_code=e.status_code,
+            content={
+                "jsonrpc": "2.0",
+                "id": request_id,
+                "error": {
+                    "code": -32001,
+                    "message": e.message
+                }
+            }
+        )
+
+    except Exception as e:
+        logger.error(f"❌ Error interno en {method}: {str(e)}")
+        return JSONResponse(
+            status_code=500,
+            content={
+                "jsonrpc": "2.0",
+                "id": request_id,
+                "error": {
+                    "code": -32603,
+                    "message": f"Internal error: {str(e)}"
+                }
+            }
+        )
+
+
 async def health_check(request: Request) -> JSONResponse:
     """
     Endpoint de health check.
@@ -216,6 +461,7 @@ app = Starlette(
     debug=True,
     routes=[
         Route("/sse", endpoint=handle_sse, methods=["GET", "POST"]),
+        Route("/rpc", endpoint=handle_rpc, methods=["POST"]),
         Route("/health", endpoint=health_check, methods=["GET"]),
         Route("/info", endpoint=server_info_endpoint, methods=["GET"])
     ],
@@ -232,7 +478,8 @@ async def startup():
     logger.info("Endpoints disponibles:")
     logger.info("  GET  /health  - Health check")
     logger.info("  GET  /info    - Información del servidor")
-    logger.info("  POST /sse     - Endpoint MCP (requiere token JWT)")
+    logger.info("  POST /sse     - Endpoint MCP SSE (requiere token JWT)")
+    logger.info("  POST /rpc     - Endpoint MCP HTTP simple (requiere token JWT) ← RECOMENDADO")
 
 
 @app.on_event("shutdown")
