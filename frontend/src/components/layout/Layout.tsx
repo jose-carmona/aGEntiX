@@ -7,12 +7,10 @@ export const Layout: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
-      <div className="flex">
-        <Sidebar />
-        <main className="flex-1 p-6">
-          <Outlet />
-        </main>
-      </div>
+      <Sidebar />
+      <main className="ml-64 mt-16 min-h-[calc(100vh-4rem)] p-6 overflow-auto">
+        <Outlet />
+      </main>
     </div>
   );
 };

@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
-import { LogFilters as LogFiltersType, LogLevel, LogComponent, AgentType } from '../../types/logs';
 import { FunnelIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { useEffect, useState } from 'react';
+import { AgentType, LogComponent, LogFilters as LogFiltersType, LogLevel } from '../../types/logs';
 
 interface LogFiltersProps {
   filters: LogFiltersType;
@@ -28,7 +28,7 @@ const AGENT_TYPES: AgentType[] = [
 ];
 
 export function LogFilters({ filters, onFiltersChange, onClearFilters }: LogFiltersProps) {
-  const [showFilters, setShowFilters] = useState(true);
+  const [showFilters, setShowFilters] = useState(false);
   const [localExpedienteId, setLocalExpedienteId] = useState(filters.expediente_id || '');
 
   // Actualizar expediente_id local cuando cambian los filtros externos
