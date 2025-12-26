@@ -100,8 +100,8 @@ class DefaultMCPRegistryFactory:
         Raises:
             MCPConnectionError: Si falla la conexión
         """
-        registry = MCPClientRegistry()
-        await registry.initialize(config, token)
+        registry = MCPClientRegistry(config=config, token=token)
+        await registry.initialize()
         return registry
 
 
