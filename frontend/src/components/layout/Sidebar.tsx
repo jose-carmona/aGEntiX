@@ -2,7 +2,7 @@ import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { clsx } from 'clsx';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faChartLine, faClipboardList, faFlaskVial, faRightFromBracket, IconDefinition } from '@fortawesome/free-solid-svg-icons';
+import { faChartLine, faClipboardList, faFlaskVial, faFolderOpen, faRightFromBracket, IconDefinition } from '@fortawesome/free-solid-svg-icons';
 import { useAuth } from '@/hooks/useAuth';
 
 interface NavItem {
@@ -15,6 +15,7 @@ const navItems: NavItem[] = [
   { name: 'Dashboard', path: '/dashboard', icon: faChartLine },
   { name: 'Logs', path: '/logs', icon: faClipboardList },
   { name: 'Pruebas de Agentes', path: '/test-panel', icon: faFlaskVial },
+  { name: 'MCP Server Mock', path: '/mcp-server', icon: faFolderOpen },
 ];
 
 export const Sidebar: React.FC = () => {

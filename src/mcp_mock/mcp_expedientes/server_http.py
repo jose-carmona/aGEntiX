@@ -60,6 +60,7 @@ Testing manual con curl:
     # Respuesta: HTTP 401 {"error": "AUTH_INVALID_TOKEN", "message": "Firma inválida"}
 """
 
+import os
 import logging
 import json
 from starlette.applications import Starlette
@@ -67,6 +68,7 @@ from starlette.routing import Route
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 from starlette.exceptions import HTTPException
+from starlette.middleware.cors import CORSMiddleware
 from mcp.server.sse import SseServerTransport
 from .server import create_server, get_server_info
 from .auth import validate_jwt, AuthError
@@ -470,6 +472,21 @@ app = Starlette(
     }
 )
 
+# Configurar CORS para permitir acceso desde el frontend
+# Los orígenes se pueden configurar via variable de entorno MCP_CORS_ORIGINS
+cors_origins = os.environ.get(
+    "MCP_CORS_ORIGINS",
+    "http://localhost:5173,http://127.0.0.1:5173"
+).split(",")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=cors_origins,
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type"],
+)
+
 
 @app.on_event("startup")
 async def startup():
@@ -479,7 +496,8 @@ async def startup():
     logger.info("  GET  /health  - Health check")
     logger.info("  GET  /info    - Información del servidor")
     logger.info("  POST /sse     - Endpoint MCP SSE (requiere token JWT)")
-    logger.info("  POST /rpc     - Endpoint MCP HTTP simple (requiere token JWT) ← RECOMENDADO")
+    logger.info("  POST /rpc     - Endpoint MCP HTTP simple (requiere token JWT)")
+    logger.info(f"CORS habilitado para: {cors_origins}")
 
 
 @app.on_event("shutdown")
