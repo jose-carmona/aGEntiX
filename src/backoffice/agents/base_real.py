@@ -7,6 +7,15 @@ Mantiene compatibilidad con AgentMock mientras usa CrewAI internamente.
 Los agentes acceden a datos del expediente mediante herramientas MCP.
 """
 
+# Workaround para ChromaDB que requiere SQLite >= 3.35.0
+# pysqlite3-binary incluye una versión compatible
+try:
+    __import__('pysqlite3')
+    import sys
+    sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
+except ImportError:
+    pass  # Si no está instalado, usa el sqlite3 del sistema
+
 import asyncio
 import json
 import re

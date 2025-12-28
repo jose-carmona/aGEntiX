@@ -27,3 +27,4 @@ uvicorn[standard]>=0.24.0
 python-multipart>=0.0.6
 prometheus-client>=0.19.0
 prometheus-fastapi-instrumentator>=6.1.0
+pysqlite3-binary>=0.5.0  # Workaround SQLite < 3.35 para ChromaDB
