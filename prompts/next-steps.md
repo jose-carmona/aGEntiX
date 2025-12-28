@@ -9,4 +9,5 @@
 4) Refinar el concepto de "agente" y como se invoca. Se trata de simplificar la invocación.
 5) Es el momento de revisar la documentación del proyecto y que todos los elementos están correctamente enfocados.
 6) mejorar el esqueleto del punto 1 para convertirlo en un sistema de agentes usando LangGraph o CrewAI; el sistema será capaz de usar los dos. En este punto El sistema será capaz de consumir tools en MCP. El sistema en este punto tendrá un único worker.
+   1) Empezamos por un agente (el más simple posible) con CrewIA. Usaremos Anthropic como proveedor, tenemos un API Key definido (ANTHROPIC_API_KEY).
 7) mejorar el sistema de agentes para que pueda escalar horizontalmente con Celery + redis con diferentes workers.
