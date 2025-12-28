@@ -1,8 +1,79 @@
-# Configuración de Agentes IA
+# Configuración de Agentes IA - aGEntiX
 # Cada agente define su comportamiento, modelo y herramientas disponibles
+#
+# Tipos soportados:
+#   - mock: Agente mock con comportamiento scripted (Paso 1)
+#   - crewai: Agente real usando CrewAI + LLM (Paso 6)
+#   - langgraph: Agente real usando LangGraph + LLM (futuro)
 
 agents:
+  # ==========================================================================
+  # Agente Real con CrewAI (Paso 6.1)
+  # ==========================================================================
+
+  ClasificadorExpediente:
+    type: crewai
+    enabled: true
+    description: "Clasifica expedientes según tipo y urgencia usando IA"
+
+    # Configuración del LLM
+    llm:
+      provider: anthropic
+      model: claude-3-5-sonnet-20241022
+      max_tokens: 4096
+      temperature: 0.1
+
+    # Definición del agente CrewAI
+    crewai_agent:
+      role: "Clasificador de Expedientes Administrativos"
+      goal: "Clasificar el expediente {expediente_id} según tipo y urgencia basándose en los datos obtenidos via MCP"
+      backstory: |
+        Eres un experto en gestión documental de la administración pública española.
+        Tu trabajo es analizar la información de expedientes y clasificarlos según:
+        - Tipo: subvención, licencia, queja, recurso, otro
+        - Urgencia: alta, media, baja
+
+        Siempre consultas los datos reales del expediente antes de clasificar.
+        Analizas la documentación presente, el estado del trámite y los metadatos
+        para tomar una decisión informada.
+      verbose: true
+      allow_delegation: false
+
+    # Tarea a ejecutar
+    crewai_task:
+      description: |
+        Analiza el expediente {expediente_id} para la tarea BPMN {tarea_id}.
+
+        PASOS OBLIGATORIOS:
+        1. Usa la herramienta 'consultar_expediente' con el parámetro expediente_id="{expediente_id}" para obtener los datos completos
+        2. Analiza el tipo de trámite basándote en los documentos y metadatos
+        3. Determina el nivel de urgencia según fechas y estado
+        4. Justifica tu decisión basándote en los datos obtenidos
+
+        IMPORTANTE: Debes usar la herramienta consultar_expediente ANTES de clasificar.
+      expected_output: |
+        Respuesta en formato JSON válido con exactamente estos campos:
+        {
+          "tipo_expediente": "subvención|licencia|queja|recurso|otro",
+          "urgencia": "alta|media|baja",
+          "justificacion": "Explicación breve basada en los datos del expediente"
+        }
+
+    # Herramientas MCP que puede usar el agente
+    tools:
+      - consultar_expediente
+
+    required_permissions:
+      - expediente.lectura
+    timeout_seconds: 300
+
+  # ==========================================================================
+  # Agentes Mock existentes (Paso 1 - mantienen compatibilidad)
+  # ==========================================================================
+
   ValidadorDocumental:
+    type: mock
+    enabled: true
     description: "Valida documentación administrativa de expedientes"
     model: "claude-3-5-sonnet-20241022"
     system_prompt: |
@@ -22,6 +93,8 @@ agents:
     timeout_seconds: 300
 
   AnalizadorSubvencion:
+    type: mock
+    enabled: true
     description: "Analiza solicitudes de subvención y evalúa requisitos"
     model: "claude-3-5-sonnet-20241022"
     system_prompt: |
@@ -46,6 +119,8 @@ agents:
     timeout_seconds: 600
 
   GeneradorInforme:
+    type: mock
+    enabled: true
     description: "Genera informes técnicos a partir de datos del expediente"
     model: "claude-3-5-sonnet-20241022"
     system_prompt: |

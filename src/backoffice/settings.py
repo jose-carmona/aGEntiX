@@ -20,6 +20,12 @@ class Settings(BaseSettings):
     # MCP Configuration
     MCP_CONFIG_PATH: str = str(Path(__file__).parent / "config" / "mcp_servers.yaml")
 
+    # Agents Configuration (Paso 6)
+    AGENTS_CONFIG_PATH: str = str(Path(__file__).parent / "config" / "agents.yaml")
+
+    # Anthropic API (Paso 6 - Agentes IA)
+    ANTHROPIC_API_KEY: str = ""
+
     # Logging
     LOG_LEVEL: str = "INFO"
     LOG_DIR: str = "logs/agent_runs"
@@ -44,3 +50,8 @@ class Settings(BaseSettings):
 
 # Instancia global de configuración
 settings = Settings()
+
+
+def get_settings() -> Settings:
+    """Retorna la instancia de configuración."""
+    return settings

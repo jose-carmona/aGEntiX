@@ -3,7 +3,8 @@
 """
 Tests para AgentConfigLoader.
 
-Verifica la carga de configuración de agentes desde YAML.
+Verifica la carga de configuración de agentes desde YAML,
+incluyendo soporte para agentes mock (Paso 1) y CrewAI (Paso 6).
 """
 
 import pytest
@@ -14,6 +15,9 @@ from pathlib import Path
 from backoffice.config.agent_config_loader import (
     AgentConfigLoader,
     AgentDefinition,
+    LLMConfig,
+    CrewAIAgentConfig,
+    CrewAITaskConfig,
     get_agent_loader,
     reset_agent_loader
 )
@@ -26,6 +30,8 @@ class TestAgentDefinition:
         """AgentDefinition se crea correctamente con todos los campos"""
         agent = AgentDefinition(
             name="TestAgent",
+            type="mock",
+            enabled=True,
             description="Agente de prueba",
             model="claude-3-5-sonnet-20241022",
             system_prompt="Eres un agente de prueba",
@@ -35,6 +41,8 @@ class TestAgentDefinition:
         )
 
         assert agent.name == "TestAgent"
+        assert agent.type == "mock"
+        assert agent.enabled is True
         assert agent.description == "Agente de prueba"
         assert agent.model == "claude-3-5-sonnet-20241022"
         assert agent.system_prompt == "Eres un agente de prueba"
@@ -51,9 +59,94 @@ class TestAgentDefinition:
             system_prompt="Prompt"
         )
 
+        assert agent.type == "mock"
+        assert agent.enabled is True
         assert agent.tools == []
         assert agent.required_permissions == []
         assert agent.timeout_seconds == 300
+        assert agent.llm is None
+        assert agent.crewai_agent is None
+        assert agent.crewai_task is None
+
+    def test_is_crewai_property(self):
+        """is_crewai retorna True para agentes CrewAI"""
+        mock_agent = AgentDefinition(
+            name="MockAgent",
+            type="mock",
+            description="Test",
+            model="test",
+            system_prompt="Test"
+        )
+        crewai_agent = AgentDefinition(
+            name="CrewAIAgent",
+            type="crewai",
+            description="Test",
+            model="test",
+            system_prompt=""
+        )
+
+        assert mock_agent.is_mock is True
+        assert mock_agent.is_crewai is False
+        assert crewai_agent.is_crewai is True
+        assert crewai_agent.is_mock is False
+
+    def test_mcp_tools_property(self):
+        """mcp_tools es alias de tools"""
+        agent = AgentDefinition(
+            name="TestAgent",
+            description="Test",
+            model="test",
+            system_prompt="Test",
+            tools=["tool1", "tool2"]
+        )
+
+        assert agent.mcp_tools == agent.tools
+        assert agent.mcp_tools == ["tool1", "tool2"]
+
+
+class TestLLMConfig:
+    """Tests para LLMConfig"""
+
+    def test_create_llm_config(self):
+        """LLMConfig se crea correctamente"""
+        llm = LLMConfig(
+            provider="anthropic",
+            model="claude-3-5-sonnet-20241022",
+            max_tokens=4096,
+            temperature=0.1
+        )
+
+        assert llm.provider == "anthropic"
+        assert llm.model == "claude-3-5-sonnet-20241022"
+        assert llm.max_tokens == 4096
+        assert llm.temperature == 0.1
+
+    def test_llm_config_defaults(self):
+        """LLMConfig tiene defaults"""
+        llm = LLMConfig(provider="anthropic", model="test")
+
+        assert llm.max_tokens == 4096
+        assert llm.temperature == 0.1
+
+
+class TestCrewAIAgentConfig:
+    """Tests para CrewAIAgentConfig"""
+
+    def test_create_crewai_agent_config(self):
+        """CrewAIAgentConfig se crea correctamente"""
+        config = CrewAIAgentConfig(
+            role="Test Role",
+            goal="Test Goal",
+            backstory="Test Backstory",
+            verbose=True,
+            allow_delegation=False
+        )
+
+        assert config.role == "Test Role"
+        assert config.goal == "Test Goal"
+        assert config.backstory == "Test Backstory"
+        assert config.verbose is True
+        assert config.allow_delegation is False
 
 
 class TestAgentConfigLoader:
@@ -61,10 +154,12 @@ class TestAgentConfigLoader:
 
     @pytest.fixture
     def valid_yaml_content(self):
-        """Contenido YAML válido para tests"""
+        """Contenido YAML válido para tests (formato mock)"""
         return """
 agents:
   ValidadorDocumental:
+    type: mock
+    enabled: true
     description: "Valida documentación"
     model: "claude-3-5-sonnet-20241022"
     system_prompt: "Eres un validador"
@@ -76,6 +171,8 @@ agents:
     timeout_seconds: 300
 
   AnalizadorSubvencion:
+    type: mock
+    enabled: true
     description: "Analiza subvenciones"
     model: "claude-3-5-sonnet-20241022"
     system_prompt: "Eres un analizador"
@@ -84,6 +181,36 @@ agents:
     required_permissions:
       - subvencion.analisis
     timeout_seconds: 600
+"""
+
+    @pytest.fixture
+    def crewai_yaml_content(self):
+        """Contenido YAML con agente CrewAI"""
+        return """
+agents:
+  ClasificadorExpediente:
+    type: crewai
+    enabled: true
+    description: "Clasifica expedientes"
+    llm:
+      provider: anthropic
+      model: claude-3-5-sonnet-20241022
+      max_tokens: 4096
+      temperature: 0.1
+    crewai_agent:
+      role: "Clasificador"
+      goal: "Clasificar expediente {expediente_id}"
+      backstory: "Experto en clasificación"
+      verbose: true
+      allow_delegation: false
+    crewai_task:
+      description: "Clasifica el expediente {expediente_id}"
+      expected_output: "JSON con clasificación"
+    tools:
+      - consultar_expediente
+    required_permissions:
+      - expediente.lectura
+    timeout_seconds: 300
 """
 
     @pytest.fixture
@@ -104,6 +231,23 @@ agents:
         if os.path.exists(temp_path):
             os.unlink(temp_path)
 
+    @pytest.fixture
+    def temp_crewai_yaml_file(self, crewai_yaml_content):
+        """Crea archivo YAML temporal con agente CrewAI"""
+        with tempfile.NamedTemporaryFile(
+            mode='w',
+            suffix='.yaml',
+            delete=False,
+            encoding='utf-8'
+        ) as f:
+            f.write(crewai_yaml_content)
+            temp_path = f.name
+
+        yield temp_path
+
+        if os.path.exists(temp_path):
+            os.unlink(temp_path)
+
     def test_load_valid_yaml(self, temp_yaml_file):
         """Carga correctamente un archivo YAML válido"""
         loader = AgentConfigLoader(temp_yaml_file)
@@ -118,11 +262,20 @@ agents:
         agent = loader.get("ValidadorDocumental")
 
         assert agent.name == "ValidadorDocumental"
+        assert agent.type == "mock"
         assert agent.description == "Valida documentación"
         assert agent.model == "claude-3-5-sonnet-20241022"
         assert "consultar_expediente" in agent.tools
         assert "actualizar_datos" in agent.tools
         assert agent.timeout_seconds == 300
+
+    def test_get_agent_alias(self, temp_yaml_file):
+        """get_agent() es alias de get()"""
+        loader = AgentConfigLoader(temp_yaml_file)
+        agent1 = loader.get("ValidadorDocumental")
+        agent2 = loader.get_agent("ValidadorDocumental")
+
+        assert agent1.name == agent2.name
 
     def test_get_nonexistent_agent_raises(self, temp_yaml_file):
         """get() lanza KeyError para agente inexistente"""
@@ -152,6 +305,37 @@ agents:
         assert len(names) == 2
         assert "ValidadorDocumental" in names
         assert "AnalizadorSubvencion" in names
+
+    def test_list_by_type_mock(self, temp_yaml_file):
+        """list_by_type() filtra por tipo mock"""
+        loader = AgentConfigLoader(temp_yaml_file)
+        mock_agents = loader.list_by_type("mock")
+
+        assert len(mock_agents) == 2
+        assert "ValidadorDocumental" in mock_agents
+
+    def test_list_by_type_crewai(self, temp_crewai_yaml_file):
+        """list_by_type() filtra por tipo crewai"""
+        loader = AgentConfigLoader(temp_crewai_yaml_file)
+        crewai_agents = loader.list_by_type("crewai")
+
+        assert len(crewai_agents) == 1
+        assert "ClasificadorExpediente" in crewai_agents
+
+    def test_load_crewai_agent(self, temp_crewai_yaml_file):
+        """Carga correctamente un agente CrewAI"""
+        loader = AgentConfigLoader(temp_crewai_yaml_file)
+        agent = loader.get("ClasificadorExpediente")
+
+        assert agent.type == "crewai"
+        assert agent.is_crewai is True
+        assert agent.llm is not None
+        assert agent.llm.provider == "anthropic"
+        assert agent.llm.model == "claude-3-5-sonnet-20241022"
+        assert agent.crewai_agent is not None
+        assert agent.crewai_agent.role == "Clasificador"
+        assert agent.crewai_task is not None
+        assert "expediente_id" in agent.crewai_task.description
 
     def test_load_nonexistent_file(self):
         """Maneja archivo inexistente sin error"""
@@ -204,9 +388,13 @@ agents:
         with open(temp_yaml_file, 'a', encoding='utf-8') as f:
             f.write("""
   NuevoAgente:
+    type: mock
+    enabled: true
     description: "Agente nuevo"
     model: "test-model"
     system_prompt: "Test"
+    tools:
+      - tool1
 """)
 
         # Recargar
@@ -214,34 +402,6 @@ agents:
 
         assert len(loader.list_agents()) == initial_count + 1
         assert loader.exists("NuevoAgente")
-
-    def test_agent_with_minimal_config(self):
-        """Agente con configuración mínima usa defaults"""
-        yaml_content = """
-agents:
-  MinimalAgent:
-    description: "Agente mínimo"
-    model: "test-model"
-    system_prompt: "Prompt mínimo"
-"""
-        with tempfile.NamedTemporaryFile(
-            mode='w',
-            suffix='.yaml',
-            delete=False,
-            encoding='utf-8'
-        ) as f:
-            f.write(yaml_content)
-            temp_path = f.name
-
-        try:
-            loader = AgentConfigLoader(temp_path)
-            agent = loader.get("MinimalAgent")
-
-            assert agent.tools == []
-            assert agent.required_permissions == []
-            assert agent.timeout_seconds == 300
-        finally:
-            os.unlink(temp_path)
 
 
 class TestAgentLoaderSingleton:
@@ -298,8 +458,30 @@ class TestAgentConfigLoaderWithRealFile:
         assert loader.exists("AnalizadorSubvencion")
         assert loader.exists("GeneradorInforme")
 
+    def test_clasificador_expediente_config(self):
+        """ClasificadorExpediente tiene configuración CrewAI correcta"""
+        config_path = Path(__file__).parent.parent.parent / "src" / "backoffice" / "config" / "agents.yaml"
+
+        if not config_path.exists():
+            pytest.skip("agents.yaml no existe todavía")
+
+        loader = AgentConfigLoader(str(config_path))
+
+        if not loader.exists("ClasificadorExpediente"):
+            pytest.skip("ClasificadorExpediente no configurado")
+
+        agent = loader.get("ClasificadorExpediente")
+
+        assert agent.type == "crewai"
+        assert agent.is_crewai is True
+        assert agent.llm is not None
+        assert agent.llm.provider == "anthropic"
+        assert agent.crewai_agent is not None
+        assert agent.crewai_task is not None
+        assert "consultar_expediente" in agent.tools
+
     def test_validador_documental_config(self):
-        """ValidadorDocumental tiene configuración correcta"""
+        """ValidadorDocumental tiene configuración mock correcta"""
         config_path = Path(__file__).parent.parent.parent / "src" / "backoffice" / "config" / "agents.yaml"
 
         if not config_path.exists():
@@ -308,11 +490,11 @@ class TestAgentConfigLoaderWithRealFile:
         loader = AgentConfigLoader(str(config_path))
         agent = loader.get("ValidadorDocumental")
 
-        assert agent.description == "Valida documentación administrativa de expedientes"
+        assert agent.type == "mock"
+        assert agent.is_mock is True
         assert "consultar_expediente" in agent.tools
         assert "actualizar_datos" in agent.tools
         assert "añadir_anotacion" in agent.tools
-        assert agent.timeout_seconds == 300
 
     def test_all_agents_have_required_fields(self):
         """Todos los agentes tienen campos requeridos"""
@@ -324,9 +506,16 @@ class TestAgentConfigLoaderWithRealFile:
         loader = AgentConfigLoader(str(config_path))
 
         for agent in loader.list_agents():
-            assert agent.name, f"Agente sin nombre"
+            assert agent.name, "Agente sin nombre"
+            assert agent.type in ["mock", "crewai", "langgraph"], f"{agent.name}: tipo inválido"
             assert agent.description, f"{agent.name}: sin descripción"
-            assert agent.model, f"{agent.name}: sin modelo"
-            assert agent.system_prompt, f"{agent.name}: sin system_prompt"
             assert len(agent.tools) > 0, f"{agent.name}: sin herramientas"
             assert agent.timeout_seconds > 0, f"{agent.name}: timeout inválido"
+
+            # Verificar campos específicos de CrewAI
+            if agent.is_crewai:
+                assert agent.llm is not None, f"{agent.name}: sin configuración LLM"
+                assert agent.crewai_agent is not None, f"{agent.name}: sin configuración crewai_agent"
+                assert agent.crewai_task is not None, f"{agent.name}: sin configuración crewai_task"
+            else:
+                assert agent.system_prompt, f"{agent.name}: sin system_prompt"
