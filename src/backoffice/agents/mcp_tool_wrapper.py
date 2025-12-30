@@ -8,9 +8,8 @@ de forma transparente, convirtiendo llamadas síncronas a asíncronas.
 """
 
 import json
-import asyncio
-from typing import Any, Callable, List, Optional
-from pydantic import Field
+from typing import Any, Callable, List, Optional, Type
+from pydantic import BaseModel, Field
 
 from ..mcp.registry import MCPClientRegistry
 from ..logging.audit_logger import AuditLogger
@@ -25,6 +24,78 @@ except ImportError:
     class BaseTool:
         """Clase dummy cuando CrewAI no está instalado."""
         pass
+
+
+# ========== SCHEMAS DE ARGUMENTOS PARA HERRAMIENTAS MCP ==========
+
+class ConsultarExpedienteArgs(BaseModel):
+    """Argumentos para consultar_expediente."""
+    expediente_id: str = Field(description="ID del expediente a consultar")
+
+
+class ActualizarDatosArgs(BaseModel):
+    """Argumentos para actualizar_datos."""
+    expediente_id: str = Field(description="ID del expediente")
+    campo: str = Field(description="Ruta del campo a actualizar (ej: 'datos.validado')")
+    valor: Any = Field(description="Nuevo valor a asignar")
+
+
+class AñadirAnotacionArgs(BaseModel):
+    """Argumentos para añadir_anotacion."""
+    expediente_id: str = Field(description="ID del expediente")
+    texto: str = Field(description="Texto de la anotación")
+
+
+class CalcularPuntuacionArgs(BaseModel):
+    """Argumentos para calcular_puntuacion."""
+    expediente_id: str = Field(description="ID del expediente")
+    criterios: Optional[dict] = Field(default=None, description="Criterios opcionales")
+
+
+class GenerarInformeArgs(BaseModel):
+    """Argumentos para generar_informe."""
+    expediente_id: str = Field(description="ID del expediente")
+    tipo_informe: str = Field(description="Tipo de informe a generar")
+
+
+class GenerarDocumentoArgs(BaseModel):
+    """Argumentos para generar_documento."""
+    expediente_id: str = Field(description="ID del expediente")
+    plantilla_id: str = Field(description="ID de la plantilla")
+    datos: dict = Field(description="Datos para la plantilla")
+
+
+class ListarDocumentosArgs(BaseModel):
+    """Argumentos para listar_documentos."""
+    expediente_id: str = Field(description="ID del expediente")
+
+
+class ObtenerDocumentoArgs(BaseModel):
+    """Argumentos para obtener_documento."""
+    expediente_id: str = Field(description="ID del expediente")
+    documento_id: str = Field(description="ID del documento")
+
+
+class AñadirDocumentoArgs(BaseModel):
+    """Argumentos para añadir_documento."""
+    expediente_id: str = Field(description="ID del expediente")
+    nombre: str = Field(description="Nombre del documento")
+    tipo: str = Field(description="Tipo MIME del documento")
+    contenido: str = Field(description="Contenido del documento (base64)")
+
+
+# Mapping de nombre de herramienta a schema de argumentos
+TOOL_ARGS_SCHEMAS: dict[str, Type[BaseModel]] = {
+    "consultar_expediente": ConsultarExpedienteArgs,
+    "actualizar_datos": ActualizarDatosArgs,
+    "añadir_anotacion": AñadirAnotacionArgs,
+    "calcular_puntuacion": CalcularPuntuacionArgs,
+    "generar_informe": GenerarInformeArgs,
+    "generar_documento": GenerarDocumentoArgs,
+    "listar_documentos": ListarDocumentosArgs,
+    "obtener_documento": ObtenerDocumentoArgs,
+    "añadir_documento": AñadirDocumentoArgs,
+}
 
 
 class MCPTool(BaseTool):
@@ -45,14 +116,15 @@ class MCPTool(BaseTool):
     class Config:
         arbitrary_types_allowed = True
 
-    def _run(self, **kwargs) -> str:
+    def _run(self, expediente_id: str = "", **kwargs) -> str:
         """
         Ejecuta la herramienta MCP de forma síncrona.
 
         CrewAI es síncrono, así que envolvemos la llamada async.
 
         Args:
-            **kwargs: Argumentos para la herramienta MCP
+            expediente_id: ID del expediente (parámetro común a todas las herramientas)
+            **kwargs: Argumentos adicionales para la herramienta MCP
 
         Returns:
             Resultado de la herramienta como string JSON
@@ -60,21 +132,12 @@ class MCPTool(BaseTool):
         if not CREWAI_AVAILABLE:
             return json.dumps({"error": "CrewAI no está instalado"})
 
+        # Combinar expediente_id con kwargs
+        all_args = {"expediente_id": expediente_id, **kwargs}
+
         try:
-            # Obtener o crear event loop
-            try:
-                loop = asyncio.get_running_loop()
-                # Si hay un loop corriendo, usamos run_in_executor
-                import concurrent.futures
-                with concurrent.futures.ThreadPoolExecutor() as pool:
-                    future = pool.submit(
-                        asyncio.run,
-                        self._async_call_tool(kwargs)
-                    )
-                    result = future.result()
-            except RuntimeError:
-                # No hay loop corriendo, podemos usar asyncio.run
-                result = asyncio.run(self._async_call_tool(kwargs))
+            # Ejecutar llamada async desde contexto síncrono
+            result = self._run_async_safely(all_args)
 
             # Registrar uso de herramienta
             if self.tool_tracker:
@@ -90,17 +153,71 @@ class MCPTool(BaseTool):
                 text = content[0].get("text", "{}")
                 return text
 
+            if self.logger:
+                self.logger.warning(
+                    f"MCP Tool '{self.name}' retornó resultado inesperado: {result}"
+                )
             return json.dumps(result)
 
         except Exception as e:
-            error_msg = f"Error en MCP Tool '{self.name}': {str(e)}"
+            error_msg = f"Error en MCP Tool '{self.name}': {str(e)} {e.detalle if hasattr(e, 'detalle') else ''}"
             if self.logger:
                 self.logger.error(error_msg)
             return json.dumps({"error": str(e)})
 
-    async def _async_call_tool(self, kwargs: dict) -> dict:
-        """Ejecuta la llamada asíncrona al MCP."""
-        return await self.mcp_registry.call_tool(self.name, kwargs)
+    def _run_async_safely(self, args: dict) -> dict:
+        """
+        Ejecuta la llamada HTTP de forma segura desde contexto síncrono.
+
+        Usa httpx síncrono para evitar problemas de event loop cuando
+        CrewAI ejecuta en un contexto async.
+        """
+        import httpx
+
+        # Obtener configuración del servidor MCP desde el registry
+        tool_name = self.name
+        server_id = self.mcp_registry._tool_routing.get(tool_name)
+
+        if not server_id:
+            raise ValueError(f"Tool '{tool_name}' no encontrada en ningún servidor MCP")
+
+        mcp_client = self.mcp_registry._clients.get(server_id)
+        if not mcp_client:
+            raise ValueError(f"Servidor MCP '{server_id}' no encontrado")
+
+        # Usar la configuración del cliente existente
+        server_config = mcp_client.server_config
+        token = mcp_client.token
+
+        # Hacer llamada HTTP síncrona
+        with httpx.Client(
+            base_url=str(server_config.url),
+            timeout=float(server_config.timeout),
+            headers={
+                "Authorization": f"Bearer {token}",
+                "Content-Type": "application/json"
+            }
+        ) as http_client:
+            response = http_client.post(
+                server_config.endpoint,
+                json={
+                    "jsonrpc": "2.0",
+                    "id": 1,
+                    "method": "tools/call",
+                    "params": {
+                        "name": tool_name,
+                        "arguments": args
+                    }
+                }
+            )
+
+            response.raise_for_status()
+            data = response.json()
+
+            if "error" in data:
+                raise ValueError(f"Error MCP: {data['error'].get('message', data['error'])}")
+
+            return data.get("result", {})
 
 
 class MCPToolFactory:
@@ -191,9 +308,13 @@ class MCPToolFactory:
                 f"Herramienta MCP: {name}. Consulta la documentación para más detalles."
             )
 
+            # Obtener schema de argumentos para esta herramienta
+            args_schema = TOOL_ARGS_SCHEMAS.get(name, ConsultarExpedienteArgs)
+
             tool = MCPTool(
                 name=name,
                 description=description,
+                args_schema=args_schema,
                 mcp_registry=mcp_registry,
                 logger=logger,
                 tool_tracker=tool_tracker
