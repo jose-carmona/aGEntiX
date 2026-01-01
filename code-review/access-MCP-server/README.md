@@ -1,12 +1,22 @@
 # Code Review: Acceso a Servidor MCP
 
 **Fecha:** 2024-12-30
+**Última actualización:** 2025-01-01
 **Archivos analizados:**
 - `src/backoffice/agents/mcp_tool_wrapper.py`
 - `src/backoffice/mcp/client.py`
 - `src/backoffice/mcp/registry.py`
 
-**Calificación actual:** 3.2/5 ⭐⭐⭐
+**Calificación actual:** 4.2/5 ⭐⭐⭐⭐ (post Fase 1+2)
+
+## Estado de Implementación
+
+| Fase | Descripción | Estado |
+|------|-------------|--------|
+| 1 | MCPClient dual (sync/async) | ✅ Implementada |
+| 2 | Métodos públicos en Registry | ✅ Implementada |
+| 3 | Simplificar wrapper | ✅ Implementada (en Fase 1) |
+| 4 | Discovery dinámico de schemas | ⏳ Pendiente |
 
 ---
 
@@ -325,3 +335,63 @@ class MCPToolFactory:
 El código funciona pero tiene deuda técnica significativa. Las Fases 1-3 pueden implementarse en una sesión de trabajo y resolverían los problemas P1, P2, P4 y P5. La Fase 4 (schemas dinámicos) requiere más análisis pero eliminaría P3 y P6.
 
 **Calificación post-refactor estimada:** 4.5/5 ⭐⭐⭐⭐⭐
+
+---
+
+## API Pública Actual (Post Fase 1+2)
+
+### MCPClientRegistry
+
+```python
+# Métodos de ejecución
+async call_tool(tool_name, arguments)     # Async
+call_tool_sync(tool_name, arguments)      # Sync (CrewAI)
+
+# Discovery
+get_available_tools() -> Dict[str, str]   # {tool_name: server_id}
+get_tool_names() -> List[str]             # Solo nombres
+is_tool_available(tool_name) -> bool      # Verificación rápida
+list_tools_sync(server_id=None) -> Dict   # Discovery sync
+
+# Servidor
+get_server_for_tool(tool_name) -> Optional[str]
+get_enabled_server_ids() -> List[str]
+get_server_config(server_id) -> Optional[MCPServerConfig]
+
+# Estado
+is_initialized -> bool                    # Property
+
+# Lifecycle
+async initialize()
+async close()
+close_sync()
+```
+
+### MCPClient
+
+```python
+# Async
+async call_tool(name, arguments)
+async list_tools()
+async read_resource(uri)
+async close()
+
+# Sync (para CrewAI)
+call_tool_sync(name, arguments)
+list_tools_sync()
+close_sync()
+async close_all()
+```
+
+---
+
+## Problemas Resueltos
+
+| Problema | Estado | Fase |
+|----------|--------|------|
+| P1. Duplicación HTTP | ✅ Resuelto | 1 |
+| P2. Violación encapsulamiento | ✅ Resuelto | 1+2 |
+| P3. Schemas hardcodeados | ⏳ Pendiente | 4 |
+| P4. Sin interfaz sync | ✅ Resuelto | 1 |
+| P5. Errores inconsistentes | ✅ Resuelto | 1 |
+| P6. Descripciones duplicadas | ⏳ Pendiente | 4 |

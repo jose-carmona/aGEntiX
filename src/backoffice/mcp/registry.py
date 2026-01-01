@@ -1,6 +1,17 @@
 # backoffice/mcp/registry.py
 
-from typing import Dict, List, Any
+"""
+Registro de clientes MCP con routing automático.
+
+Provee una API pública completa para evitar accesos a atributos privados:
+- get_server_for_tool(): Obtiene el servidor para una tool
+- get_tool_names(): Lista de tools disponibles
+- is_tool_available(): Verifica si una tool existe
+- is_initialized: Estado de inicialización
+- list_tools_sync(): Discovery síncrono de tools
+"""
+
+from typing import Dict, List, Any, Optional
 from .client import MCPClient
 from .exceptions import MCPError, MCPToolError
 from ..config.models import MCPServersConfig
@@ -180,7 +191,117 @@ class MCPClientRegistry:
         """
         return list(self._clients.keys())
 
+    # ========== FASE 2: MÉTODOS PÚBLICOS ADICIONALES ==========
+
+    @property
+    def is_initialized(self) -> bool:
+        """
+        Indica si el registry ha sido inicializado.
+
+        Returns:
+            True si initialize() fue llamado exitosamente
+        """
+        return self._initialized
+
+    def get_server_for_tool(self, tool_name: str) -> Optional[str]:
+        """
+        Retorna el server_id para una tool específica.
+
+        Args:
+            tool_name: Nombre de la tool
+
+        Returns:
+            ID del servidor que provee la tool, o None si no existe
+        """
+        return self._tool_routing.get(tool_name)
+
+    def get_tool_names(self) -> List[str]:
+        """
+        Retorna lista de nombres de tools disponibles.
+
+        Returns:
+            Lista de nombres de tools
+        """
+        return list(self._tool_routing.keys())
+
+    def is_tool_available(self, tool_name: str) -> bool:
+        """
+        Verifica si una tool está disponible.
+
+        Args:
+            tool_name: Nombre de la tool
+
+        Returns:
+            True si la tool existe en algún servidor MCP
+        """
+        return tool_name in self._tool_routing
+
+    def list_tools_sync(self, server_id: Optional[str] = None) -> Dict[str, Any]:
+        """
+        Lista tools disponibles de forma síncrona.
+
+        Útil para discovery en contextos no-async (CrewAI).
+        NOTA: Requiere que initialize() haya sido llamado.
+
+        Args:
+            server_id: ID del servidor (opcional). Si no se especifica,
+                      retorna tools de todos los servidores.
+
+        Returns:
+            Dict con lista de tools y sus metadatos
+
+        Raises:
+            RuntimeError: Si el registry no está inicializado
+            MCPToolError: Si el servidor no existe
+        """
+        if not self._initialized:
+            raise RuntimeError(
+                "MCPClientRegistry no inicializado. "
+                "Llama a 'await registry.initialize()' antes de usar list_tools_sync()."
+            )
+
+        if server_id:
+            if server_id not in self._clients:
+                raise MCPToolError(
+                    codigo="MCP_SERVER_NOT_FOUND",
+                    mensaje=f"Servidor MCP '{server_id}' no encontrado",
+                    detalle=f"Servidores disponibles: {list(self._clients.keys())}"
+                )
+            return self._clients[server_id].list_tools_sync()
+
+        # Agregar tools de todos los servidores
+        all_tools = []
+        for client in self._clients.values():
+            try:
+                result = client.list_tools_sync()
+                tools = result.get("tools", [])
+                all_tools.extend(tools)
+            except Exception as e:
+                logger.warning(f"Error listando tools: {e}")
+
+        return {"tools": all_tools}
+
+    def get_server_config(self, server_id: str) -> Optional[Any]:
+        """
+        Obtiene la configuración de un servidor MCP.
+
+        Args:
+            server_id: ID del servidor
+
+        Returns:
+            Configuración del servidor o None si no existe
+        """
+        client = self._clients.get(server_id)
+        if client:
+            return client.server_config
+        return None
+
     async def close(self):
-        """Cierra todos los clientes HTTP"""
+        """Cierra todos los clientes HTTP async."""
         tasks = [client.close() for client in self._clients.values()]
         await asyncio.gather(*tasks)
+
+    def close_sync(self):
+        """Cierra todos los clientes HTTP sync."""
+        for client in self._clients.values():
+            client.close_sync()

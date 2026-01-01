@@ -478,3 +478,192 @@ async def test_mcp_registry_multiple_servers():
         assert registry._tool_routing["firmar_documento"] == "mcp-firma"
 
     await registry.close()
+
+
+# ============================================================================
+# FASE 2: TESTS PARA MÉTODOS PÚBLICOS ADICIONALES
+# ============================================================================
+
+@pytest.mark.asyncio
+async def test_mcp_registry_is_initialized_property(mock_server_config, test_token):
+    """Test: Propiedad is_initialized"""
+    config = MCPServersConfig(mcp_servers=[mock_server_config])
+    registry = MCPClientRegistry(config, test_token)
+
+    # Antes de inicializar
+    assert registry.is_initialized is False
+
+    json_data = {
+        "jsonrpc": "2.0",
+        "id": 1,
+        "result": {"tools": [{"name": "test_tool", "description": "..."}]}
+    }
+    mock_response = create_mock_response(json_data)
+
+    async def async_post(*args, **kwargs):
+        return mock_response
+
+    with patch('httpx.AsyncClient.post', side_effect=async_post):
+        await registry.initialize()
+
+        # Después de inicializar
+        assert registry.is_initialized is True
+
+    await registry.close()
+
+
+@pytest.mark.asyncio
+async def test_mcp_registry_get_server_for_tool(mock_server_config, test_token):
+    """Test: get_server_for_tool retorna server_id correcto"""
+    config = MCPServersConfig(mcp_servers=[mock_server_config])
+    registry = MCPClientRegistry(config, test_token)
+
+    json_data = {
+        "jsonrpc": "2.0",
+        "id": 1,
+        "result": {"tools": [{"name": "consultar_expediente", "description": "..."}]}
+    }
+    mock_response = create_mock_response(json_data)
+
+    async def async_post(*args, **kwargs):
+        return mock_response
+
+    with patch('httpx.AsyncClient.post', side_effect=async_post):
+        await registry.initialize()
+
+        # Tool existente
+        server_id = registry.get_server_for_tool("consultar_expediente")
+        assert server_id == "test-mcp"
+
+        # Tool inexistente
+        server_id = registry.get_server_for_tool("tool_inexistente")
+        assert server_id is None
+
+    await registry.close()
+
+
+@pytest.mark.asyncio
+async def test_mcp_registry_get_tool_names(mock_server_config, test_token):
+    """Test: get_tool_names retorna lista de nombres"""
+    config = MCPServersConfig(mcp_servers=[mock_server_config])
+    registry = MCPClientRegistry(config, test_token)
+
+    json_data = {
+        "jsonrpc": "2.0",
+        "id": 1,
+        "result": {"tools": [
+            {"name": "tool1", "description": "..."},
+            {"name": "tool2", "description": "..."}
+        ]}
+    }
+    mock_response = create_mock_response(json_data)
+
+    async def async_post(*args, **kwargs):
+        return mock_response
+
+    with patch('httpx.AsyncClient.post', side_effect=async_post):
+        await registry.initialize()
+
+        tool_names = registry.get_tool_names()
+        assert isinstance(tool_names, list)
+        assert "tool1" in tool_names
+        assert "tool2" in tool_names
+        assert len(tool_names) == 2
+
+    await registry.close()
+
+
+@pytest.mark.asyncio
+async def test_mcp_registry_is_tool_available(mock_server_config, test_token):
+    """Test: is_tool_available verifica existencia"""
+    config = MCPServersConfig(mcp_servers=[mock_server_config])
+    registry = MCPClientRegistry(config, test_token)
+
+    json_data = {
+        "jsonrpc": "2.0",
+        "id": 1,
+        "result": {"tools": [{"name": "consultar_expediente", "description": "..."}]}
+    }
+    mock_response = create_mock_response(json_data)
+
+    async def async_post(*args, **kwargs):
+        return mock_response
+
+    with patch('httpx.AsyncClient.post', side_effect=async_post):
+        await registry.initialize()
+
+        assert registry.is_tool_available("consultar_expediente") is True
+        assert registry.is_tool_available("tool_inexistente") is False
+
+    await registry.close()
+
+
+@pytest.mark.asyncio
+async def test_mcp_registry_get_server_config(mock_server_config, test_token):
+    """Test: get_server_config retorna configuración"""
+    config = MCPServersConfig(mcp_servers=[mock_server_config])
+    registry = MCPClientRegistry(config, test_token)
+
+    json_data = {
+        "jsonrpc": "2.0",
+        "id": 1,
+        "result": {"tools": []}
+    }
+    mock_response = create_mock_response(json_data)
+
+    async def async_post(*args, **kwargs):
+        return mock_response
+
+    with patch('httpx.AsyncClient.post', side_effect=async_post):
+        await registry.initialize()
+
+        # Servidor existente
+        server_config = registry.get_server_config("test-mcp")
+        assert server_config is not None
+        assert server_config.id == "test-mcp"
+
+        # Servidor inexistente
+        server_config = registry.get_server_config("servidor-inexistente")
+        assert server_config is None
+
+    await registry.close()
+
+
+@pytest.mark.asyncio
+async def test_mcp_registry_list_tools_sync_requires_init(mock_server_config, test_token):
+    """Test: list_tools_sync requiere inicialización"""
+    config = MCPServersConfig(mcp_servers=[mock_server_config])
+    registry = MCPClientRegistry(config, test_token)
+
+    # Sin inicializar debe lanzar RuntimeError
+    with pytest.raises(RuntimeError) as exc_info:
+        registry.list_tools_sync()
+
+    assert "no inicializado" in str(exc_info.value)
+
+
+@pytest.mark.asyncio
+async def test_mcp_registry_list_tools_sync_server_not_found(mock_server_config, test_token):
+    """Test: list_tools_sync con servidor inexistente"""
+    config = MCPServersConfig(mcp_servers=[mock_server_config])
+    registry = MCPClientRegistry(config, test_token)
+
+    json_data = {
+        "jsonrpc": "2.0",
+        "id": 1,
+        "result": {"tools": []}
+    }
+    mock_response = create_mock_response(json_data)
+
+    async def async_post(*args, **kwargs):
+        return mock_response
+
+    with patch('httpx.AsyncClient.post', side_effect=async_post):
+        await registry.initialize()
+
+        with pytest.raises(MCPToolError) as exc_info:
+            registry.list_tools_sync(server_id="servidor-inexistente")
+
+        assert exc_info.value.codigo == "MCP_SERVER_NOT_FOUND"
+
+    await registry.close()
