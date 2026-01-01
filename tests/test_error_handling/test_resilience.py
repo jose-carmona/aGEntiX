@@ -68,6 +68,25 @@ def mock_httpx_response():
     return _create
 
 
+def create_mock_async_client(mock_response=None, side_effect=None):
+    """
+    Helper para crear un mock de httpx.AsyncClient compatible con lazy init.
+
+    Args:
+        mock_response: Respuesta a retornar (para casos de éxito o error JSON-RPC)
+        side_effect: Excepción a lanzar (para simular errores de conexión)
+    """
+    mock_client = MagicMock()
+
+    async def async_post(*args, **kwargs):
+        if side_effect:
+            raise side_effect
+        return mock_response
+
+    mock_client.post = MagicMock(side_effect=async_post)
+    return mock_client
+
+
 # ============================================================================
 # TESTS MCP ERRORS
 # ============================================================================
@@ -90,11 +109,11 @@ async def test_error_1_mcp_server_completely_down(mock_server_config, test_token
     """
     client = MCPClient(mock_server_config, test_token)
 
-    with patch.object(
-        client.client,
-        'post',
+    mock_async_client = create_mock_async_client(
         side_effect=httpx.ConnectError("Connection refused")
-    ):
+    )
+
+    with patch.object(client, '_get_async_client', return_value=mock_async_client):
         with pytest.raises(MCPConnectionError) as exc_info:
             await client.call_tool("consultar_expediente", {"exp_id": "EXP-001"})
 
@@ -137,7 +156,9 @@ async def test_error_2_mcp_tool_execution_fails(mock_server_config, test_token):
     mock_response.json = Mock(return_value=error_response)
     mock_response.raise_for_status = Mock()
 
-    with patch.object(client.client, 'post', return_value=mock_response):
+    mock_async_client = create_mock_async_client(mock_response=mock_response)
+
+    with patch.object(client, '_get_async_client', return_value=mock_async_client):
         with pytest.raises(MCPToolError) as exc_info:
             await client.call_tool("consultar_expediente", {"exp_id": "EXP-999"})
 
@@ -165,11 +186,11 @@ async def test_error_3_network_timeout_during_mcp_call(mock_server_config, test_
     """
     client = MCPClient(mock_server_config, test_token)
 
-    with patch.object(
-        client.client,
-        'post',
+    mock_async_client = create_mock_async_client(
         side_effect=httpx.TimeoutException("Request timeout")
-    ):
+    )
+
+    with patch.object(client, '_get_async_client', return_value=mock_async_client):
         with pytest.raises(MCPConnectionError) as exc_info:
             await client.call_tool("consultar_expediente", {"exp_id": "EXP-001"})
 
@@ -212,7 +233,9 @@ async def test_error_7_mcp_jsonrpc_error_response(mock_server_config, test_token
     mock_response.json = Mock(return_value=error_response)
     mock_response.raise_for_status = Mock()
 
-    with patch.object(client.client, 'post', return_value=mock_response):
+    mock_async_client = create_mock_async_client(mock_response=mock_response)
+
+    with patch.object(client, '_get_async_client', return_value=mock_async_client):
         with pytest.raises(MCPToolError) as exc_info:
             await client.call_tool("consultar_expediente", {})
 
@@ -246,11 +269,9 @@ async def test_error_13_mcp_authorization_denied(mock_server_config, test_token)
         response=Mock(status_code=403, text="Permisos insuficientes")
     )
 
-    with patch.object(
-        client.client,
-        'post',
-        side_effect=http_error
-    ):
+    mock_async_client = create_mock_async_client(side_effect=http_error)
+
+    with patch.object(client, '_get_async_client', return_value=mock_async_client):
         with pytest.raises(MCPAuthError) as exc_info:
             await client.call_tool("modificar_expediente", {"exp_id": "EXP-001"})
 
@@ -642,11 +663,9 @@ async def test_error_10_concurrent_modification_conflict(mock_server_config, tes
         response=Mock(status_code=409, text="Versión del expediente ha cambiado")
     )
 
-    with patch.object(
-        client.client,
-        'post',
-        side_effect=http_error
-    ):
+    mock_async_client = create_mock_async_client(side_effect=http_error)
+
+    with patch.object(client, '_get_async_client', return_value=mock_async_client):
         with pytest.raises(MCPToolError) as exc_info:
             await client.call_tool("actualizar_expediente", {
                 "exp_id": "EXP-001",
