@@ -7,7 +7,7 @@
 - `src/backoffice/mcp/client.py`
 - `src/backoffice/mcp/registry.py`
 
-**Calificación actual:** 4.2/5 ⭐⭐⭐⭐ (post Fase 1+2)
+**Calificación actual:** 4.5/5 ⭐⭐⭐⭐⭐ (post Fase 1+2+3)
 
 ## Estado de Implementación
 
@@ -15,8 +15,30 @@
 |------|-------------|--------|
 | 1 | MCPClient dual (sync/async) | ✅ Implementada |
 | 2 | Métodos públicos en Registry | ✅ Implementada |
-| 3 | Simplificar wrapper | ✅ Implementada (en Fase 1) |
+| 3 | Wrapper con errores semánticos | ✅ Implementada |
 | 4 | Discovery dinámico de schemas | ⏳ Pendiente |
+
+### Fase 3: Mejoras Implementadas
+
+El wrapper ahora preserva errores semánticos con información de retry:
+
+```python
+# Error response structure
+{
+    "error": "MCP_TIMEOUT",      # Código semántico
+    "message": "Timeout en...",   # Mensaje descriptivo
+    "type": "connection",         # Tipo: connection|auth|tool|internal
+    "retriable": True             # ¿El agente puede reintentar?
+}
+```
+
+| Tipo Error | Retriable | Ejemplo |
+|------------|-----------|---------|
+| MCPConnectionError | ✅ Sí | Timeout, servidor caído |
+| MCPAuthError | ❌ No | Token inválido, permisos |
+| MCPToolError (CONFLICT) | ✅ Sí | Modificación concurrente |
+| MCPToolError (otros) | ❌ No | Tool no encontrada |
+| Exception | ❌ No | Errores internos |
 
 ---
 
@@ -393,5 +415,11 @@ async close_all()
 | P2. Violación encapsulamiento | ✅ Resuelto | 1+2 |
 | P3. Schemas hardcodeados | ⏳ Pendiente | 4 |
 | P4. Sin interfaz sync | ✅ Resuelto | 1 |
-| P5. Errores inconsistentes | ✅ Resuelto | 1 |
+| P5. Errores inconsistentes | ✅ Resuelto | 1+3 |
 | P6. Descripciones duplicadas | ⏳ Pendiente | 4 |
+
+## Tests
+
+- **test_mcp_integration.py**: 22 tests (MCPClient + MCPClientRegistry)
+- **test_mcp_tool_wrapper.py**: 14 tests (errores semánticos + factory)
+- **Total backoffice**: 135 tests PASS
