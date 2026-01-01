@@ -4,7 +4,7 @@
 Wrapper para exponer herramientas MCP como Tools de CrewAI.
 
 Permite que los agentes CrewAI usen las herramientas del MCPClientRegistry
-de forma transparente, convirtiendo llamadas síncronas a asíncronas.
+de forma transparente, usando la interfaz síncrona del cliente MCP.
 """
 
 import json
@@ -102,8 +102,8 @@ class MCPTool(BaseTool):
     """
     Tool de CrewAI que ejecuta una herramienta MCP.
 
-    Convierte la interfaz síncrona de CrewAI en llamadas asíncronas
-    al MCPClientRegistry.
+    Usa la interfaz síncrona del MCPClientRegistry para ejecutar
+    herramientas MCP desde el contexto síncrono de CrewAI.
     """
     name: str = Field(description="Nombre de la herramienta MCP")
     description: str = Field(description="Descripción de la herramienta")
@@ -136,8 +136,8 @@ class MCPTool(BaseTool):
         all_args = {"expediente_id": expediente_id, **kwargs}
 
         try:
-            # Ejecutar llamada async desde contexto síncrono
-            result = self._run_async_safely(all_args)
+            # Ejecutar llamada síncrona al MCP
+            result = self._call_mcp_tool(all_args)
 
             # Registrar uso de herramienta
             if self.tool_tracker:
@@ -165,59 +165,22 @@ class MCPTool(BaseTool):
                 self.logger.error(error_msg)
             return json.dumps({"error": str(e)})
 
-    def _run_async_safely(self, args: dict) -> dict:
+    def _call_mcp_tool(self, args: dict) -> dict:
         """
-        Ejecuta la llamada HTTP de forma segura desde contexto síncrono.
+        Ejecuta la llamada al servidor MCP usando la interfaz síncrona.
 
-        Usa httpx síncrono para evitar problemas de event loop cuando
-        CrewAI ejecuta en un contexto async.
+        Delega al MCPClientRegistry que maneja el routing y la conexión.
+
+        Args:
+            args: Argumentos para la tool
+
+        Returns:
+            Resultado de la tool
+
+        Raises:
+            MCPError: Errores de conexión, autenticación o ejecución
         """
-        import httpx
-
-        # Obtener configuración del servidor MCP desde el registry
-        tool_name = self.name
-        server_id = self.mcp_registry._tool_routing.get(tool_name)
-
-        if not server_id:
-            raise ValueError(f"Tool '{tool_name}' no encontrada en ningún servidor MCP")
-
-        mcp_client = self.mcp_registry._clients.get(server_id)
-        if not mcp_client:
-            raise ValueError(f"Servidor MCP '{server_id}' no encontrado")
-
-        # Usar la configuración del cliente existente
-        server_config = mcp_client.server_config
-        token = mcp_client.token
-
-        # Hacer llamada HTTP síncrona
-        with httpx.Client(
-            base_url=str(server_config.url),
-            timeout=float(server_config.timeout),
-            headers={
-                "Authorization": f"Bearer {token}",
-                "Content-Type": "application/json"
-            }
-        ) as http_client:
-            response = http_client.post(
-                server_config.endpoint,
-                json={
-                    "jsonrpc": "2.0",
-                    "id": 1,
-                    "method": "tools/call",
-                    "params": {
-                        "name": tool_name,
-                        "arguments": args
-                    }
-                }
-            )
-
-            response.raise_for_status()
-            data = response.json()
-
-            if "error" in data:
-                raise ValueError(f"Error MCP: {data['error'].get('message', data['error'])}")
-
-            return data.get("result", {})
+        return self.mcp_registry.call_tool_sync(self.name, args)
 
 
 class MCPToolFactory:

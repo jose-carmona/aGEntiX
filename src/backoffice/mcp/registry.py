@@ -82,13 +82,38 @@ class MCPClientRegistry:
             # El sistema seguirá funcionando con los MCPs disponibles
             logger.warning(f"No se pudieron descubrir tools de MCP '{server_id}': {e}")
 
+    def _get_client_for_tool(self, tool_name: str) -> "MCPClient":
+        """
+        Obtiene el cliente MCP para una tool específica.
+
+        Args:
+            tool_name: Nombre de la tool
+
+        Returns:
+            Cliente MCP correspondiente
+
+        Raises:
+            MCPToolError: Si la tool no se encuentra
+        """
+        server_id = self._tool_routing.get(tool_name)
+
+        if not server_id:
+            available_tools = list(self._tool_routing.keys())
+            raise MCPToolError(
+                codigo="MCP_TOOL_NOT_FOUND",
+                mensaje=f"Tool '{tool_name}' no encontrada en ningún servidor MCP configurado",
+                detalle=f"Tools disponibles: {available_tools}"
+            )
+
+        return self._clients[server_id]
+
     async def call_tool(
         self,
         tool_name: str,
         arguments: Dict[str, Any]
     ) -> Dict[str, Any]:
         """
-        Ejecuta una tool con routing automático al MCP correcto.
+        Ejecuta una tool con routing automático al MCP correcto (async).
 
         Args:
             tool_name: Nombre de la tool
@@ -103,20 +128,39 @@ class MCPClientRegistry:
         if not self._initialized:
             await self.initialize()
 
-        # Routing: buscar qué servidor tiene esta tool
-        server_id = self._tool_routing.get(tool_name)
+        client = self._get_client_for_tool(tool_name)
+        return await client.call_tool(tool_name, arguments)
 
-        if not server_id:
-            available_tools = list(self._tool_routing.keys())
-            raise MCPToolError(
-                codigo="MCP_TOOL_NOT_FOUND",
-                mensaje=f"Tool '{tool_name}' no encontrada en ningún servidor MCP configurado",
-                detalle=f"Tools disponibles: {available_tools}"
+    def call_tool_sync(
+        self,
+        tool_name: str,
+        arguments: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """
+        Ejecuta una tool con routing automático (sync).
+
+        Versión síncrona para uso desde CrewAI y otros contextos no-async.
+        NOTA: Requiere que initialize() haya sido llamado previamente.
+
+        Args:
+            tool_name: Nombre de la tool
+            arguments: Argumentos de la tool
+
+        Returns:
+            Resultado de la tool
+
+        Raises:
+            MCPToolError: Si la tool no se encuentra
+            RuntimeError: Si el registry no ha sido inicializado
+        """
+        if not self._initialized:
+            raise RuntimeError(
+                "MCPClientRegistry no inicializado. "
+                "Llama a 'await registry.initialize()' antes de usar call_tool_sync()."
             )
 
-        # Delegar al cliente correcto
-        client = self._clients[server_id]
-        return await client.call_tool(tool_name, arguments)
+        client = self._get_client_for_tool(tool_name)
+        return client.call_tool_sync(tool_name, arguments)
 
     def get_available_tools(self) -> Dict[str, str]:
         """

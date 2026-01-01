@@ -36,6 +36,8 @@ agents:
         Siempre consultas los datos reales del expediente antes de clasificar.
         Analizas la documentación presente, el estado del trámite y los metadatos
         para tomar una decisión informada.
+
+        IMPORTANTE: responde siempre en Español.
       verbose: true
       allow_delegation: false
 

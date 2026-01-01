@@ -38,6 +38,17 @@ def create_mock_response(json_data, status_code=200):
     return mock_resp
 
 
+def create_mock_async_client(mock_response):
+    """Helper para crear un mock de httpx.AsyncClient"""
+    mock_client = MagicMock()
+
+    async def async_post(*args, **kwargs):
+        return mock_response
+
+    mock_client.post = MagicMock(side_effect=async_post)
+    return mock_client
+
+
 @pytest.mark.asyncio
 async def test_mcp_client_connection_success(mock_server_config, test_token):
     """Test: Conexión exitosa al servidor MCP"""
@@ -49,17 +60,15 @@ async def test_mcp_client_connection_success(mock_server_config, test_token):
         "result": {"content": [{"type": "text", "text": "Success"}]}
     }
     mock_response = create_mock_response(json_data)
+    mock_async_client = create_mock_async_client(mock_response)
 
-    async def async_post(*args, **kwargs):
-        return mock_response
-
-    with patch.object(client.client, 'post', side_effect=async_post) as mock_post:
+    with patch.object(client, '_get_async_client', return_value=mock_async_client):
         result = await client.call_tool("test_tool", {"arg": "value"})
 
         # Verificar llamada
-        assert mock_post.call_count == 1
-        call_args = mock_post.call_args
-        assert call_args[0][0] == "/sse"
+        assert mock_async_client.post.call_count == 1
+        call_args = mock_async_client.post.call_args
+        assert call_args[0][0] == "/rpc"
 
         # Verificar JSON-RPC
         json_req = call_args[1]["json"]
@@ -78,7 +87,10 @@ async def test_mcp_client_timeout(mock_server_config, test_token):
     """Test: Timeout al conectar con MCP"""
     client = MCPClient(mock_server_config, test_token)
 
-    with patch.object(client.client, 'post', side_effect=httpx.TimeoutException("Timeout")):
+    mock_client = MagicMock()
+    mock_client.post = MagicMock(side_effect=httpx.TimeoutException("Timeout"))
+
+    with patch.object(client, '_get_async_client', return_value=mock_client):
         with pytest.raises(MCPConnectionError) as exc_info:
             await client.call_tool("test_tool", {})
 
@@ -93,7 +105,10 @@ async def test_mcp_client_connection_error(mock_server_config, test_token):
     """Test: Error de conexión con MCP"""
     client = MCPClient(mock_server_config, test_token)
 
-    with patch.object(client.client, 'post', side_effect=httpx.ConnectError("Connection refused")):
+    mock_client = MagicMock()
+    mock_client.post = MagicMock(side_effect=httpx.ConnectError("Connection refused"))
+
+    with patch.object(client, '_get_async_client', return_value=mock_client):
         with pytest.raises(MCPConnectionError) as exc_info:
             await client.call_tool("test_tool", {})
 
@@ -118,7 +133,10 @@ async def test_mcp_client_auth_error_401(mock_server_config, test_token):
         response=mock_response
     )
 
-    with patch.object(client.client, 'post', side_effect=http_error):
+    mock_client = MagicMock()
+    mock_client.post = MagicMock(side_effect=http_error)
+
+    with patch.object(client, '_get_async_client', return_value=mock_client):
         with pytest.raises(MCPAuthError) as exc_info:
             await client.call_tool("test_tool", {})
 
@@ -142,7 +160,10 @@ async def test_mcp_client_auth_error_403(mock_server_config, test_token):
         response=mock_response
     )
 
-    with patch.object(client.client, 'post', side_effect=http_error):
+    mock_client = MagicMock()
+    mock_client.post = MagicMock(side_effect=http_error)
+
+    with patch.object(client, '_get_async_client', return_value=mock_client):
         with pytest.raises(MCPAuthError) as exc_info:
             await client.call_tool("test_tool", {})
 
@@ -166,7 +187,10 @@ async def test_mcp_client_tool_not_found_404(mock_server_config, test_token):
         response=mock_response
     )
 
-    with patch.object(client.client, 'post', side_effect=http_error):
+    mock_client = MagicMock()
+    mock_client.post = MagicMock(side_effect=http_error)
+
+    with patch.object(client, '_get_async_client', return_value=mock_client):
         with pytest.raises(MCPToolError) as exc_info:
             await client.call_tool("unknown_tool", {})
 
@@ -191,7 +215,10 @@ async def test_mcp_client_server_unavailable_502(mock_server_config, test_token)
         response=mock_response
     )
 
-    with patch.object(client.client, 'post', side_effect=http_error):
+    mock_client = MagicMock()
+    mock_client.post = MagicMock(side_effect=http_error)
+
+    with patch.object(client, '_get_async_client', return_value=mock_client):
         with pytest.raises(MCPConnectionError) as exc_info:
             await client.call_tool("test_tool", {})
 
@@ -215,11 +242,9 @@ async def test_mcp_client_json_rpc_error(mock_server_config, test_token):
         }
     }
     mock_response = create_mock_response(json_data)
+    mock_async_client = create_mock_async_client(mock_response)
 
-    async def async_post(*args, **kwargs):
-        return mock_response
-
-    with patch.object(client.client, 'post', side_effect=async_post):
+    with patch.object(client, '_get_async_client', return_value=mock_async_client):
         with pytest.raises(MCPToolError) as exc_info:
             await client.call_tool("test_tool", {})
 
@@ -363,15 +388,13 @@ async def test_mcp_client_list_tools(mock_server_config, test_token):
         }
     }
     mock_response = create_mock_response(json_data)
+    mock_async_client = create_mock_async_client(mock_response)
 
-    async def async_post(*args, **kwargs):
-        return mock_response
-
-    with patch.object(client.client, 'post', side_effect=async_post) as mock_post:
+    with patch.object(client, '_get_async_client', return_value=mock_async_client):
         result = await client.list_tools()
 
         # Verificar método
-        call_args = mock_post.call_args
+        call_args = mock_async_client.post.call_args
         assert call_args[1]["json"]["method"] == "tools/list"
 
         # Verificar resultado
@@ -383,12 +406,17 @@ async def test_mcp_client_list_tools(mock_server_config, test_token):
 
 @pytest.mark.asyncio
 async def test_mcp_client_headers_propagation(mock_server_config, test_token):
-    """Test: Headers JWT propagados"""
+    """Test: Headers JWT propagados correctamente"""
     client = MCPClient(mock_server_config, test_token)
 
-    assert "Authorization" in client.client.headers
-    assert client.client.headers["Authorization"] == f"Bearer {test_token}"
-    assert client.client.headers["Content-Type"] == "application/json"
+    # Verificar propiedades de configuración
+    assert client._headers["Authorization"] == f"Bearer {test_token}"
+    assert client._headers["Content-Type"] == "application/json"
+
+    # Verificar que el cliente async se crea con los headers correctos
+    async_client = client._get_async_client()
+    assert "Authorization" in async_client.headers
+    assert async_client.headers["Authorization"] == f"Bearer {test_token}"
 
     await client.close()
 
