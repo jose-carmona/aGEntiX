@@ -7,7 +7,7 @@
 - `src/backoffice/mcp/client.py`
 - `src/backoffice/mcp/registry.py`
 
-**Calificación actual:** 4.5/5 ⭐⭐⭐⭐⭐ (post Fase 1+2+3)
+**Calificación actual:** 5/5 ⭐⭐⭐⭐⭐ (post Fase 1+2+3+4)
 
 ## Estado de Implementación
 
@@ -16,7 +16,7 @@
 | 1 | MCPClient dual (sync/async) | ✅ Implementada |
 | 2 | Métodos públicos en Registry | ✅ Implementada |
 | 3 | Wrapper con errores semánticos | ✅ Implementada |
-| 4 | Discovery dinámico de schemas | ⏳ Pendiente |
+| 4 | Discovery dinámico de schemas | ✅ Implementada |
 
 ### Fase 3: Mejoras Implementadas
 
@@ -39,6 +39,69 @@ El wrapper ahora preserva errores semánticos con información de retry:
 | MCPToolError (CONFLICT) | ✅ Sí | Modificación concurrente |
 | MCPToolError (otros) | ❌ No | Tool no encontrada |
 | Exception | ❌ No | Errores internos |
+
+### Fase 4: Discovery Dinámico de Schemas
+
+El sistema ahora obtiene schemas de argumentos dinámicamente del servidor MCP:
+
+**Nuevo archivo: `backoffice/agents/schema_builder.py`**
+
+```python
+from backoffice.agents.schema_builder import build_pydantic_model, GenericMCPArgs
+
+# Convertir JSON Schema a modelo Pydantic
+json_schema = {
+    "type": "object",
+    "properties": {
+        "expediente_id": {"type": "string", "description": "ID"},
+        "campo": {"type": "string", "description": "Campo"}
+    },
+    "required": ["expediente_id"]
+}
+
+Model = build_pydantic_model("MiArgs", json_schema)
+instance = Model(expediente_id="EXP-001", campo="test")
+```
+
+**Nuevo método en Registry: `get_tools_with_schemas()`**
+
+```python
+# Obtiene tools con sus schemas completos
+tools = registry.get_tools_with_schemas()
+# {
+#     "consultar_expediente": {
+#         "name": "consultar_expediente",
+#         "description": "Consulta expediente...",
+#         "inputSchema": {...},
+#         "server_id": "expedientes"
+#     }
+# }
+```
+
+**MCPToolFactory con schemas dinámicos:**
+
+```python
+# Usa schemas del servidor (default)
+tools = MCPToolFactory.create_tools(
+    tool_names=["consultar_expediente"],
+    mcp_registry=registry,
+    logger=logger,
+    use_dynamic_schemas=True  # Default
+)
+
+# Fallback a schemas estáticos
+tools = MCPToolFactory.create_tools(
+    tool_names=["consultar_expediente"],
+    mcp_registry=registry,
+    logger=logger,
+    use_dynamic_schemas=False
+)
+```
+
+**Beneficios:**
+- Schemas siempre sincronizados con el servidor MCP
+- No requiere actualizar código cuando cambian los argumentos de tools
+- Fallback automático si el servidor no responde
 
 ---
 
@@ -360,7 +423,7 @@ El código funciona pero tiene deuda técnica significativa. Las Fases 1-3 puede
 
 ---
 
-## API Pública Actual (Post Fase 1+2)
+## API Pública Actual (Post Fase 1+2+3+4)
 
 ### MCPClientRegistry
 
@@ -374,6 +437,7 @@ get_available_tools() -> Dict[str, str]   # {tool_name: server_id}
 get_tool_names() -> List[str]             # Solo nombres
 is_tool_available(tool_name) -> bool      # Verificación rápida
 list_tools_sync(server_id=None) -> Dict   # Discovery sync
+get_tools_with_schemas() -> Dict          # Tools con inputSchema (Fase 4)
 
 # Servidor
 get_server_for_tool(tool_name) -> Optional[str]
@@ -387,6 +451,14 @@ is_initialized -> bool                    # Property
 async initialize()
 async close()
 close_sync()
+```
+
+### schema_builder (Fase 4)
+
+```python
+build_pydantic_model(name, json_schema) -> Type[BaseModel]
+build_models_from_tools(tools_with_schemas) -> Dict[str, Type[BaseModel]]
+GenericMCPArgs  # Modelo genérico con extra="allow"
 ```
 
 ### MCPClient
@@ -413,13 +485,14 @@ async close_all()
 |----------|--------|------|
 | P1. Duplicación HTTP | ✅ Resuelto | 1 |
 | P2. Violación encapsulamiento | ✅ Resuelto | 1+2 |
-| P3. Schemas hardcodeados | ⏳ Pendiente | 4 |
+| P3. Schemas hardcodeados | ✅ Resuelto | 4 |
 | P4. Sin interfaz sync | ✅ Resuelto | 1 |
 | P5. Errores inconsistentes | ✅ Resuelto | 1+3 |
-| P6. Descripciones duplicadas | ⏳ Pendiente | 4 |
+| P6. Descripciones duplicadas | ✅ Resuelto | 4 |
 
 ## Tests
 
 - **test_mcp_integration.py**: 22 tests (MCPClient + MCPClientRegistry)
-- **test_mcp_tool_wrapper.py**: 14 tests (errores semánticos + factory)
-- **Total backoffice**: 135 tests PASS
+- **test_mcp_tool_wrapper.py**: 17 tests (errores semánticos + factory + dynamic schemas)
+- **test_schema_builder.py**: 16 tests (JSON Schema → Pydantic)
+- **Total backoffice**: 154 tests PASS

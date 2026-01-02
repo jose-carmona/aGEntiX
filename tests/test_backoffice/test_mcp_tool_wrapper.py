@@ -32,6 +32,8 @@ def mock_registry():
     """Registry mock para tests"""
     registry = Mock()
     registry.call_tool_sync = Mock()
+    # Para MCPToolFactory - retornar dict vacío para usar fallback schemas
+    registry.get_tools_with_schemas = Mock(return_value={})
     return registry
 
 
@@ -256,3 +258,71 @@ class TestMCPToolFactory:
 
         desc_unknown = MCPToolFactory.get_tool_description("unknown")
         assert "Herramienta MCP" in desc_unknown
+
+    def test_create_tools_with_dynamic_schemas(self, mock_logger):
+        """Test: Factory usa schemas dinámicos del servidor MCP"""
+        # Mock registry con schemas dinámicos
+        registry_with_schemas = Mock()
+        registry_with_schemas.call_tool_sync = Mock()
+        registry_with_schemas.get_tools_with_schemas = Mock(return_value={
+            "mi_tool_dinamica": {
+                "name": "mi_tool_dinamica",
+                "description": "Descripción dinámica del servidor",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "param1": {"type": "string", "description": "Primer param"},
+                        "param2": {"type": "integer", "description": "Segundo param"}
+                    },
+                    "required": ["param1"]
+                },
+                "server_id": "test-mcp"
+            }
+        })
+
+        tools = MCPToolFactory.create_tools(
+            tool_names=["mi_tool_dinamica"],
+            mcp_registry=registry_with_schemas,
+            logger=mock_logger,
+            use_dynamic_schemas=True
+        )
+
+        assert len(tools) == 1
+        tool = tools[0]
+        assert tool.name == "mi_tool_dinamica"
+        # CrewAI añade metadatos a la descripción, verificamos que contiene nuestra descripción
+        assert "Descripción dinámica del servidor" in tool.description
+        # Verificar que el schema tiene los campos correctos
+        assert hasattr(tool.args_schema, "model_fields")
+        assert "param1" in tool.args_schema.model_fields
+
+    def test_create_tools_fallback_on_error(self, mock_logger):
+        """Test: Factory usa fallback cuando get_tools_with_schemas falla"""
+        # Mock registry que falla al obtener schemas
+        registry_failing = Mock()
+        registry_failing.call_tool_sync = Mock()
+        registry_failing.get_tools_with_schemas = Mock(side_effect=Exception("Connection error"))
+
+        tools = MCPToolFactory.create_tools(
+            tool_names=["consultar_expediente"],
+            mcp_registry=registry_failing,
+            logger=mock_logger,
+            use_dynamic_schemas=True  # Intenta dinámico pero fallará
+        )
+
+        assert len(tools) == 1
+        # Debe usar descripción fallback
+        assert "datos completos" in tools[0].description
+
+    def test_create_tools_with_static_schemas(self, mock_registry, mock_logger):
+        """Test: Factory usa schemas estáticos cuando use_dynamic_schemas=False"""
+        tools = MCPToolFactory.create_tools(
+            tool_names=["consultar_expediente"],
+            mcp_registry=mock_registry,
+            logger=mock_logger,
+            use_dynamic_schemas=False
+        )
+
+        assert len(tools) == 1
+        # No debe llamar a get_tools_with_schemas
+        mock_registry.get_tools_with_schemas.assert_not_called()

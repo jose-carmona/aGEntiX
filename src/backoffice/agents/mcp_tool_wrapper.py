@@ -8,7 +8,7 @@ de forma transparente, usando la interfaz síncrona del cliente MCP.
 """
 
 import json
-from typing import Any, Callable, List, Optional, Type
+from typing import Any, Callable, Dict, List, Optional, Type
 from pydantic import BaseModel, Field
 
 from ..mcp.registry import MCPClientRegistry
@@ -242,17 +242,30 @@ class MCPToolFactory:
     """
     Factory para crear Tools de CrewAI desde el MCPClientRegistry.
 
+    Soporta dos modos:
+    1. Discovery dinámico: Obtiene schemas del servidor MCP (recomendado)
+    2. Fallback estático: Usa schemas hardcodeados si el servidor no responde
+
     Uso:
+        # Con discovery dinámico (recomendado)
         tools = MCPToolFactory.create_tools(
             tool_names=["consultar_expediente"],
             mcp_registry=registry,
             logger=logger,
-            tool_tracker=agent._track_tool_use
+            use_dynamic_schemas=True  # Default
+        )
+
+        # Con schemas estáticos (fallback)
+        tools = MCPToolFactory.create_tools(
+            tool_names=["consultar_expediente"],
+            mcp_registry=registry,
+            logger=logger,
+            use_dynamic_schemas=False
         )
     """
 
-    # Descripciones de herramientas MCP conocidas
-    TOOL_DESCRIPTIONS = {
+    # Descripciones fallback cuando el servidor no responde
+    FALLBACK_DESCRIPTIONS = {
         "consultar_expediente": (
             "Consulta los datos completos de un expediente administrativo. "
             "Requiere el parámetro 'expediente_id' (string) con el ID del expediente. "
@@ -289,13 +302,17 @@ class MCPToolFactory:
         ),
     }
 
+    # Cache de schemas dinámicos (evita llamadas repetidas al servidor)
+    _dynamic_schemas_cache: Optional[Dict[str, Dict[str, Any]]] = None
+
     @classmethod
     def create_tools(
         cls,
         tool_names: List[str],
         mcp_registry: MCPClientRegistry,
         logger: AuditLogger,
-        tool_tracker: Optional[Callable[[str], None]] = None
+        tool_tracker: Optional[Callable[[str], None]] = None,
+        use_dynamic_schemas: bool = True
     ) -> List[MCPTool]:
         """
         Crea lista de Tools de CrewAI para las herramientas MCP especificadas.
@@ -305,6 +322,8 @@ class MCPToolFactory:
             mcp_registry: Registry de clientes MCP
             logger: Logger de auditoría
             tool_tracker: Callback para registrar uso de herramientas
+            use_dynamic_schemas: Si True, obtiene schemas del servidor MCP.
+                                Si False, usa schemas hardcodeados.
 
         Returns:
             Lista de MCPTool configuradas
@@ -318,16 +337,54 @@ class MCPToolFactory:
                 "Ejecuta: pip install crewai"
             )
 
+        # Importar schema_builder aquí para evitar import circular
+        from .schema_builder import build_pydantic_model, GenericMCPArgs
+
+        # Obtener schemas dinámicos del servidor si está habilitado
+        dynamic_schemas: Dict[str, Dict[str, Any]] = {}
+        if use_dynamic_schemas:
+            try:
+                dynamic_schemas = mcp_registry.get_tools_with_schemas()
+            except Exception as e:
+                # Si falla, usamos schemas estáticos
+                import logging
+                logging.getLogger(__name__).warning(
+                    f"No se pudieron obtener schemas dinámicos: {e}. "
+                    "Usando schemas estáticos."
+                )
+
         tools = []
 
         for name in tool_names:
-            description = cls.TOOL_DESCRIPTIONS.get(
-                name,
-                f"Herramienta MCP: {name}. Consulta la documentación para más detalles."
-            )
+            # 1. Obtener descripción (dinámica o fallback)
+            if name in dynamic_schemas:
+                description = dynamic_schemas[name].get("description", "")
+                if not description:
+                    description = cls.FALLBACK_DESCRIPTIONS.get(
+                        name,
+                        f"Herramienta MCP: {name}. Consulta la documentación."
+                    )
+            else:
+                description = cls.FALLBACK_DESCRIPTIONS.get(
+                    name,
+                    f"Herramienta MCP: {name}. Consulta la documentación."
+                )
 
-            # Obtener schema de argumentos para esta herramienta
-            args_schema = TOOL_ARGS_SCHEMAS.get(name, ConsultarExpedienteArgs)
+            # 2. Obtener schema (dinámico o fallback)
+            if name in dynamic_schemas:
+                input_schema = dynamic_schemas[name].get("inputSchema", {})
+                if input_schema:
+                    # Construir modelo Pydantic dinámicamente
+                    model_name = "".join(
+                        word.capitalize()
+                        for word in name.replace("_", " ").split()
+                    ) + "Args"
+                    args_schema = build_pydantic_model(model_name, input_schema)
+                else:
+                    args_schema = GenericMCPArgs
+            else:
+                # Fallback a schemas hardcodeados
+                args_schema = TOOL_ARGS_SCHEMAS.get(name, GenericMCPArgs)
 
             tool = MCPTool(
                 name=name,
@@ -342,9 +399,14 @@ class MCPToolFactory:
         return tools
 
     @classmethod
+    def clear_schema_cache(cls) -> None:
+        """Limpia el cache de schemas dinámicos."""
+        cls._dynamic_schemas_cache = None
+
+    @classmethod
     def get_tool_description(cls, tool_name: str) -> str:
         """
-        Obtiene la descripción de una herramienta.
+        Obtiene la descripción de una herramienta (fallback).
 
         Args:
             tool_name: Nombre de la herramienta
@@ -352,7 +414,7 @@ class MCPToolFactory:
         Returns:
             Descripción de la herramienta
         """
-        return cls.TOOL_DESCRIPTIONS.get(
+        return cls.FALLBACK_DESCRIPTIONS.get(
             tool_name,
             f"Herramienta MCP: {tool_name}"
         )

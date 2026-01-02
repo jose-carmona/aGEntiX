@@ -281,6 +281,51 @@ class MCPClientRegistry:
 
         return {"tools": all_tools}
 
+    def get_tools_with_schemas(self) -> Dict[str, Dict[str, Any]]:
+        """
+        Obtiene todas las tools con sus schemas completos.
+
+        Retorna un diccionario indexado por nombre de tool con:
+        - name: Nombre de la tool
+        - description: Descripción de la tool
+        - inputSchema: JSON Schema de los argumentos
+        - server_id: ID del servidor que provee la tool
+
+        NOTA: Requiere que initialize() haya sido llamado.
+
+        Returns:
+            Dict[tool_name, {name, description, inputSchema, server_id}]
+
+        Raises:
+            RuntimeError: Si el registry no está inicializado
+        """
+        if not self._initialized:
+            raise RuntimeError(
+                "MCPClientRegistry no inicializado. "
+                "Llama a 'await registry.initialize()' antes de usar get_tools_with_schemas()."
+            )
+
+        tools_with_schemas: Dict[str, Dict[str, Any]] = {}
+
+        for server_id, client in self._clients.items():
+            try:
+                result = client.list_tools_sync()
+                tools = result.get("tools", [])
+
+                for tool in tools:
+                    tool_name = tool.get("name")
+                    if tool_name:
+                        tools_with_schemas[tool_name] = {
+                            "name": tool_name,
+                            "description": tool.get("description", ""),
+                            "inputSchema": tool.get("inputSchema", {}),
+                            "server_id": server_id
+                        }
+            except Exception as e:
+                logger.warning(f"Error obteniendo schemas de '{server_id}': {e}")
+
+        return tools_with_schemas
+
     def get_server_config(self, server_id: str) -> Optional[Any]:
         """
         Obtiene la configuración de un servidor MCP.
