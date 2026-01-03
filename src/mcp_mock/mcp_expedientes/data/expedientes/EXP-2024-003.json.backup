@@ -26,7 +26,18 @@
       "ruta": "data/documentos/EXP-2024-003/solicitud_certificado.pdf",
       "hash_sha256": "zzz999yyy888xxx777www666vvv555uuu444ttt333sss222rrr111qqq000",
       "tamano_bytes": 98234,
-      "validado": true
+      "validado": true,
+      "metadatos_extraidos": {
+        "tipo_procedimiento": "CERTIFICADO_EMPADRONAMIENTO",
+        "fecha_solicitud": "2024-01-05",
+        "solicitante": "Ana López Martín",
+        "nif_solicitante": "45678912C",
+        "tipo_certificado": "RESIDENCIA",
+        "finalidad": "TRAMITES_BANCARIOS",
+        "numero_ejemplares": 1,
+        "direccion_empadronamiento": "Plaza de España 12, 3º B, Córdoba"
+      },
+      "texto_markdown": "# Solicitud de Certificado de Empadronamiento\n\n## Ayuntamiento de Córdoba\n**Padrón Municipal de Habitantes**\n\n---\n\n## Datos del Solicitante\n\n| Campo | Valor |\n|-------|-------|\n| Nombre y Apellidos | Ana López Martín |\n| NIF | 45678912C |\n| Dirección de empadronamiento | Plaza de España 12, 3º B, Córdoba |\n| Email | ana.lopez@example.com |\n| Teléfono | +34 612345678 |\n\n## Tipo de Certificado Solicitado\n\n- [x] Certificado de RESIDENCIA\n- [ ] Certificado de CONVIVENCIA\n- [ ] Certificado HISTÓRICO\n\n## Finalidad del Certificado\n\n**Trámites bancarios**\n\nEl presente certificado será presentado ante entidad bancaria para acreditar domicilio de residencia.\n\n## Datos Adicionales\n\n| Campo | Valor |\n|-------|-------|\n| Número de ejemplares | 1 |\n| Formato | Digital con CSV |\n| Urgente | No |\n\n## Declaración\n\nEl/la solicitante declara que los datos consignados son veraces y que se compromete a utilizar el certificado únicamente para la finalidad indicada.\n\n---\n\n**Firma del solicitante**\n\nEn Córdoba, a 5 de enero de 2024\n\n[Firma electrónica]\n\n*Ana López Martín*"
     },
     {
       "id": "DOC-202",
@@ -36,7 +47,23 @@
       "ruta": "data/documentos/EXP-2024-003/dni_solicitante.pdf",
       "hash_sha256": "yyy888xxx777www666vvv555uuu444ttt333sss222rrr111qqq000ppp999",
       "tamano_bytes": 145678,
-      "validado": true
+      "validado": true,
+      "metadatos_extraidos": {
+        "numero_documento": "45678912C",
+        "tipo_documento": "DNI",
+        "nombre_completo": "Ana López Martín",
+        "apellido1": "López",
+        "apellido2": "Martín",
+        "nombre": "Ana",
+        "fecha_nacimiento": "1990-11-28",
+        "lugar_nacimiento": "Sevilla",
+        "sexo": "F",
+        "nacionalidad": "ESPAÑOLA",
+        "fecha_expedicion": "2021-03-20",
+        "fecha_caducidad": "2031-03-20",
+        "equipo_expedidor": "DGP - CÓRDOBA"
+      },
+      "texto_markdown": "# Documento Nacional de Identidad\n\n**ESPAÑA / SPAIN / ESPAGNE**\n\n---\n\n## Anverso\n\n| Campo | Valor |\n|-------|-------|\n| Apellidos / Surname | LÓPEZ MARTÍN |\n| Nombre / Given names | ANA |\n| Sexo / Sex | F |\n| Nacionalidad / Nationality | ESPAÑOLA |\n| Fecha de nacimiento / Date of birth | 28 11 1990 |\n| Lugar de nacimiento | SEVILLA |\n\n[Fotografía del titular]\n\n---\n\n## Reverso\n\n| Campo | Valor |\n|-------|-------|\n| DNI Núm. | 45678912C |\n| Fecha de expedición | 20 03 2021 |\n| Válido hasta | 20 03 2031 |\n| Equipo | DGP - CÓRDOBA |\n| Domicilio | PL. ESPAÑA 12 3ºB |\n| | 14003 CÓRDOBA |\n\n[Firma del titular]\n\n---\n\n**Zona de lectura automática (MRZ):**\n```\nIDESP45678912C<<<<<<<<<<<<<<<\n9011280F3103200ESP<<<<<<<<<<<2\nLOPEZ<MARTIN<<ANA<<<<<<<<<<<<\n```"
     },
     {
       "id": "DOC-203",
@@ -46,7 +73,28 @@
       "ruta": "data/documentos/EXP-2024-003/certificado_empadronamiento.pdf",
       "hash_sha256": "xxx777www666vvv555uuu444ttt333sss222rrr111qqq000ppp999ooo888",
       "tamano_bytes": 234567,
-      "validado": true
+      "validado": true,
+      "metadatos_extraidos": {
+        "tipo_certificado": "RESIDENCIA",
+        "numero_certificado": "CERT-2024-001",
+        "fecha_emision": "2024-01-05",
+        "organismo_emisor": "Ayuntamiento de Córdoba",
+        "funcionario_emisor": "María Fernández García",
+        "cargo_emisor": "Secretaria del Padrón Municipal",
+        "datos_certificados": {
+          "nombre_completo": "Ana López Martín",
+          "nif": "45678912C",
+          "direccion": "Plaza de España 12, 3º B",
+          "codigo_postal": "14003",
+          "municipio": "Córdoba",
+          "provincia": "Córdoba",
+          "fecha_alta_padron": "2019-06-15"
+        },
+        "csv": "CERT2024001AYCO20240105",
+        "validez": "3 meses desde fecha de emisión",
+        "finalidad": "TRAMITES_BANCARIOS"
+      },
+      "texto_markdown": "# Certificado de Empadronamiento\n\n## AYUNTAMIENTO DE CÓRDOBA\n**Padrón Municipal de Habitantes**\n\n---\n\n### CERTIFICADO Nº CERT-2024-001\n\nDña. **MARÍA FERNÁNDEZ GARCÍA**, Secretaria del Padrón Municipal del Excmo. Ayuntamiento de Córdoba,\n\n### CERTIFICA:\n\nQue según los datos obrantes en el Padrón Municipal de Habitantes de este Ayuntamiento,\n\n| Dato | Valor |\n|------|-------|\n| Nombre y Apellidos | ANA LÓPEZ MARTÍN |\n| NIF | 45678912C |\n| Fecha de nacimiento | 28/11/1990 |\n| Lugar de nacimiento | SEVILLA |\n\n**CONSTA EMPADRONADO/A** en este municipio en la siguiente dirección:\n\n> **Plaza de España, 12, 3º B**\n> **14003 - CÓRDOBA (Córdoba)**\n\n| Dato del empadronamiento | Valor |\n|--------------------------|-------|\n| Fecha de alta en el Padrón | 15/06/2019 |\n| Tipo de alta | CAMBIO DE DOMICILIO |\n| Nivel de estudios | UNIVERSITARIOS |\n\n---\n\n### Finalidad\n\nEl presente certificado se expide a petición del interesado para:\n\n**TRÁMITES BANCARIOS**\n\n---\n\n### Validez\n\nEste certificado tiene validez de **3 meses** desde la fecha de emisión.\n\n---\n\nY para que conste y surta los efectos oportunos, se expide el presente certificado.\n\nEn Córdoba, a 5 de enero de 2024\n\n[Firma electrónica]\n\n**LA SECRETARIA DEL PADRÓN MUNICIPAL**\n\nMaría Fernández García\n\n---\n\n**Código Seguro de Verificación (CSV):** CERT2024001AYCO20240105\n\n*Puede verificar la autenticidad de este documento en: https://sede.cordoba.es/verificar*\n\n[Escudo del Ayuntamiento de Córdoba]"
     }
   ],
   "historial": [
@@ -64,7 +112,7 @@
       "usuario": "Automático",
       "tipo": "AGENTE",
       "accion": "VALIDAR_IDENTIDAD",
-      "detalles": "Identidad validada mediante DNI"
+      "detalles": "Identidad validada mediante DNI - NIF 45678912C coincide con datos del Padrón"
     },
     {
       "id": "HIST-203",
@@ -72,7 +120,7 @@
       "usuario": "Automático",
       "tipo": "AGENTE",
       "accion": "VERIFICAR_EMPADRONAMIENTO",
-      "detalles": "Verificación exitosa en base de datos de padrón"
+      "detalles": "Verificación exitosa - Consta empadronado/a desde 15/06/2019 en Plaza de España 12, 3º B"
     },
     {
       "id": "HIST-204",
@@ -80,7 +128,7 @@
       "usuario": "Automático",
       "tipo": "AGENTE",
       "accion": "GENERAR_CERTIFICADO",
-      "detalles": "Certificado generado con ID: CERT-2024-001"
+      "detalles": "Certificado generado con ID: CERT-2024-001 - CSV: CERT2024001AYCO20240105"
     },
     {
       "id": "HIST-205",
@@ -88,7 +136,7 @@
       "usuario": "Sistema",
       "tipo": "SISTEMA",
       "accion": "NOTIFICAR_CIUDADANO",
-      "detalles": "Notificación enviada a ana.lopez@example.com"
+      "detalles": "Notificación enviada a ana.lopez@example.com con enlace de descarga del certificado"
     },
     {
       "id": "HIST-206",
@@ -96,7 +144,7 @@
       "usuario": "Sistema",
       "tipo": "SISTEMA",
       "accion": "CERRAR_EXPEDIENTE",
-      "detalles": "Expediente completado y archivado"
+      "detalles": "Expediente completado y archivado - Tiempo total de tramitación: 1h 32m"
     }
   ],
   "metadatos": {

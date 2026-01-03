@@ -29,7 +29,20 @@
       "ruta": "data/documentos/EXP-2024-002/solicitud_licencia.pdf",
       "hash_sha256": "aaa111bbb222ccc333ddd444eee555fff666ggg777hhh888iii999jjj000",
       "tamano_bytes": 189234,
-      "validado": true
+      "validado": true,
+      "metadatos_extraidos": {
+        "tipo_procedimiento": "LICENCIA_OBRA_MENOR",
+        "fecha_solicitud": "2024-02-10",
+        "solicitante": "Juan Martínez Rodríguez",
+        "nif_solicitante": "87654321B",
+        "direccion_obra": "Calle Málaga 78, Córdoba",
+        "tipo_obra": "REFORMA_MENOR",
+        "descripcion_obra": "Reforma interior de vivienda sin modificación estructural",
+        "presupuesto_estimado": 15000.00,
+        "arquitecto_director": "Pedro Sánchez Fernández",
+        "numero_colegiado": "COA-12345"
+      },
+      "texto_markdown": "# Solicitud de Licencia de Obra\n\n## Ayuntamiento de Córdoba\n**Área de Urbanismo - Licencias de Obra**\n\n---\n\n## Datos del Solicitante\n\n| Campo | Valor |\n|-------|-------|\n| Nombre y Apellidos | Juan Martínez Rodríguez |\n| NIF | 87654321B |\n| Dirección | Avenida de la Libertad 45, 2º A, Córdoba |\n| Email | juan.martinez@example.com |\n| Teléfono | +34 655987654 |\n\n## Datos de la Obra\n\n| Campo | Valor |\n|-------|-------|\n| Ubicación | Calle Málaga 78, Córdoba |\n| Tipo de obra | REFORMA MENOR |\n| Referencia catastral | 1234567VK4712A0001WX |\n\n**Descripción de las obras:**\n\nReforma interior de vivienda unifamiliar consistente en:\n- Redistribución de espacios interiores\n- Renovación de instalaciones eléctricas\n- Renovación de fontanería y saneamiento\n- Sustitución de carpintería interior\n- Reforma de baños y cocina\n\n*Sin afección a elementos estructurales ni modificación de fachada*\n\n**Presupuesto estimado:** 15.000,00 EUR\n\n## Técnico Director\n\n| Campo | Valor |\n|-------|-------|\n| Nombre | Pedro Sánchez Fernández |\n| Titulación | Arquitecto |\n| Nº Colegiado | COA-12345 |\n| Colegio | Colegio Oficial de Arquitectos de Córdoba |\n\n## Documentación Aportada\n\n- [x] Instancia de solicitud (este documento)\n- [x] Proyecto básico\n- [ ] Proyecto de ejecución completo\n- [ ] Estudio de seguridad y salud\n- [ ] Autorización de comunidad de vecinos\n\n---\n\n**Firma del solicitante**\n\nEn Córdoba, a 10 de febrero de 2024\n\n[Firma]\n\n*Juan Martínez Rodríguez*"
     },
     {
       "id": "DOC-102",
@@ -39,7 +52,52 @@
       "ruta": "data/documentos/EXP-2024-002/proyecto_basico.pdf",
       "hash_sha256": "bbb222ccc333ddd444eee555fff666ggg777hhh888iii999jjj000kkk111",
       "tamano_bytes": 1456789,
-      "validado": false
+      "validado": false,
+      "metadatos_extraidos": {
+        "tipo_proyecto": "PROYECTO_BASICO",
+        "titulo": "Proyecto Básico de Reforma Interior",
+        "direccion_obra": "Calle Málaga 78, Córdoba",
+        "referencia_catastral": "1234567VK4712A0001WX",
+        "superficie_construida_m2": 95.5,
+        "superficie_util_m2": 82.3,
+        "numero_plantas": 1,
+        "arquitecto": "Pedro Sánchez Fernández",
+        "numero_colegiado": "COA-12345",
+        "fecha_visado": "2024-02-08",
+        "numero_visado": "VIS-2024-00234",
+        "presupuesto_ejecucion_material": 12500.00,
+        "plazo_ejecucion_meses": 3,
+        "normativa_aplicable": ["CTE", "PGOU Córdoba", "Ordenanza edificación"],
+        "estado_proyecto": "BASICO_INCOMPLETO",
+        "documentos_pendientes": ["Proyecto de ejecución", "Estudio de seguridad"]
+      },
+      "texto_markdown": "# Proyecto Básico de Reforma Interior\n\n## Vivienda en Calle Málaga 78, Córdoba\n\n---\n\n### MEMORIA\n\n#### 1. DATOS GENERALES\n\n| Concepto | Valor |\n|----------|-------|\n| Promotor | Juan Martínez Rodríguez |\n| Arquitecto | Pedro Sánchez Fernández |\n| Nº Colegiado | COA-12345 |\n| Ubicación | Calle Málaga 78, Córdoba |\n| Ref. Catastral | 1234567VK4712A0001WX |\n\n#### 2. DESCRIPCIÓN DEL PROYECTO\n\n**Objeto:**\nReforma interior de vivienda unifamiliar entre medianeras, consistente en la redistribución de espacios interiores y renovación de instalaciones, sin afección a elementos estructurales.\n\n**Superficies:**\n\n| Superficie | m² |\n|------------|----|\n| Construida | 95,50 |\n| Útil | 82,30 |\n| Parcela | 120,00 |\n\n**Programa funcional:**\n- Salón-comedor: 25 m²\n- Cocina: 12 m²\n- Dormitorio principal: 15 m²\n- Dormitorio 2: 12 m²\n- Dormitorio 3: 10 m²\n- Baño 1: 5 m²\n- Baño 2: 3,30 m²\n\n#### 3. NORMATIVA DE APLICACIÓN\n\n- Código Técnico de la Edificación (CTE)\n- Plan General de Ordenación Urbana de Córdoba\n- Ordenanza Municipal de Edificación\n- Reglamento Electrotécnico de Baja Tensión\n- Código de Accesibilidad de Andalucía\n\n#### 4. PRESUPUESTO\n\n| Capítulo | Importe |\n|----------|--------:|\n| Demoliciones | 1.500 € |\n| Albañilería | 3.000 € |\n| Instalación eléctrica | 2.500 € |\n| Fontanería | 2.000 € |\n| Carpintería | 2.000 € |\n| Revestimientos | 1.500 € |\n| **TOTAL PEM** | **12.500 €** |\n| Gastos generales (13%) | 1.625 € |\n| Beneficio industrial (6%) | 750 € |\n| **TOTAL PRESUPUESTO** | **14.875 €** |\n\n#### 5. PLAZO DE EJECUCIÓN\n\nPlazo estimado: **3 meses**\n\n---\n\n### PLANOS\n\n1. Situación y emplazamiento\n2. Estado actual - Planta\n3. Estado reformado - Planta\n4. Cotas y superficies\n5. Instalación eléctrica\n6. Fontanería y saneamiento\n\n---\n\n**VISADO:**\n\nColegio Oficial de Arquitectos de Córdoba\nNº Visado: VIS-2024-00234\nFecha: 08/02/2024\n\n[Sello del Colegio]\n\n---\n\n*NOTA: Este proyecto básico requiere ser completado con proyecto de ejecución y estudio de seguridad y salud para la obtención de la licencia de obra.*"
+    },
+    {
+      "id": "DOC-103",
+      "nombre": "dni_solicitante.pdf",
+      "fecha": "2024-02-10T09:15:00Z",
+      "tipo": "IDENTIFICACION",
+      "ruta": "data/documentos/EXP-2024-002/dni_solicitante.pdf",
+      "hash_sha256": "ccc333ddd444eee555fff666ggg777hhh888iii999jjj000kkk111lll222",
+      "tamano_bytes": 134567,
+      "validado": true,
+      "metadatos_extraidos": {
+        "numero_documento": "87654321B",
+        "tipo_documento": "DNI",
+        "nombre_completo": "Juan Martínez Rodríguez",
+        "apellido1": "Martínez",
+        "apellido2": "Rodríguez",
+        "nombre": "Juan",
+        "fecha_nacimiento": "1978-07-22",
+        "lugar_nacimiento": "Córdoba",
+        "sexo": "M",
+        "nacionalidad": "ESPAÑOLA",
+        "fecha_expedicion": "2019-05-15",
+        "fecha_caducidad": "2029-05-15",
+        "equipo_expedidor": "DGP - CÓRDOBA"
+      },
+      "texto_markdown": "# Documento Nacional de Identidad\n\n**ESPAÑA / SPAIN / ESPAGNE**\n\n---\n\n## Anverso\n\n| Campo | Valor |\n|-------|-------|\n| Apellidos / Surname | MARTÍNEZ RODRÍGUEZ |\n| Nombre / Given names | JUAN |\n| Sexo / Sex | M |\n| Nacionalidad / Nationality | ESPAÑOLA |\n| Fecha de nacimiento / Date of birth | 22 07 1978 |\n| Lugar de nacimiento | CÓRDOBA |\n\n[Fotografía del titular]\n\n---\n\n## Reverso\n\n| Campo | Valor |\n|-------|-------|\n| DNI Núm. | 87654321B |\n| Fecha de expedición | 15 05 2019 |\n| Válido hasta | 15 05 2029 |\n| Equipo | DGP - CÓRDOBA |\n| Domicilio | AV. LIBERTAD 45 2ºA |\n| | 14002 CÓRDOBA |\n\n[Firma del titular]\n\n---\n\n**Zona de lectura automática (MRZ):**\n```\nIDESP87654321B<<<<<<<<<<<<<<<\n7807220M2905150ESP<<<<<<<<<<<4\nMARTINEZ<RODRIGUEZ<<JUAN<<<<<\n```"
     }
   ],
   "historial": [

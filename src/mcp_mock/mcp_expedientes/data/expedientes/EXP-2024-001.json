@@ -2,7 +2,7 @@
   "id": "EXP-2024-001",
   "tipo": "SUBVENCIONES",
   "estado": "EN_TRAMITE",
-  "fecha_inicio": "2024-01-15T08:30:00Z",
+  "fecha_inicio": "2024-01-15T08:30:00+00:00",
   "datos": {
     "solicitante": {
       "nombre": "María García López",
@@ -11,7 +11,7 @@
       "email": "maria.garcia@example.com",
       "telefono": "+34 600123456"
     },
-    "importe_solicitado": 5000.00,
+    "importe_solicitado": 5000.0,
     "concepto": "Ayuda para mejora de local comercial",
     "cuenta_bancaria": "ES79 2100 0813 4501 2345 6789",
     "documentacion_valida": null
@@ -25,7 +25,22 @@
       "ruta": "data/documentos/EXP-2024-001/solicitud.pdf",
       "hash_sha256": "abc123def456789012345678901234567890123456789012345678901234",
       "tamano_bytes": 245678,
-      "validado": null
+      "validado": null,
+      "metadatos_extraidos": {
+        "tipo_procedimiento": "SUBVENCIONES",
+        "fecha_solicitud": "2024-01-15",
+        "solicitante": "María García López",
+        "nif_solicitante": "12345678A",
+        "importe_solicitado": 5000.00,
+        "concepto": "Ayuda para mejora de local comercial",
+        "datos_contacto": {
+          "email": "maria.garcia@example.com",
+          "telefono": "+34 600123456",
+          "direccion": "Calle Mayor 123, Córdoba"
+        },
+        "cuenta_bancaria": "ES79 2100 0813 4501 2345 6789"
+      },
+      "texto_markdown": "# Solicitud de Subvención\n\n## Convocatoria\n**Ayudas para mejora de locales comerciales 2024**\n\n---\n\n## Datos del Solicitante\n\n| Campo | Valor |\n|-------|-------|\n| Nombre y Apellidos | María García López |\n| NIF | 12345678A |\n| Dirección | Calle Mayor 123, Córdoba |\n| Email | maria.garcia@example.com |\n| Teléfono | +34 600123456 |\n\n## Datos de la Solicitud\n\n**Concepto:** Ayuda para mejora de local comercial\n\n**Descripción del proyecto:**\nRenovación integral del sistema de iluminación del local comercial situado en Calle Mayor 123, Córdoba, incluyendo instalación de luminarias LED de bajo consumo y sistema de control inteligente.\n\n**Importe solicitado:** 5.000,00 EUR\n\n**Cuenta bancaria para ingreso:**\nES79 2100 0813 4501 2345 6789\n\n## Documentación Aportada\n\n- [x] Fotocopia DNI\n- [x] Justificante de titularidad bancaria\n- [ ] Memoria descriptiva del proyecto\n- [ ] Presupuesto detallado\n\n## Declaración Responsable\n\nEl/la solicitante declara bajo su responsabilidad que:\n- Los datos consignados son veraces\n- No se encuentra incurso en ninguna de las prohibiciones del artículo 13 de la Ley General de Subvenciones\n- Se encuentra al corriente de sus obligaciones tributarias y con la Seguridad Social\n\n---\n\n**Firma del solicitante**\n\nEn Córdoba, a 15 de enero de 2024\n\n[Firma manuscrita]\n\n*María García López*"
     },
     {
       "id": "DOC-002",
@@ -35,7 +50,23 @@
       "ruta": "data/documentos/EXP-2024-001/dni.pdf",
       "hash_sha256": "def456789012345678901234567890123456789012345678901234567890",
       "tamano_bytes": 123456,
-      "validado": null
+      "validado": null,
+      "metadatos_extraidos": {
+        "numero_documento": "12345678A",
+        "tipo_documento": "DNI",
+        "nombre_completo": "María García López",
+        "apellido1": "García",
+        "apellido2": "López",
+        "nombre": "María",
+        "fecha_nacimiento": "1985-03-15",
+        "lugar_nacimiento": "Córdoba",
+        "sexo": "F",
+        "nacionalidad": "ESPAÑOLA",
+        "fecha_expedicion": "2020-01-10",
+        "fecha_caducidad": "2030-01-10",
+        "equipo_expedidor": "DGP - CÓRDOBA"
+      },
+      "texto_markdown": "# Documento Nacional de Identidad\n\n**ESPAÑA / SPAIN / ESPAGNE**\n\n---\n\n## Anverso\n\n| Campo | Valor |\n|-------|-------|\n| Apellidos / Surname | GARCÍA LÓPEZ |\n| Nombre / Given names | MARÍA |\n| Sexo / Sex | F |\n| Nacionalidad / Nationality | ESPAÑOLA |\n| Fecha de nacimiento / Date of birth | 15 03 1985 |\n| Lugar de nacimiento | CÓRDOBA |\n\n[Fotografía del titular]\n\n---\n\n## Reverso\n\n| Campo | Valor |\n|-------|-------|\n| DNI Núm. | 12345678A |\n| Fecha de expedición | 10 01 2020 |\n| Válido hasta | 10 01 2030 |\n| Equipo | DGP - CÓRDOBA |\n| Domicilio | C/ MAYOR 123 |\n| | 14001 CÓRDOBA |\n\n[Firma del titular]\n\n---\n\n**Zona de lectura automática (MRZ):**\n```\nIDESP12345678A<<<<<<<<<<<<<<<\n8503150F3001109ESP<<<<<<<<<<<6\nGARCIA<LOPEZ<<MARIA<<<<<<<<<<\n```"
     },
     {
       "id": "DOC-003",
@@ -45,7 +76,22 @@
       "ruta": "data/documentos/EXP-2024-001/justificante.pdf",
       "hash_sha256": "ghi789012345678901234567890123456789012345678901234567890123",
       "tamano_bytes": 98765,
-      "validado": null
+      "validado": null,
+      "metadatos_extraidos": {
+        "entidad": "Banco Ejemplo S.A.",
+        "codigo_entidad": "2100",
+        "codigo_oficina": "0813",
+        "numero_cuenta_completo": "ES79 2100 0813 4501 2345 6789",
+        "iban": "ES79",
+        "digito_control": "45",
+        "numero_cuenta": "0123456789",
+        "tipo_cuenta": "CUENTA CORRIENTE",
+        "titular": "María García López",
+        "nif_titular": "12345678A",
+        "fecha_certificado": "2024-01-14",
+        "validez_dias": 30
+      },
+      "texto_markdown": "# Certificado de Titularidad Bancaria\n\n**BANCO EJEMPLO S.A.**\n\nCIF: A12345678\nDomicilio Social: Paseo de la Castellana 100, 28046 Madrid\n\n---\n\n## CERTIFICADO\n\nD./Dña. **RESPONSABLE DE OFICINA 0813**\n\nEn calidad de apoderado de BANCO EJEMPLO S.A.\n\n**CERTIFICA:**\n\nQue según los registros de esta entidad, la cuenta número:\n\n### ES79 2100 0813 4501 2345 6789\n\nFigura abierta a nombre de:\n\n**MARÍA GARCÍA LÓPEZ**\nNIF: 12345678A\n\n| Dato | Valor |\n|------|-------|\n| Tipo de cuenta | CUENTA CORRIENTE |\n| Fecha de apertura | 15/03/2018 |\n| Estado | ACTIVA |\n| Oficina | 0813 - CÓRDOBA CENTRO |\n\n---\n\nY para que conste y surta los efectos oportunos ante **DIPUTACIÓN PROVINCIAL DE CÓRDOBA**, se expide el presente certificado.\n\nEn Córdoba, a 14 de enero de 2024\n\n[Firma electrónica avanzada]\n\n---\n\n*Este documento ha sido firmado electrónicamente. Código de verificación: VER-2024-001234*\n\n*Validez: 30 días desde la fecha de expedición*"
     }
   ],
   "historial": [

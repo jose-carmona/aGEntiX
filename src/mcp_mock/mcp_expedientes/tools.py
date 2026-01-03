@@ -122,6 +122,44 @@ async def list_tools() -> List[types.Tool]:
             }
         ),
 
+        types.Tool(
+            name="obtener_texto_documento",
+            description="Obtiene el texto markdown del contenido de un documento",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "expediente_id": {
+                        "type": "string",
+                        "description": "ID del expediente (ej: EXP-2024-001)"
+                    },
+                    "documento_id": {
+                        "type": "string",
+                        "description": "ID del documento (ej: DOC-001)"
+                    }
+                },
+                "required": ["expediente_id", "documento_id"]
+            }
+        ),
+
+        types.Tool(
+            name="obtener_metadatos_documento",
+            description="Obtiene los metadatos extraídos de un documento (NIF, fechas, importes, etc.)",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "expediente_id": {
+                        "type": "string",
+                        "description": "ID del expediente"
+                    },
+                    "documento_id": {
+                        "type": "string",
+                        "description": "ID del documento"
+                    }
+                },
+                "required": ["expediente_id", "documento_id"]
+            }
+        ),
+
         # ========== TOOLS DE ESCRITURA ==========
 
         types.Tool(
@@ -194,6 +232,64 @@ async def list_tools() -> List[types.Tool]:
                 },
                 "required": ["expediente_id", "texto"]
             }
+        ),
+
+        types.Tool(
+            name="actualizar_metadatos_documento",
+            description="Actualiza los metadatos extraídos de un documento",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "expediente_id": {
+                        "type": "string",
+                        "description": "ID del expediente"
+                    },
+                    "documento_id": {
+                        "type": "string",
+                        "description": "ID del documento"
+                    },
+                    "metadatos": {
+                        "type": "object",
+                        "description": "Metadatos a establecer o actualizar (se mezclan con los existentes)"
+                    },
+                    "reemplazar": {
+                        "type": "boolean",
+                        "description": "Si true, reemplaza todos los metadatos. Si false, los mezcla (default: false)"
+                    }
+                },
+                "required": ["expediente_id", "documento_id", "metadatos"]
+            }
+        ),
+
+        types.Tool(
+            name="crear_documento_desde_markdown",
+            description="Crea un nuevo documento a partir de contenido markdown generado por el agente",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "expediente_id": {
+                        "type": "string",
+                        "description": "ID del expediente"
+                    },
+                    "nombre": {
+                        "type": "string",
+                        "description": "Nombre del documento (ej: informe_validacion.md)"
+                    },
+                    "tipo": {
+                        "type": "string",
+                        "description": "Tipo de documento (INFORME, RESOLUCION, NOTIFICACION, etc.)"
+                    },
+                    "texto_markdown": {
+                        "type": "string",
+                        "description": "Contenido del documento en formato markdown"
+                    },
+                    "metadatos": {
+                        "type": "object",
+                        "description": "Metadatos del documento (opcional)"
+                    }
+                },
+                "required": ["expediente_id", "nombre", "tipo", "texto_markdown"]
+            }
         )
     ]
 
@@ -230,6 +326,18 @@ async def call_tool(name: str, arguments: dict) -> List[types.TextContent]:
 
         elif name == "añadir_anotacion":
             return await tool_añadir_anotacion(**arguments)
+
+        elif name == "obtener_texto_documento":
+            return await tool_obtener_texto_documento(**arguments)
+
+        elif name == "obtener_metadatos_documento":
+            return await tool_obtener_metadatos_documento(**arguments)
+
+        elif name == "actualizar_metadatos_documento":
+            return await tool_actualizar_metadatos_documento(**arguments)
+
+        elif name == "crear_documento_desde_markdown":
+            return await tool_crear_documento_desde_markdown(**arguments)
 
         else:
             raise AuthError(f"Tool desconocida: {name}", 404)
@@ -511,3 +619,273 @@ def set_nested_value(obj: Any, path: str, value: Any) -> None:
         setattr(current, final_key, value)
     else:
         raise AuthError(f"Campo '{final_key}' no existe", 400)
+
+
+# ========== TOOLS DE DOCUMENTOS (NUEVAS) ==========
+
+async def tool_obtener_texto_documento(
+    expediente_id: str,
+    documento_id: str
+) -> List[types.TextContent]:
+    """
+    Obtiene el texto markdown del contenido de un documento.
+
+    Args:
+        expediente_id: ID del expediente
+        documento_id: ID del documento
+
+    Returns:
+        Texto markdown del documento
+
+    Raises:
+        AuthError: Si el documento no existe o no tiene texto_markdown
+    """
+    expediente = load_expediente(expediente_id)
+
+    # Buscar documento
+    documento = next(
+        (doc for doc in expediente.documentos if doc.id == documento_id),
+        None
+    )
+
+    if not documento:
+        raise AuthError(
+            f"Documento {documento_id} no encontrado en expediente {expediente_id}",
+            404
+        )
+
+    if not documento.texto_markdown:
+        raise AuthError(
+            f"Documento {documento_id} no tiene texto markdown disponible",
+            422
+        )
+
+    result = {
+        "success": True,
+        "documento_id": documento.id,
+        "nombre": documento.nombre,
+        "tipo": documento.tipo,
+        "texto_markdown": documento.texto_markdown
+    }
+
+    return [
+        types.TextContent(
+            type="text",
+            text=json.dumps(result, ensure_ascii=False, indent=2)
+        )
+    ]
+
+
+async def tool_obtener_metadatos_documento(
+    expediente_id: str,
+    documento_id: str
+) -> List[types.TextContent]:
+    """
+    Obtiene los metadatos extraídos de un documento.
+
+    Args:
+        expediente_id: ID del expediente
+        documento_id: ID del documento
+
+    Returns:
+        Metadatos extraídos del documento (NIF, fechas, importes, etc.)
+
+    Raises:
+        AuthError: Si el documento no existe o no tiene metadatos
+    """
+    expediente = load_expediente(expediente_id)
+
+    # Buscar documento
+    documento = next(
+        (doc for doc in expediente.documentos if doc.id == documento_id),
+        None
+    )
+
+    if not documento:
+        raise AuthError(
+            f"Documento {documento_id} no encontrado en expediente {expediente_id}",
+            404
+        )
+
+    if not documento.metadatos_extraidos:
+        raise AuthError(
+            f"Documento {documento_id} no tiene metadatos extraídos",
+            422
+        )
+
+    result = {
+        "success": True,
+        "documento_id": documento.id,
+        "nombre": documento.nombre,
+        "tipo": documento.tipo,
+        "metadatos_extraidos": documento.metadatos_extraidos
+    }
+
+    return [
+        types.TextContent(
+            type="text",
+            text=json.dumps(result, ensure_ascii=False, indent=2)
+        )
+    ]
+
+
+async def tool_actualizar_metadatos_documento(
+    expediente_id: str,
+    documento_id: str,
+    metadatos: Dict[str, Any],
+    reemplazar: bool = False
+) -> List[types.TextContent]:
+    """
+    Actualiza los metadatos extraídos de un documento.
+
+    Args:
+        expediente_id: ID del expediente
+        documento_id: ID del documento
+        metadatos: Nuevos metadatos a establecer
+        reemplazar: Si True, reemplaza todos los metadatos. Si False, los mezcla.
+
+    Returns:
+        Resultado de la operación con metadatos anteriores y nuevos
+
+    Raises:
+        AuthError: Si el documento no existe
+    """
+    expediente = load_expediente(expediente_id)
+
+    # Buscar documento
+    documento = None
+    doc_index = None
+    for i, doc in enumerate(expediente.documentos):
+        if doc.id == documento_id:
+            documento = doc
+            doc_index = i
+            break
+
+    if not documento:
+        raise AuthError(
+            f"Documento {documento_id} no encontrado en expediente {expediente_id}",
+            404
+        )
+
+    # Guardar metadatos anteriores
+    metadatos_anteriores = documento.metadatos_extraidos.copy() if documento.metadatos_extraidos else {}
+
+    # Actualizar metadatos
+    if reemplazar or not documento.metadatos_extraidos:
+        documento.metadatos_extraidos = metadatos
+    else:
+        documento.metadatos_extraidos.update(metadatos)
+
+    # Actualizar documento en el expediente
+    expediente.documentos[doc_index] = documento
+
+    # Registrar en historial
+    entrada = EntradaHistorial(
+        id=generate_id("HIST"),
+        fecha=datetime.now(),
+        usuario="Automático",
+        tipo="AGENTE",
+        accion="ACTUALIZAR_METADATOS_DOCUMENTO",
+        detalles=f"Metadatos del documento {documento_id} actualizados (reemplazar={reemplazar})"
+    )
+    expediente.historial.append(entrada)
+
+    # Guardar
+    save_expediente(expediente)
+
+    result = {
+        "success": True,
+        "documento_id": documento_id,
+        "metadatos_anteriores": metadatos_anteriores,
+        "metadatos_nuevos": documento.metadatos_extraidos,
+        "mensaje": "Metadatos actualizados correctamente"
+    }
+
+    return [
+        types.TextContent(
+            type="text",
+            text=json.dumps(result, ensure_ascii=False, indent=2)
+        )
+    ]
+
+
+async def tool_crear_documento_desde_markdown(
+    expediente_id: str,
+    nombre: str,
+    tipo: str,
+    texto_markdown: str,
+    metadatos: Dict[str, Any] = None
+) -> List[types.TextContent]:
+    """
+    Crea un nuevo documento a partir de contenido markdown.
+
+    Args:
+        expediente_id: ID del expediente
+        nombre: Nombre del documento
+        tipo: Tipo de documento (INFORME, RESOLUCION, etc.)
+        texto_markdown: Contenido en formato markdown
+        metadatos: Metadatos opcionales del documento
+
+    Returns:
+        Resultado con el ID del documento creado
+
+    Raises:
+        AuthError: Si hay error al crear el documento
+    """
+    expediente = load_expediente(expediente_id)
+
+    # Generar ID para el documento
+    doc_id = generate_id("DOC")
+
+    # Generar ruta
+    ruta = f"data/documentos/{expediente_id}/{nombre}"
+
+    # Calcular tamaño
+    tamano_bytes = len(texto_markdown.encode('utf-8'))
+
+    # Crear documento
+    documento = Documento(
+        id=doc_id,
+        nombre=nombre,
+        fecha=datetime.now(),
+        tipo=tipo,
+        ruta=ruta,
+        hash_sha256="",  # En un sistema real, se calcularía el hash
+        tamano_bytes=tamano_bytes,
+        validado=None,
+        metadatos_extraidos=metadatos,
+        texto_markdown=texto_markdown
+    )
+
+    # Añadir a la lista de documentos
+    expediente.documentos.append(documento)
+
+    # Registrar en historial
+    entrada = EntradaHistorial(
+        id=generate_id("HIST"),
+        fecha=datetime.now(),
+        usuario="Automático",
+        tipo="AGENTE",
+        accion="CREAR_DOCUMENTO_MARKDOWN",
+        detalles=f"Documento {doc_id} creado desde markdown: {nombre} (tipo: {tipo})"
+    )
+    expediente.historial.append(entrada)
+
+    # Guardar
+    save_expediente(expediente)
+
+    result = {
+        "success": True,
+        "documento_id": doc_id,
+        "nombre": nombre,
+        "tipo": tipo,
+        "ruta": ruta,
+        "mensaje": f"Documento {doc_id} creado correctamente"
+    }
+
+    return [
+        types.TextContent(
+            type="text",
+            text=json.dumps(result, ensure_ascii=False, indent=2)
+        )
+    ]

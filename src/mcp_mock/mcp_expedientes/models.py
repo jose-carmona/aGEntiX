@@ -20,7 +20,22 @@ class Solicitante(BaseModel):
 
 
 class Documento(BaseModel):
-    """Representa un documento adjunto a un expediente"""
+    """
+    Representa un documento adjunto a un expediente.
+
+    Attributes:
+        id: ID único del documento (ej: "DOC-001")
+        nombre: Nombre del fichero (ej: "dni.pdf")
+        fecha: Fecha de incorporación al expediente
+        tipo: Tipo de documento (SOLICITUD, IDENTIFICACION, BANCARIO, etc.)
+        ruta: Ruta física del documento
+        hash_sha256: Hash para verificar integridad
+        tamano_bytes: Tamaño en bytes
+        validado: Estado de validación
+        metadatos_extraidos: Metadatos extraídos del documento según su tipo
+            (NIF, fechas, importes, referencias catastrales, etc.)
+        texto_markdown: Transcripción del contenido del documento en markdown
+    """
     id: str
     nombre: str
     fecha: datetime
@@ -29,6 +44,8 @@ class Documento(BaseModel):
     hash_sha256: str
     tamano_bytes: int
     validado: Optional[bool] = None
+    metadatos_extraidos: Optional[Dict[str, Any]] = None
+    texto_markdown: Optional[str] = None
 
 
 class EntradaHistorial(BaseModel):
