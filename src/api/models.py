@@ -38,7 +38,9 @@ class ExecuteAgentRequest(BaseModel):
     """
     Request simplificado para ejecutar un agente.
 
-    Solo requiere el nombre del agente, el prompt específico y el contexto.
+    Solo requiere el nombre del agente y el contexto.
+    Opcionalmente se puede añadir un additional_goal que se combina
+    con el goal del agente definido en agents.yaml.
     La configuración del agente (model, system_prompt, tools) se carga
     automáticamente desde agents.yaml en el servidor.
     """
@@ -48,10 +50,10 @@ class ExecuteAgentRequest(BaseModel):
         example="ValidadorDocumental",
         description="Nombre del agente a ejecutar (debe existir en agents.yaml)"
     )
-    prompt: str = Field(
-        ...,
-        example="Valida los documentos del expediente y verifica el NIF del solicitante",
-        description="Instrucciones específicas para esta ejecución"
+    additional_goal: Optional[str] = Field(
+        None,
+        example="Priorizar la validación del NIF del solicitante",
+        description="Objetivo adicional opcional que se añade al goal del agente definido en agents.yaml"
     )
     context: AgentContext = Field(
         ...,

@@ -62,10 +62,10 @@ export interface GenerateJWTResponse {
  * La configuración del agente (model, system_prompt, tools) se carga desde agents.yaml
  */
 export interface ExecuteAgentRequest {
-  agent: string;           // Nombre del agente (ej: "ValidadorDocumental")
-  prompt: string;          // Instrucciones específicas para esta ejecución
-  context: AgentContext;   // Contexto con expediente_id y tarea_id
-  callback_url?: string;   // URL de callback opcional
+  agent: string;              // Nombre del agente (ej: "ValidadorDocumental")
+  additional_goal?: string;   // Objetivo adicional opcional que se añade al goal del agente
+  context: AgentContext;      // Contexto con expediente_id y tarea_id
+  callback_url?: string;      // URL de callback opcional
 }
 
 /**

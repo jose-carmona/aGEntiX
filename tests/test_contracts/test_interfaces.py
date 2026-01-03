@@ -206,7 +206,7 @@ def test_contract_api_execute_request_response():
     Test: Contrato de API simplificado es estable (OpenAPI spec)
 
     NOTA: El Paso 4 simplificó el API de ejecución de agentes.
-    El nuevo formato usa: agent, prompt, context, callback_url (opcional).
+    El nuevo formato usa: agent, context, additional_goal (opcional), callback_url (opcional).
 
     Si este test falla:
     - Se cambió la estructura de request/response de API
@@ -222,10 +222,10 @@ def test_contract_api_execute_request_response():
 
     # Campos obligatorios del request simplificado
     assert 'agent' in request_fields, "Campo 'agent' requerido"
-    assert 'prompt' in request_fields, "Campo 'prompt' requerido"
     assert 'context' in request_fields, "Campo 'context' requerido"
 
-    # Campo opcional
+    # Campos opcionales
+    assert 'additional_goal' in request_fields, "Campo 'additional_goal' (opcional) requerido"
     assert 'callback_url' in request_fields, "Campo 'callback_url' (opcional) requerido"
 
     # Verificar AgentContext
@@ -243,7 +243,7 @@ def test_contract_api_execute_request_response():
     )
     sample_request = ExecuteAgentRequest(
         agent="ValidadorDocumental",
-        prompt="Valida los documentos del expediente",
+        additional_goal="Priorizar validación de NIFs",
         context=sample_context,
         callback_url="https://example.com/webhook"
     )
@@ -252,7 +252,7 @@ def test_contract_api_execute_request_response():
     request_dict = sample_request.model_dump()
     assert isinstance(request_dict, dict)
     assert request_dict['agent'] == "ValidadorDocumental"
-    assert request_dict['prompt'] == "Valida los documentos del expediente"
+    assert request_dict['additional_goal'] == "Priorizar validación de NIFs"
     assert request_dict['context']['expediente_id'] == "EXP-TEST-001"
 
 
@@ -507,7 +507,6 @@ def test_contract_pydantic_models_json_serializable():
     )
     request = ExecuteAgentRequest(
         agent="ValidadorDocumental",
-        prompt="Test prompt",
         context=context
     )
     request_json = request.model_dump_json()
@@ -558,23 +557,24 @@ def test_contract_backward_compatibility_optional_fields():
         tarea_id="TAREA-001"
     )
 
-    # Sin callback_url (es opcional)
+    # Sin additional_goal y sin callback_url (son opcionales)
     minimal_request = ExecuteAgentRequest(
         agent="ValidadorDocumental",
-        prompt="Test prompt",
         context=context
     )
 
     assert minimal_request.agent == "ValidadorDocumental"
+    assert minimal_request.additional_goal is None
     assert minimal_request.callback_url is None
 
-    # Con callback_url
+    # Con additional_goal y callback_url
     full_request = ExecuteAgentRequest(
         agent="ValidadorDocumental",
-        prompt="Test prompt",
+        additional_goal="Objetivo adicional",
         context=context,
         callback_url="https://example.com/webhook"
     )
+    assert full_request.additional_goal is not None
     assert full_request.callback_url is not None
 
     # Test: WebhookPayload con campos mínimos

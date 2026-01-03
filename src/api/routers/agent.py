@@ -84,7 +84,7 @@ async def execute_agent(
 
     **Request simplificado:**
     - `agent`: Nombre del agente (debe existir en agents.yaml)
-    - `prompt`: Instrucciones específicas para esta ejecución
+    - `additional_goal`: Objetivo adicional opcional que se añade al goal del agente
     - `context`: expediente_id y tarea_id
     - `callback_url`: URL de callback (opcional)
 
@@ -140,13 +140,13 @@ async def execute_agent(
     )
 
     # 4. Construir AgentConfig combinando YAML + request
-    # El prompt del usuario se combina con el system_prompt del YAML
+    # El additional_goal se añadirá al goal del agente definido en YAML
     agent_config = AgentConfig(
         nombre=agent_definition.name,
         system_prompt=agent_definition.system_prompt,
         modelo=agent_definition.model,
-        prompt_tarea=request.prompt,  # El prompt del usuario
-        herramientas=agent_definition.tools
+        herramientas=agent_definition.tools,
+        additional_goal=request.additional_goal  # Se interpola en {additional_goal} del goal
     )
 
     # 5. Generar run_id y registrar tarea

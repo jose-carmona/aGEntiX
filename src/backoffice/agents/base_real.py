@@ -65,7 +65,8 @@ class AgentReal(ABC):
         run_id: str,
         mcp_registry: MCPClientRegistry,
         logger: AuditLogger,
-        config: Optional[AgentDefinition] = None
+        config: Optional[AgentDefinition] = None,
+        additional_goal: Optional[str] = None
     ):
         """
         Inicializa el agente real.
@@ -77,12 +78,14 @@ class AgentReal(ABC):
             mcp_registry: Registry de clientes MCP para routing
             logger: Logger de auditoría
             config: Configuración del agente (opcional, se carga del YAML si no se proporciona)
+            additional_goal: Objetivo adicional opcional que se añade al goal del agente
         """
         self.expediente_id = expediente_id
         self.tarea_id = tarea_id
         self.run_id = run_id
         self.mcp_registry = mcp_registry
         self.logger = logger
+        self.additional_goal = additional_goal or ""
         self._tools_used: List[str] = []
 
         # Cargar configuración si no se proporciona
@@ -157,7 +160,8 @@ class AgentReal(ABC):
         return template.format(
             expediente_id=self.expediente_id,
             tarea_id=self.tarea_id,
-            run_id=self.run_id
+            run_id=self.run_id,
+            additional_goal=self.additional_goal
         )
 
     async def execute(self) -> Dict[str, Any]:

@@ -108,8 +108,8 @@ class TestExecuteAgentSimplified:
 
         assert response.status_code == 422
 
-    def test_execute_with_missing_prompt_returns_422(self):
-        """Request sin campo 'prompt' retorna 422"""
+    def test_execute_without_additional_goal_returns_202(self):
+        """Request sin campo 'additional_goal' es válido (campo opcional)"""
         response = client.post(
             "/api/v1/agent/execute",
             json={
@@ -122,7 +122,8 @@ class TestExecuteAgentSimplified:
             headers={"Authorization": "Bearer test-token"}
         )
 
-        assert response.status_code == 422
+        # additional_goal es opcional, debe retornar 202 Accepted
+        assert response.status_code == 202
 
     def test_execute_with_missing_context_returns_422(self):
         """Request sin campo 'context' retorna 422"""
@@ -366,7 +367,7 @@ class TestAgentConfigIntegration:
             captured_config['nombre'] = agent_config.nombre
             captured_config['system_prompt'] = agent_config.system_prompt
             captured_config['modelo'] = agent_config.modelo
-            captured_config['prompt_tarea'] = agent_config.prompt_tarea
+            captured_config['additional_goal'] = agent_config.additional_goal
             captured_config['herramientas'] = agent_config.herramientas
             return AgentExecutionResult(
                 success=True,
@@ -383,7 +384,7 @@ class TestAgentConfigIntegration:
             "/api/v1/agent/execute",
             json={
                 "agent": "ValidadorDocumental",
-                "prompt": "Prompt específico del usuario",
+                "additional_goal": "Objetivo adicional del usuario",
                 "context": {
                     "expediente_id": "EXP-2024-001",
                     "tarea_id": "TAREA-001"
@@ -399,5 +400,5 @@ class TestAgentConfigIntegration:
         assert "validador" in captured_config['system_prompt'].lower() or \
                "documentación" in captured_config['system_prompt'].lower()
         assert captured_config['modelo'] == "claude-3-5-sonnet-20241022"
-        assert captured_config['prompt_tarea'] == "Prompt específico del usuario"
+        assert captured_config['additional_goal'] == "Objetivo adicional del usuario"
         assert "consultar_expediente" in captured_config['herramientas']

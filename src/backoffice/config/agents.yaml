@@ -26,7 +26,7 @@ agents:
     # Definición del agente CrewAI
     crewai_agent:
       role: "Clasificador de Expedientes Administrativos"
-      goal: "Clasificar el expediente {expediente_id} según tipo y urgencia basándose en los datos obtenidos via MCP"
+      goal: "Clasificar el expediente {expediente_id} según tipo y urgencia basándose en los datos obtenidos via MCP. {additional_goal}"
       backstory: |
         Eres un experto en gestión documental de la administración pública española.
         Tu trabajo es analizar la información de expedientes y clasificarlos según:

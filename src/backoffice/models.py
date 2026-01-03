@@ -10,8 +10,8 @@ class AgentConfig:
     nombre: str  # "ValidadorDocumental"
     system_prompt: str  # "Eres un validador..."
     modelo: str  # "claude-3-5-sonnet-20241022"
-    prompt_tarea: str  # "Valida que todos los documentos..."
     herramientas: List[str]  # ["consultar_expediente", "actualizar_datos", ...]
+    additional_goal: Optional[str] = None  # "Priorizar validación del NIF" (opcional, se añade al goal)
 
 
 @dataclass

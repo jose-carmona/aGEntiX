@@ -1,7 +1,7 @@
 # backoffice/agents/base.py
 
 from abc import ABC, abstractmethod
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 from ..mcp.registry import MCPClientRegistry
 from ..logging.audit_logger import AuditLogger
 
@@ -20,7 +20,8 @@ class AgentMock(ABC):
         tarea_id: str,
         run_id: str,
         mcp_registry: MCPClientRegistry,
-        logger: AuditLogger
+        logger: AuditLogger,
+        additional_goal: Optional[str] = None
     ):
         """
         Inicializa el agente mock.
@@ -31,12 +32,14 @@ class AgentMock(ABC):
             run_id: ID único de esta ejecución
             mcp_registry: Registry de clientes MCP para routing
             logger: Logger de auditoría
+            additional_goal: Objetivo adicional (no usado en mocks, pero mantiene compatibilidad)
         """
         self.expediente_id = expediente_id
         self.tarea_id = tarea_id
         self.run_id = run_id
         self.mcp_registry = mcp_registry
         self.logger = logger
+        self.additional_goal = additional_goal
         self._tools_used: List[str] = []
 
     @abstractmethod

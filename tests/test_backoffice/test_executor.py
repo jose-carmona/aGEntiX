@@ -121,8 +121,8 @@ def agent_config():
         nombre="ValidadorDocumental",
         system_prompt="Test prompt",
         modelo="claude-3-5-sonnet",
-        prompt_tarea="Test task",
-        herramientas=["consultar_expediente", "actualizar_datos"]
+        herramientas=["consultar_expediente", "actualizar_datos"],
+        additional_goal="Test additional goal"
     )
 
 

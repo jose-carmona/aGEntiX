@@ -422,7 +422,6 @@ def test_error_12_invalid_webhook_url_format():
                 "nombre": "ValidadorDocumental",
                 "system_prompt": "Test",
                 "modelo": "claude-3-5-sonnet-20241022",
-                "prompt_tarea": "Test",
                 "herramientas": ["consultar_expediente"]
             },
             webhook_url="http://localhost:8080/callback"
@@ -440,7 +439,6 @@ def test_error_12_invalid_webhook_url_format():
                 "nombre": "ValidadorDocumental",
                 "system_prompt": "Test",
                 "modelo": "claude-3-5-sonnet-20241022",
-                "prompt_tarea": "Test",
                 "herramientas": ["consultar_expediente"]
             },
             webhook_url="http://192.168.1.1/callback"
@@ -530,7 +528,6 @@ async def test_error_6_agent_raises_unhandled_exception(test_constants):
         nombre="ValidadorDocumental",
         system_prompt="Test",
         modelo="claude-3-5-sonnet-20241022",
-        prompt_tarea="Test",
         herramientas=[]
     )
 
@@ -619,7 +616,6 @@ async def test_error_9_invalid_agent_configuration(test_constants):
         nombre="UnknownAgent",
         system_prompt="Test",
         modelo="claude-3-5-sonnet-20241022",
-        prompt_tarea="Test",
         herramientas=[]
     )
 

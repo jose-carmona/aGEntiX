@@ -28,7 +28,7 @@ export const IntegratedExecutionForm: React.FC<IntegratedExecutionFormProps> = (
   const [expTipo, setExpTipo] = useState('SUBVENCIONES');
   const [tareaId, setTareaId] = useState('TAREA-TEST-001');
   const [tareaNombre, setTareaNombre] = useState('VALIDAR_DOCUMENTACION');
-  const [prompt, setPrompt] = useState('');
+  const [additionalGoal, setAdditionalGoal] = useState('');
   const [permisos, setPermisos] = useState<string[]>(['consulta']);
   const [expHours, setExpHours] = useState(1);
 
@@ -40,11 +40,12 @@ export const IntegratedExecutionForm: React.FC<IntegratedExecutionFormProps> = (
   const [localError, setLocalError] = useState<string | null>(null);
   const [errorType, setErrorType] = useState<'validation' | 'jwt' | 'execution' | null>(null);
 
-  // Prompts predeterminados por agente
-  const defaultPrompts: Record<string, string> = {
-    'ValidadorDocumental': 'Valida los documentos del expediente y verifica que toda la documentación esté completa',
-    'AnalizadorSubvencion': 'Analiza la solicitud de subvención y verifica el cumplimiento de requisitos',
-    'GeneradorInforme': 'Genera un informe técnico resumiendo el estado del expediente'
+  // Objetivos adicionales sugeridos por agente (opcionales)
+  const suggestedGoals: Record<string, string> = {
+    'ValidadorDocumental': 'Priorizar la verificación de los NIFs y fechas de documentos',
+    'AnalizadorSubvencion': 'Enfatizar el cumplimiento de plazos y requisitos económicos',
+    'GeneradorInforme': 'Incluir recomendaciones de mejora en el informe',
+    'ClasificadorExpediente': 'Considerar la antigüedad del expediente para determinar urgencia'
   };
 
   // Cargar configuración guardada y permisos disponibles
@@ -53,10 +54,12 @@ export const IntegratedExecutionForm: React.FC<IntegratedExecutionFormProps> = (
     loadPermissions();
   }, []);
 
-  // Actualizar prompt predeterminado cuando cambia el agente
+  // Sugerir objetivo adicional cuando cambia el agente (el usuario puede modificarlo o dejarlo vacío)
   useEffect(() => {
-    if (selectedAgentId && defaultPrompts[selectedAgentId]) {
-      setPrompt(defaultPrompts[selectedAgentId]);
+    if (selectedAgentId && suggestedGoals[selectedAgentId]) {
+      setAdditionalGoal(suggestedGoals[selectedAgentId]);
+    } else {
+      setAdditionalGoal('');
     }
   }, [selectedAgentId]);
 
@@ -194,11 +197,7 @@ export const IntegratedExecutionForm: React.FC<IntegratedExecutionFormProps> = (
       return;
     }
 
-    if (!prompt.trim()) {
-      setLocalError('El prompt es requerido');
-      setErrorType('validation');
-      return;
-    }
+    // additional_goal es opcional, no requiere validación
 
     setIsGeneratingToken(true);
 
@@ -218,7 +217,7 @@ export const IntegratedExecutionForm: React.FC<IntegratedExecutionFormProps> = (
       // 2. Construir request simplificado (Paso 4)
       const executeRequest: ExecuteAgentRequest = {
         agent: selectedAgentId,
-        prompt: prompt,
+        additional_goal: additionalGoal.trim() || undefined,  // Solo incluir si tiene valor
         context: {
           expediente_id: expedienteId,
           tarea_id: tareaId
@@ -278,7 +277,6 @@ export const IntegratedExecutionForm: React.FC<IntegratedExecutionFormProps> = (
   const canExecute =
     selectedAgentId &&
     expedienteId &&
-    prompt.trim() &&
     !expedienteError &&
     !isExecuting &&
     !isGeneratingToken;
@@ -397,27 +395,27 @@ export const IntegratedExecutionForm: React.FC<IntegratedExecutionFormProps> = (
           </div>
         </div>
 
-        {/* Sección: Prompt del Agente */}
+        {/* Sección: Objetivo Adicional (Opcional) */}
         <div>
           <h4 className="text-sm font-semibold text-gray-700 mb-3 pb-2 border-b">
-            3. Instrucciones para el Agente *
+            3. Objetivo Adicional (Opcional)
           </h4>
 
           <div>
-            <label htmlFor="prompt" className="block text-sm font-medium text-gray-700 mb-2">
-              Prompt
+            <label htmlFor="additional-goal" className="block text-sm font-medium text-gray-700 mb-2">
+              Objetivo Adicional
             </label>
             <textarea
-              id="prompt"
-              value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
-              placeholder="Escribe las instrucciones específicas para el agente..."
+              id="additional-goal"
+              value={additionalGoal}
+              onChange={(e) => setAdditionalGoal(e.target.value)}
+              placeholder="Opcional: añade instrucciones adicionales al objetivo del agente..."
               disabled={isExecuting || isGeneratingToken}
-              rows={3}
+              rows={2}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-500"
             />
             <p className="mt-1 text-xs text-gray-500">
-              Estas instrucciones se combinarán con el system_prompt del agente
+              Se añade al objetivo base del agente definido en agents.yaml. Déjalo vacío para usar solo el objetivo predeterminado.
             </p>
           </div>
         </div>
@@ -522,8 +520,8 @@ export const IntegratedExecutionForm: React.FC<IntegratedExecutionFormProps> = (
         {/* Info de ayuda */}
         <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
           <p className="text-xs text-gray-600">
-            <strong>API Simplificada (Paso 4):</strong> Solo se envía el nombre del agente, prompt y contexto.
-            La configuración del agente (modelo, system_prompt, tools) se carga automáticamente desde el servidor.
+            <strong>API Simplificada:</strong> Solo se envía el nombre del agente, contexto y opcionalmente un objetivo adicional.
+            La configuración del agente (modelo, goal, tools) se carga automáticamente desde agents.yaml en el servidor.
           </p>
         </div>
       </div>

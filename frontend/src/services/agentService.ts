@@ -34,7 +34,7 @@ export const generateJWT = async (request: GenerateJWTRequest): Promise<Generate
  *
  * Request simplificado:
  * - agent: Nombre del agente (ej: "ValidadorDocumental")
- * - prompt: Instrucciones específicas
+ * - additional_goal: Objetivo adicional opcional que se añade al goal del agente
  * - context: { expediente_id, tarea_id }
  * - callback_url: URL de callback (opcional)
  */

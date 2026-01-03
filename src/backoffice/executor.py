@@ -141,7 +141,7 @@ class AgentExecutor:
             available_tools = mcp_registry.get_available_tools()
             logger.log(f"Tools disponibles: {len(available_tools)}")
 
-            # 4. Crear y ejecutar agente mock
+            # 4. Crear y ejecutar agente
             logger.log(f"Creando agente {agent_config.nombre}...")
             try:
                 agent_class = self.agent_registry.get(agent_config.nombre)
@@ -150,7 +150,8 @@ class AgentExecutor:
                     tarea_id=tarea_id,
                     run_id=agent_run_id,
                     mcp_registry=mcp_registry,
-                    logger=logger
+                    logger=logger,
+                    additional_goal=agent_config.additional_goal
                 )
             except KeyError as e:
                 logger.error(f"Agente no configurado: {str(e)}")

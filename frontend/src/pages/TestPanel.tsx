@@ -111,7 +111,7 @@ export const TestPanel: React.FC = () => {
           Panel de Pruebas de Agentes
         </h1>
         <p className="text-gray-600">
-          Ejecuta agentes con la API simplificada. Solo necesitas: agente, prompt y contexto.
+          Ejecuta agentes con la API simplificada. Solo necesitas: agente y contexto. El objetivo adicional es opcional.
         </p>
       </div>
 
@@ -199,11 +199,11 @@ export const TestPanel: React.FC = () => {
           </svg>
           <div className="flex-1">
             <p className="text-sm font-medium text-blue-900 mb-2">
-              API Simplificada (Paso 4):
+              API Simplificada:
             </p>
             <div className="text-sm text-blue-800 space-y-1">
-              <p><strong>Request:</strong> <code className="bg-blue-100 px-1 rounded">agent</code>, <code className="bg-blue-100 px-1 rounded">prompt</code>, <code className="bg-blue-100 px-1 rounded">context</code></p>
-              <p>La configuración del agente (modelo, system_prompt, tools) se carga automáticamente desde <code className="bg-blue-100 px-1 rounded">agents.yaml</code></p>
+              <p><strong>Request:</strong> <code className="bg-blue-100 px-1 rounded">agent</code>, <code className="bg-blue-100 px-1 rounded">context</code>, <code className="bg-blue-100 px-1 rounded">additional_goal</code> (opcional)</p>
+              <p>La configuración del agente (modelo, goal, tools) se carga automáticamente desde <code className="bg-blue-100 px-1 rounded">agents.yaml</code></p>
             </div>
           </div>
         </div>
