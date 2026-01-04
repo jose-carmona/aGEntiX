@@ -21,11 +21,13 @@ from .generador_informe import GeneradorInforme
 try:
     from .base_real import AgentReal
     from .clasificador_expediente import ClasificadorExpediente
+    from .redactor_situacion import RedactorSituacion
     CREWAI_AGENTS_AVAILABLE = True
 except (ImportError, RuntimeError) as e:
     # RuntimeError captura problemas como SQLite incompatible
     AgentReal = None
     ClasificadorExpediente = None
+    RedactorSituacion = None
     CREWAI_AGENTS_AVAILABLE = False
 
 
@@ -42,8 +44,11 @@ AGENT_REGISTRY: Dict[str, AgentType] = {
 }
 
 # Añadir agentes CrewAI si están disponibles
-if CREWAI_AGENTS_AVAILABLE and ClasificadorExpediente is not None:
-    AGENT_REGISTRY["ClasificadorExpediente"] = ClasificadorExpediente
+if CREWAI_AGENTS_AVAILABLE:
+    if ClasificadorExpediente is not None:
+        AGENT_REGISTRY["ClasificadorExpediente"] = ClasificadorExpediente
+    if RedactorSituacion is not None:
+        AGENT_REGISTRY["RedactorSituacion"] = RedactorSituacion
 
 
 def get_agent_class(agent_name: str) -> AgentType:
@@ -96,7 +101,7 @@ def list_crewai_agents() -> list[str]:
         Lista de nombres de agentes CrewAI (vacía si CrewAI no está instalado)
     """
     if CREWAI_AGENTS_AVAILABLE:
-        return ["ClasificadorExpediente"]
+        return ["ClasificadorExpediente", "RedactorSituacion"]
     return []
 
 

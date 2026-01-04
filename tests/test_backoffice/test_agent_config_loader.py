@@ -480,6 +480,51 @@ class TestAgentConfigLoaderWithRealFile:
         assert agent.crewai_task is not None
         assert "consultar_expediente" in agent.tools
 
+    def test_redactor_situacion_config(self):
+        """RedactorSituacion tiene configuración CrewAI correcta"""
+        config_path = Path(__file__).parent.parent.parent / "src" / "backoffice" / "config" / "agents.yaml"
+
+        if not config_path.exists():
+            pytest.skip("agents.yaml no existe todavía")
+
+        loader = AgentConfigLoader(str(config_path))
+
+        if not loader.exists("RedactorSituacion"):
+            pytest.skip("RedactorSituacion no configurado")
+
+        agent = loader.get("RedactorSituacion")
+
+        # Verificar tipo
+        assert agent.type == "crewai"
+        assert agent.is_crewai is True
+
+        # Verificar configuración LLM
+        assert agent.llm is not None
+        assert agent.llm.provider == "anthropic"
+        assert agent.llm.max_tokens == 4096  # Máximo permitido por Haiku
+
+        # Verificar agente CrewAI
+        assert agent.crewai_agent is not None
+        assert "Redactor" in agent.crewai_agent.role
+        assert "Informe de Situación" in agent.crewai_agent.goal
+
+        # Verificar tarea CrewAI
+        assert agent.crewai_task is not None
+        assert "expediente_id" in agent.crewai_task.description
+
+        # Verificar herramientas MCP requeridas
+        assert "consultar_expediente" in agent.tools
+        assert "listar_documentos" in agent.tools
+        assert "obtener_texto_documento" in agent.tools
+        assert "crear_documento_desde_markdown" in agent.tools
+
+        # Verificar permisos
+        assert "expediente.lectura" in agent.required_permissions
+        assert "documento.escritura" in agent.required_permissions
+
+        # Verificar timeout (600s = 10 min por ser agente complejo)
+        assert agent.timeout_seconds == 600
+
     def test_validador_documental_config(self):
         """ValidadorDocumental tiene configuración mock correcta"""
         config_path = Path(__file__).parent.parent.parent / "src" / "backoffice" / "config" / "agents.yaml"

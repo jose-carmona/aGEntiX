@@ -85,6 +85,27 @@ class AñadirDocumentoArgs(BaseModel):
     contenido: str = Field(description="Contenido del documento (base64)")
 
 
+class ObtenerTextoDocumentoArgs(BaseModel):
+    """Argumentos para obtener_texto_documento."""
+    expediente_id: str = Field(description="ID del expediente")
+    documento_id: str = Field(description="ID del documento")
+
+
+class ObtenerMetadatosDocumentoArgs(BaseModel):
+    """Argumentos para obtener_metadatos_documento."""
+    expediente_id: str = Field(description="ID del expediente")
+    documento_id: str = Field(description="ID del documento")
+
+
+class CrearDocumentoDesdeMarkdownArgs(BaseModel):
+    """Argumentos para crear_documento_desde_markdown."""
+    expediente_id: str = Field(description="ID del expediente")
+    nombre: str = Field(description="Nombre del documento (ej: 'informe_situacion.md')")
+    tipo: str = Field(description="Tipo de documento (ej: 'INFORME')")
+    texto_markdown: str = Field(description="Contenido markdown del documento")
+    metadatos: Optional[dict] = Field(default=None, description="Metadatos opcionales del documento")
+
+
 # Mapping de nombre de herramienta a schema de argumentos
 TOOL_ARGS_SCHEMAS: dict[str, Type[BaseModel]] = {
     "consultar_expediente": ConsultarExpedienteArgs,
@@ -96,6 +117,9 @@ TOOL_ARGS_SCHEMAS: dict[str, Type[BaseModel]] = {
     "listar_documentos": ListarDocumentosArgs,
     "obtener_documento": ObtenerDocumentoArgs,
     "añadir_documento": AñadirDocumentoArgs,
+    "obtener_texto_documento": ObtenerTextoDocumentoArgs,
+    "obtener_metadatos_documento": ObtenerMetadatosDocumentoArgs,
+    "crear_documento_desde_markdown": CrearDocumentoDesdeMarkdownArgs,
 }
 
 
@@ -299,6 +323,27 @@ class MCPToolFactory:
             "Genera un documento a partir de plantilla. "
             "Requiere 'expediente_id', 'plantilla_id' y 'datos'. "
             "Retorna el documento generado."
+        ),
+        "listar_documentos": (
+            "Lista todos los documentos de un expediente. "
+            "Requiere 'expediente_id'. "
+            "Retorna lista de documentos con id, nombre, tipo, fecha."
+        ),
+        "obtener_texto_documento": (
+            "Obtiene el texto markdown renderizable de un documento. "
+            "Requiere 'expediente_id' y 'documento_id'. "
+            "Retorna el contenido markdown del documento para análisis."
+        ),
+        "obtener_metadatos_documento": (
+            "Obtiene los metadatos extraídos de un documento. "
+            "Requiere 'expediente_id' y 'documento_id'. "
+            "Retorna metadatos estructurados (tipo_documento, datos extraídos, etc.)."
+        ),
+        "crear_documento_desde_markdown": (
+            "Crea un nuevo documento en el expediente a partir de texto markdown. "
+            "Requiere 'expediente_id', 'nombre', 'tipo', 'texto_markdown'. "
+            "Opcionalmente acepta 'metadatos'. "
+            "Retorna confirmación con el ID del documento creado."
         ),
     }
 

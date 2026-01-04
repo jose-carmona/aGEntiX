@@ -69,6 +69,113 @@ agents:
     timeout_seconds: 300
 
   # ==========================================================================
+  # RedactorSituacion - Genera Informes de Situación (Paso 6.2)
+  # ==========================================================================
+
+  RedactorSituacion:
+    type: crewai
+    enabled: true
+    description: "Genera un Informe de Situación analizando todos los documentos del expediente"
+
+    # Configuración del LLM
+    llm:
+      provider: anthropic
+      model: claude-3-haiku-20240307
+      max_tokens: 4096
+      temperature: 0.2
+
+    # Definición del agente CrewAI
+    crewai_agent:
+      role: "Redactor de Informes de Situación Administrativa"
+      goal: |
+        Generar un Informe de Situación completo para el expediente {expediente_id}.
+        El informe debe resumir los datos más importantes de todos los documentos,
+        revisar los pasos por los que ha pasado el expediente, y crear un documento
+        estructurado que sirva como resumen ejecutivo del estado actual.
+        {additional_goal}
+      backstory: |
+        Eres un experto redactor de informes administrativos de la administración pública española.
+        Tu especialidad es analizar expedientes completos y generar informes de situación claros,
+        concisos y bien estructurados.
+
+        Tienes amplia experiencia en:
+        - Análisis de documentación administrativa (DNIs, solicitudes, certificados)
+        - Extracción de información clave de documentos
+        - Redacción de informes técnicos siguiendo normativa administrativa
+        - Síntesis de historiales de tramitación
+
+        Tu trabajo es fundamental para que los gestores puedan entender rápidamente
+        el estado de cualquier expediente sin tener que revisar todos los documentos.
+      verbose: true
+      allow_delegation: false
+
+    # Tarea a ejecutar
+    crewai_task:
+      description: |
+        Genera un Informe de Situación para el expediente {expediente_id}.
+
+        PASOS OBLIGATORIOS:
+
+        1. CONSULTA DEL EXPEDIENTE
+           - Usa 'consultar_expediente' con expediente_id="{expediente_id}"
+           - Extrae: tipo, estado, fecha_inicio, datos del solicitante
+
+        2. LISTADO DE DOCUMENTOS
+           - Usa 'listar_documentos' con expediente_id="{expediente_id}"
+           - Anota cuántos documentos hay y sus tipos
+
+        3. LECTURA DE CADA DOCUMENTO
+           - Para cada documento encontrado, usa 'obtener_texto_documento'
+             con expediente_id="{expediente_id}" y el documento_id correspondiente
+           - Extrae la información más relevante de cada documento
+
+        4. ANÁLISIS DEL HISTORIAL
+           - Del expediente consultado en el paso 1, revisa el campo 'historial'
+           - Identifica las acciones realizadas y por quién
+
+        5. REDACCIÓN DEL INFORME
+           - Genera un informe en formato Markdown con estas secciones:
+             * Título: "Informe de Situación - {expediente_id}"
+             * Datos Generales (tipo, estado, fecha, solicitante)
+             * Resumen de Documentación (lista de documentos con datos clave)
+             * Cronología de Tramitación (basado en historial)
+             * Situación Actual y Observaciones
+             * Fecha de generación
+
+        6. GUARDAR DOCUMENTO
+           - Usa 'crear_documento_desde_markdown' con:
+             * expediente_id="{expediente_id}"
+             * nombre="informe_situacion.md"
+             * tipo="INFORME"
+             * texto_markdown=<el informe generado>
+             * metadatos con tipo_informe, fecha_generacion, generado_por
+
+        IMPORTANTE: Responde siempre en Español.
+        IMPORTANTE: Debes completar TODOS los pasos antes de finalizar.
+      expected_output: |
+        Respuesta en formato JSON válido con estos campos:
+        {
+          "completado": true,
+          "documento_id": "ID del documento creado",
+          "resumen": "Breve resumen del informe generado (2-3 líneas)",
+          "documentos_analizados": 3,
+          "eventos_historial": 5
+        }
+
+    # Herramientas MCP que puede usar el agente
+    tools:
+      - consultar_expediente
+      - listar_documentos
+      - obtener_texto_documento
+      - crear_documento_desde_markdown
+      - añadir_anotacion
+
+    required_permissions:
+      - expediente.lectura
+      - documento.escritura
+    timeout_seconds: 600
+
+  # ==========================================================================
   # Agentes Mock existentes (Paso 1 - mantienen compatibilidad)
   # ==========================================================================
 
