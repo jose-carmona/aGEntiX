@@ -43,9 +43,8 @@ class TestListAgents:
         data = response.json()
         agent_names = [a["name"] for a in data["agents"]]
 
-        assert "ValidadorDocumental" in agent_names
-        assert "AnalizadorSubvencion" in agent_names
-        assert "GeneradorInforme" in agent_names
+        assert "ClasificadorExpediente" in agent_names
+        assert "RedactorSituacion" in agent_names
 
     def test_list_agents_includes_description(self):
         """GET /agents incluye descripción de cada agente"""
@@ -81,7 +80,7 @@ class TestExecuteAgentSimplified:
     def test_execute_without_token_returns_401(self):
         """Request sin token retorna 401"""
         response = client.post("/api/v1/agent/execute", json={
-            "agent": "ValidadorDocumental",
+            "agent": "ClasificadorExpediente",
             "prompt": "Valida los documentos del expediente",
             "context": {
                 "expediente_id": "EXP-2024-001",
@@ -113,7 +112,7 @@ class TestExecuteAgentSimplified:
         response = client.post(
             "/api/v1/agent/execute",
             json={
-                "agent": "ValidadorDocumental",
+                "agent": "ClasificadorExpediente",
                 "context": {
                     "expediente_id": "EXP-2024-001",
                     "tarea_id": "TAREA-001"
@@ -130,7 +129,7 @@ class TestExecuteAgentSimplified:
         response = client.post(
             "/api/v1/agent/execute",
             json={
-                "agent": "ValidadorDocumental",
+                "agent": "ClasificadorExpediente",
                 "prompt": "Valida los documentos"
             },
             headers={"Authorization": "Bearer test-token"}
@@ -174,7 +173,7 @@ class TestExecuteAgentSimplified:
         response = client.post(
             "/api/v1/agent/execute",
             json={
-                "agent": "ValidadorDocumental",
+                "agent": "ClasificadorExpediente",
                 "prompt": "Valida los documentos del expediente y verifica el NIF",
                 "context": {
                     "expediente_id": "EXP-2024-001",
@@ -209,7 +208,7 @@ class TestExecuteAgentSimplified:
         response = client.post(
             "/api/v1/agent/execute",
             json={
-                "agent": "ValidadorDocumental",
+                "agent": "ClasificadorExpediente",
                 "prompt": "Valida los documentos del expediente",
                 "context": {
                     "expediente_id": "EXP-2024-001",
@@ -258,7 +257,7 @@ class TestGetAgentStatus:
         exec_response = client.post(
             "/api/v1/agent/execute",
             json={
-                "agent": "ValidadorDocumental",
+                "agent": "ClasificadorExpediente",
                 "prompt": "Valida los documentos",
                 "context": {
                     "expediente_id": "EXP-2024-001",
@@ -294,7 +293,7 @@ class TestCallbackUrlValidation:
         response = client.post(
             "/api/v1/agent/execute",
             json={
-                "agent": "ValidadorDocumental",
+                "agent": "ClasificadorExpediente",
                 "prompt": "Test",
                 "context": {
                     "expediente_id": "EXP-2024-001",
@@ -315,7 +314,7 @@ class TestCallbackUrlValidation:
         response = client.post(
             "/api/v1/agent/execute",
             json={
-                "agent": "ValidadorDocumental",
+                "agent": "ClasificadorExpediente",
                 "prompt": "Test",
                 "context": {
                     "expediente_id": "EXP-2024-001",
@@ -333,7 +332,7 @@ class TestCallbackUrlValidation:
         response = client.post(
             "/api/v1/agent/execute",
             json={
-                "agent": "ValidadorDocumental",
+                "agent": "ClasificadorExpediente",
                 "prompt": "Test",
                 "context": {
                     "expediente_id": "EXP-2024-001",
@@ -383,7 +382,7 @@ class TestAgentConfigIntegration:
         response = client.post(
             "/api/v1/agent/execute",
             json={
-                "agent": "ValidadorDocumental",
+                "agent": "ClasificadorExpediente",
                 "additional_goal": "Objetivo adicional del usuario",
                 "context": {
                     "expediente_id": "EXP-2024-001",
@@ -396,9 +395,8 @@ class TestAgentConfigIntegration:
         assert response.status_code == 202
 
         # Verificar que se usó la configuración del YAML
-        assert captured_config['nombre'] == "ValidadorDocumental"
-        assert "validador" in captured_config['system_prompt'].lower() or \
-               "documentación" in captured_config['system_prompt'].lower()
-        assert captured_config['modelo'] == "claude-3-5-sonnet-20241022"
+        assert captured_config['nombre'] == "ClasificadorExpediente"
+        # CrewAI agents use crewai_agent config instead of system_prompt
+        assert captured_config['modelo'] == "claude-3-haiku-20240307"
         assert captured_config['additional_goal'] == "Objetivo adicional del usuario"
         assert "consultar_expediente" in captured_config['herramientas']

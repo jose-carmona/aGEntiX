@@ -421,8 +421,8 @@ class TestAgentLoaderSingleton:
 
         # Debe cargar el archivo agents.yaml del proyecto
         assert loader is not None
-        # Verificar que carga los agentes del proyecto
-        assert loader.exists("ValidadorDocumental")
+        # Verificar que carga los agentes CrewAI del proyecto
+        assert loader.exists("ClasificadorExpediente")
 
     def test_get_agent_loader_singleton(self):
         """get_agent_loader() retorna la misma instancia"""
@@ -453,10 +453,9 @@ class TestAgentConfigLoaderWithRealFile:
 
         loader = AgentConfigLoader(str(config_path))
 
-        # Verificar agentes esperados
-        assert loader.exists("ValidadorDocumental")
-        assert loader.exists("AnalizadorSubvencion")
-        assert loader.exists("GeneradorInforme")
+        # Verificar agentes CrewAI esperados
+        assert loader.exists("ClasificadorExpediente")
+        assert loader.exists("RedactorSituacion")
 
     def test_clasificador_expediente_config(self):
         """ClasificadorExpediente tiene configuración CrewAI correcta"""
@@ -525,24 +524,8 @@ class TestAgentConfigLoaderWithRealFile:
         # Verificar timeout (600s = 10 min por ser agente complejo)
         assert agent.timeout_seconds == 600
 
-    def test_validador_documental_config(self):
-        """ValidadorDocumental tiene configuración mock correcta"""
-        config_path = Path(__file__).parent.parent.parent / "src" / "backoffice" / "config" / "agents.yaml"
-
-        if not config_path.exists():
-            pytest.skip("agents.yaml no existe todavía")
-
-        loader = AgentConfigLoader(str(config_path))
-        agent = loader.get("ValidadorDocumental")
-
-        assert agent.type == "mock"
-        assert agent.is_mock is True
-        assert "consultar_expediente" in agent.tools
-        assert "actualizar_datos" in agent.tools
-        assert "añadir_anotacion" in agent.tools
-
     def test_all_agents_have_required_fields(self):
-        """Todos los agentes tienen campos requeridos"""
+        """Todos los agentes CrewAI tienen campos requeridos"""
         config_path = Path(__file__).parent.parent.parent / "src" / "backoffice" / "config" / "agents.yaml"
 
         if not config_path.exists():
@@ -552,15 +535,12 @@ class TestAgentConfigLoaderWithRealFile:
 
         for agent in loader.list_agents():
             assert agent.name, "Agente sin nombre"
-            assert agent.type in ["mock", "crewai", "langgraph"], f"{agent.name}: tipo inválido"
+            assert agent.type == "crewai", f"{agent.name}: tipo debe ser crewai"
             assert agent.description, f"{agent.name}: sin descripción"
             assert len(agent.tools) > 0, f"{agent.name}: sin herramientas"
             assert agent.timeout_seconds > 0, f"{agent.name}: timeout inválido"
 
             # Verificar campos específicos de CrewAI
-            if agent.is_crewai:
-                assert agent.llm is not None, f"{agent.name}: sin configuración LLM"
-                assert agent.crewai_agent is not None, f"{agent.name}: sin configuración crewai_agent"
-                assert agent.crewai_task is not None, f"{agent.name}: sin configuración crewai_task"
-            else:
-                assert agent.system_prompt, f"{agent.name}: sin system_prompt"
+            assert agent.llm is not None, f"{agent.name}: sin configuración LLM"
+            assert agent.crewai_agent is not None, f"{agent.name}: sin configuración crewai_agent"
+            assert agent.crewai_task is not None, f"{agent.name}: sin configuración crewai_task"

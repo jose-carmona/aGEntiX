@@ -31,7 +31,7 @@
         "fecha_solicitud": "2024-01-15",
         "solicitante": "María García López",
         "nif_solicitante": "12345678A",
-        "importe_solicitado": 5000.00,
+        "importe_solicitado": 5000.0,
         "concepto": "Ayuda para mejora de local comercial",
         "datos_contacto": {
           "email": "maria.garcia@example.com",
@@ -92,6 +92,22 @@
         "validez_dias": 30
       },
       "texto_markdown": "# Certificado de Titularidad Bancaria\n\n**BANCO EJEMPLO S.A.**\n\nCIF: A12345678\nDomicilio Social: Paseo de la Castellana 100, 28046 Madrid\n\n---\n\n## CERTIFICADO\n\nD./Dña. **RESPONSABLE DE OFICINA 0813**\n\nEn calidad de apoderado de BANCO EJEMPLO S.A.\n\n**CERTIFICA:**\n\nQue según los registros de esta entidad, la cuenta número:\n\n### ES79 2100 0813 4501 2345 6789\n\nFigura abierta a nombre de:\n\n**MARÍA GARCÍA LÓPEZ**\nNIF: 12345678A\n\n| Dato | Valor |\n|------|-------|\n| Tipo de cuenta | CUENTA CORRIENTE |\n| Fecha de apertura | 15/03/2018 |\n| Estado | ACTIVA |\n| Oficina | 0813 - CÓRDOBA CENTRO |\n\n---\n\nY para que conste y surta los efectos oportunos ante **DIPUTACIÓN PROVINCIAL DE CÓRDOBA**, se expide el presente certificado.\n\nEn Córdoba, a 14 de enero de 2024\n\n[Firma electrónica avanzada]\n\n---\n\n*Este documento ha sido firmado electrónicamente. Código de verificación: VER-2024-001234*\n\n*Validez: 30 días desde la fecha de expedición*"
+    },
+    {
+      "id": "DOC-595993",
+      "nombre": "informe_situacion.md",
+      "fecha": "2026-01-04T20:29:55.993199",
+      "tipo": "INFORME",
+      "ruta": "data/documentos/EXP-2024-001/informe_situacion.md",
+      "hash_sha256": "",
+      "tamano_bytes": 1320,
+      "validado": null,
+      "metadatos_extraidos": {
+        "tipo_informe": "SITUACION",
+        "fecha_generacion": "2024-01-20",
+        "generado_por": "Redactor de Informes"
+      },
+      "texto_markdown": "# Informe de Situación - EXP-2024-001\n\n## Datos Generales\n\n- **Tipo de Expediente:** SUBVENCIONES\n- **Estado:** EN_TRAMITE\n- **Fecha de Inicio:** 15/01/2024\n- **Solicitante:** \n  - Nombre: María García López\n  - NIF: 12345678A\n  - Dirección: Calle Mayor 123, Córdoba\n  - Email: maria.garcia@example.com\n  - Teléfono: +34 600123456\n- **Importe Solicitado:** 5.000,00 EUR\n- **Concepto:** Ayuda para mejora de local comercial\n\n## Resumen de Documentación\n\n- **Solicitud** (DOC-001): Formulario de solicitud de subvención con datos del proyecto y del solicitante.\n- **DNI** (DOC-002): Documento Nacional de Identidad de la solicitante María García López.\n- **Justificante Bancario** (DOC-003): Certificado de titularidad de la cuenta bancaria ES79 2100 0813 4501 2345 6789 a nombre de María García López.\n\n## Cronología de Tramitación\n\n- **15/01/2024:** Inicio del expediente por parte del sistema.\n- **15/01/2024:** Agente automático inicia la validación de la documentación aportada.\n\n## Situación Actual y Observaciones\n\nEl expediente se encuentra en proceso de validación de la documentación aportada por la solicitante. Falta por recibir la memoria descriptiva del proyecto y el presupuesto detallado, documentos necesarios para continuar con la tramitación.\n\n## Fecha de Generación\n\n20/01/2024"
     }
   ],
   "historial": [
@@ -110,6 +126,14 @@
       "tipo": "AGENTE",
       "accion": "INICIAR_VALIDACION",
       "detalles": "Agente iniciado para validar documentación"
+    },
+    {
+      "id": "HIST-595993",
+      "fecha": "2026-01-04T20:29:55.993220",
+      "usuario": "Automático",
+      "tipo": "AGENTE",
+      "accion": "CREAR_DOCUMENTO_MARKDOWN",
+      "detalles": "Documento DOC-595993 creado desde markdown: informe_situacion.md (tipo: INFORME)"
     }
   ],
   "metadatos": {

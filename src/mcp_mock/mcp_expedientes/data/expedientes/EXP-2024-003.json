@@ -2,7 +2,7 @@
   "id": "EXP-2024-003",
   "tipo": "CERTIFICADO_EMPADRONAMIENTO",
   "estado": "ARCHIVADO",
-  "fecha_inicio": "2024-01-05T10:00:00Z",
+  "fecha_inicio": "2024-01-05T10:00:00+00:00",
   "datos": {
     "solicitante": {
       "nombre": "Ana López Martín",
@@ -95,6 +95,22 @@
         "finalidad": "TRAMITES_BANCARIOS"
       },
       "texto_markdown": "# Certificado de Empadronamiento\n\n## AYUNTAMIENTO DE CÓRDOBA\n**Padrón Municipal de Habitantes**\n\n---\n\n### CERTIFICADO Nº CERT-2024-001\n\nDña. **MARÍA FERNÁNDEZ GARCÍA**, Secretaria del Padrón Municipal del Excmo. Ayuntamiento de Córdoba,\n\n### CERTIFICA:\n\nQue según los datos obrantes en el Padrón Municipal de Habitantes de este Ayuntamiento,\n\n| Dato | Valor |\n|------|-------|\n| Nombre y Apellidos | ANA LÓPEZ MARTÍN |\n| NIF | 45678912C |\n| Fecha de nacimiento | 28/11/1990 |\n| Lugar de nacimiento | SEVILLA |\n\n**CONSTA EMPADRONADO/A** en este municipio en la siguiente dirección:\n\n> **Plaza de España, 12, 3º B**\n> **14003 - CÓRDOBA (Córdoba)**\n\n| Dato del empadronamiento | Valor |\n|--------------------------|-------|\n| Fecha de alta en el Padrón | 15/06/2019 |\n| Tipo de alta | CAMBIO DE DOMICILIO |\n| Nivel de estudios | UNIVERSITARIOS |\n\n---\n\n### Finalidad\n\nEl presente certificado se expide a petición del interesado para:\n\n**TRÁMITES BANCARIOS**\n\n---\n\n### Validez\n\nEste certificado tiene validez de **3 meses** desde la fecha de emisión.\n\n---\n\nY para que conste y surta los efectos oportunos, se expide el presente certificado.\n\nEn Córdoba, a 5 de enero de 2024\n\n[Firma electrónica]\n\n**LA SECRETARIA DEL PADRÓN MUNICIPAL**\n\nMaría Fernández García\n\n---\n\n**Código Seguro de Verificación (CSV):** CERT2024001AYCO20240105\n\n*Puede verificar la autenticidad de este documento en: https://sede.cordoba.es/verificar*\n\n[Escudo del Ayuntamiento de Córdoba]"
+    },
+    {
+      "id": "DOC-391233",
+      "nombre": "informe_situacion.md",
+      "fecha": "2026-01-04T20:43:11.233687",
+      "tipo": "INFORME",
+      "ruta": "data/documentos/EXP-2024-003/informe_situacion.md",
+      "hash_sha256": "",
+      "tamano_bytes": 2113,
+      "validado": null,
+      "metadatos_extraidos": {
+        "tipo_informe": "SITUACION",
+        "fecha_generacion": "2024-01-05",
+        "generado_por": "Redactor de Informes de Situación Administrativa"
+      },
+      "texto_markdown": "# Informe de Situación - EXP-2024-003\n\n## Datos Generales\n\n- **Tipo de Expediente:** Certificado de Empadronamiento\n- **Estado:** Archivado\n- **Fecha de Inicio:** 05/01/2024\n- **Solicitante:** Ana López Martín, NIF 45678912C\n\n## Resumen de Documentación\n\n- **Solicitud de Certificado de Empadronamiento** (DOC-201)\n  - Tipo de Certificado: Residencia\n  - Finalidad: Trámites bancarios\n  - Número de ejemplares: 1\n- **DNI del Solicitante** (DOC-202)\n  - Número de Documento: 45678912C\n  - Nombre Completo: Ana López Martín\n  - Fecha de Nacimiento: 28/11/1990\n  - Lugar de Nacimiento: Sevilla\n- **Certificado de Empadronamiento** (DOC-203)\n  - Número de Certificado: CERT-2024-001\n  - Fecha de Emisión: 05/01/2024\n  - Organismo Emisor: Ayuntamiento de Córdoba\n  - Datos Certificados:\n    - Nombre Completo: Ana López Martín\n    - NIF: 45678912C\n    - Dirección: Plaza de España 12, 3º B, 14003 Córdoba\n    - Fecha de Alta en el Padrón: 15/06/2019\n\n## Cronología de Tramitación\n\n1. **05/01/2024 10:00** - Inicio del expediente: Solicitud de certificado de empadronamiento recibida.\n2. **05/01/2024 10:05** - Validación de identidad: Identidad validada mediante DNI, NIF 45678912C coincide con datos del Padrón.\n3. **05/01/2024 10:10** - Verificación de empadronamiento: Consta empadronado/a desde 15/06/2019 en Plaza de España 12, 3º B.\n4. **05/01/2024 11:30** - Generación de certificado: Certificado generado con ID CERT-2024-001 y CSV CERT2024001AYCO20240105.\n5. **05/01/2024 11:31** - Notificación al ciudadano: Notificación enviada a ana.lopez@example.com con enlace de descarga del certificado.\n6. **05/01/2024 11:32** - Cierre del expediente: Expediente completado y archivado, tiempo total de tramitación: 1h 32m.\n\n## Situación Actual y Observaciones\n\nEl expediente EXP-2024-003 se encuentra **ARCHIVADO** tras la emisión y notificación del Certificado de Empadronamiento CERT-2024-001 a la solicitante Ana López Martín. El proceso se completó en un tiempo total de 1 hora y 32 minutos, cumpliendo con los plazos establecidos.\n\n## Fecha de Generación\n\n05 de enero de 2024"
     }
   ],
   "historial": [
@@ -145,6 +161,14 @@
       "tipo": "SISTEMA",
       "accion": "CERRAR_EXPEDIENTE",
       "detalles": "Expediente completado y archivado - Tiempo total de tramitación: 1h 32m"
+    },
+    {
+      "id": "HIST-391233",
+      "fecha": "2026-01-04T20:43:11.233711",
+      "usuario": "Automático",
+      "tipo": "AGENTE",
+      "accion": "CREAR_DOCUMENTO_MARKDOWN",
+      "detalles": "Documento DOC-391233 creado desde markdown: informe_situacion.md (tipo: INFORME)"
     }
   ],
   "metadatos": {

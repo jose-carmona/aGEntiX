@@ -3,7 +3,6 @@
 """
 Clase base para agentes reales usando CrewAI.
 
-Mantiene compatibilidad con AgentMock mientras usa CrewAI internamente.
 Los agentes acceden a datos del expediente mediante herramientas MCP.
 """
 
@@ -43,8 +42,7 @@ class AgentReal(ABC):
     """
     Clase base para agentes reales con CrewAI.
 
-    Implementa la misma interfaz que AgentMock para mantener
-    compatibilidad con AgentExecutor.
+    Implementa la interfaz requerida por AgentExecutor.
 
     IMPORTANTE: Accede a datos del expediente mediante MCP tools,
     NO directamente. El LLM razona sobre los datos obtenidos.

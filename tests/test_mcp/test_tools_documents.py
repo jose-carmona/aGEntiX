@@ -277,7 +277,7 @@ Se han revisado todos los documentos aportados y se verifica:
             "texto_markdown": texto_informe,
             "metadatos": {
                 "tipo_informe": "VALIDACION_DOCUMENTAL",
-                "autor": "Agente ValidadorDocumental",
+                "autor": "Agente ClasificadorExpediente",
                 "fecha_emision": "2024-01-16T10:45:00Z",
                 "resultado": "FAVORABLE"
             }

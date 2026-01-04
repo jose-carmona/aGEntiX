@@ -118,7 +118,7 @@ def executor(
 def agent_config():
     """Configuración de agente de prueba"""
     return AgentConfig(
-        nombre="ValidadorDocumental",
+        nombre="ClasificadorExpediente",
         system_prompt="Test prompt",
         modelo="claude-3-5-sonnet",
         herramientas=["consultar_expediente", "actualizar_datos"],
@@ -767,7 +767,7 @@ async def test_agent_registry_get_called_with_agent_name(executor, mock_agent_re
     )
 
     assert result.success is True
-    mock_agent_registry.get.assert_called_once_with("ValidadorDocumental")
+    mock_agent_registry.get.assert_called_once_with("ClasificadorExpediente")
 
 
 @pytest.mark.asyncio

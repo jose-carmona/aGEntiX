@@ -141,10 +141,15 @@ async def execute_agent(
 
     # 4. Construir AgentConfig combinando YAML + request
     # El additional_goal se añadirá al goal del agente definido en YAML
+    # Para agentes CrewAI, el modelo está en llm.model
+    modelo = agent_definition.model
+    if agent_definition.is_crewai and agent_definition.llm:
+        modelo = agent_definition.llm.model
+
     agent_config = AgentConfig(
         nombre=agent_definition.name,
         system_prompt=agent_definition.system_prompt,
-        modelo=agent_definition.model,
+        modelo=modelo,
         herramientas=agent_definition.tools,
         additional_goal=request.additional_goal  # Se interpola en {additional_goal} del goal
     )

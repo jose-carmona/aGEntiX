@@ -21,7 +21,7 @@ from dataclasses import is_dataclass
 # Imports del sistema
 from src.backoffice.executor import AgentExecutor
 from src.backoffice.models import AgentExecutionResult, AgentConfig, AgentError
-from src.backoffice.agents.base import AgentMock  # Base class for agents
+from src.backoffice.agents.base_real import AgentReal  # Base class for agents
 from src.backoffice.mcp.registry import MCPClientRegistry
 from src.backoffice.logging.audit_logger import AuditLogger
 from src.backoffice.auth.jwt_validator import JWTClaims
@@ -123,21 +123,21 @@ def test_contract_agent_execution_result_structure():
 
 
 # ==============================================================================
-# CONTRACT-3: AgentMock.execute() Interface
+# CONTRACT-3: AgentReal.execute() Interface
 # ==============================================================================
 
 def test_contract_base_agent_execute_interface():
     """
-    Test: Interface de AgentMock (base de agentes) es estable para agentes reales
+    Test: Interface de AgentReal (base de agentes CrewAI) es estable
 
     Si este test falla:
     - Se cambió la interfaz base de agentes
-    - Agentes reales (Paso 3) necesitarán cambios
+    - Agentes CrewAI necesitarán cambios
     - ACCIÓN: Revisar si cambio es necesario, mantener backward compatibility
     """
     # Verificar que execute existe
-    assert hasattr(AgentMock, 'execute')
-    execute_method = getattr(AgentMock, 'execute')
+    assert hasattr(AgentReal, 'execute')
+    execute_method = getattr(AgentReal, 'execute')
 
     # Verificar que es async
     assert inspect.iscoroutinefunction(execute_method)
@@ -149,7 +149,7 @@ def test_contract_base_agent_execute_interface():
         assert hints['return'] == Dict[str, Any] or hints['return'] == dict
 
     # Verificar que hay otros métodos auxiliares
-    assert hasattr(AgentMock, 'get_tools_used')
+    assert hasattr(AgentReal, 'get_tools_used')
 
 
 # ==============================================================================
@@ -242,7 +242,7 @@ def test_contract_api_execute_request_response():
         tarea_id="TAREA-001"
     )
     sample_request = ExecuteAgentRequest(
-        agent="ValidadorDocumental",
+        agent="ClasificadorExpediente",
         additional_goal="Priorizar validación de NIFs",
         context=sample_context,
         callback_url="https://example.com/webhook"
@@ -251,7 +251,7 @@ def test_contract_api_execute_request_response():
     # Serialización a JSON
     request_dict = sample_request.model_dump()
     assert isinstance(request_dict, dict)
-    assert request_dict['agent'] == "ValidadorDocumental"
+    assert request_dict['agent'] == "ClasificadorExpediente"
     assert request_dict['additional_goal'] == "Priorizar validación de NIFs"
     assert request_dict['context']['expediente_id'] == "EXP-TEST-001"
 
@@ -506,12 +506,12 @@ def test_contract_pydantic_models_json_serializable():
         tarea_id="TAREA-001"
     )
     request = ExecuteAgentRequest(
-        agent="ValidadorDocumental",
+        agent="ClasificadorExpediente",
         context=context
     )
     request_json = request.model_dump_json()
     request_parsed = json.loads(request_json)
-    assert request_parsed['agent'] == "ValidadorDocumental"
+    assert request_parsed['agent'] == "ClasificadorExpediente"
 
     # WebhookPayload
     from src.api.models import WebhookPayload
@@ -559,17 +559,17 @@ def test_contract_backward_compatibility_optional_fields():
 
     # Sin additional_goal y sin callback_url (son opcionales)
     minimal_request = ExecuteAgentRequest(
-        agent="ValidadorDocumental",
+        agent="ClasificadorExpediente",
         context=context
     )
 
-    assert minimal_request.agent == "ValidadorDocumental"
+    assert minimal_request.agent == "ClasificadorExpediente"
     assert minimal_request.additional_goal is None
     assert minimal_request.callback_url is None
 
     # Con additional_goal y callback_url
     full_request = ExecuteAgentRequest(
-        agent="ValidadorDocumental",
+        agent="ClasificadorExpediente",
         additional_goal="Objetivo adicional",
         context=context,
         callback_url="https://example.com/webhook"

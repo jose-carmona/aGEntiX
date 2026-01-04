@@ -14,7 +14,7 @@ from api.models import ExecuteAgentRequest, AgentContext
 def create_request_with_callback(callback_url: str) -> ExecuteAgentRequest:
     """Helper para crear request con callback_url específico"""
     return ExecuteAgentRequest(
-        agent="ValidadorDocumental",
+        agent="ClasificadorExpediente",
         prompt="Test prompt",
         context=AgentContext(
             expediente_id="EXP-001",
@@ -134,7 +134,7 @@ def test_callback_url_with_non_standard_port():
 def test_callback_url_is_optional():
     """Test: callback_url es opcional"""
     req = ExecuteAgentRequest(
-        agent="ValidadorDocumental",
+        agent="ClasificadorExpediente",
         prompt="Test prompt",
         context=AgentContext(
             expediente_id="EXP-001",

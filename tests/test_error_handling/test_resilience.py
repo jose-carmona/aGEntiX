@@ -419,7 +419,7 @@ def test_error_12_invalid_webhook_url_format():
             expediente_id="EXP-001",
             tarea_id="T-001",
             agent_config={
-                "nombre": "ValidadorDocumental",
+                "nombre": "ClasificadorExpediente",
                 "system_prompt": "Test",
                 "modelo": "claude-3-5-sonnet-20241022",
                 "herramientas": ["consultar_expediente"]
@@ -436,7 +436,7 @@ def test_error_12_invalid_webhook_url_format():
             expediente_id="EXP-001",
             tarea_id="T-001",
             agent_config={
-                "nombre": "ValidadorDocumental",
+                "nombre": "ClasificadorExpediente",
                 "system_prompt": "Test",
                 "modelo": "claude-3-5-sonnet-20241022",
                 "herramientas": ["consultar_expediente"]
@@ -525,7 +525,7 @@ async def test_error_6_agent_raises_unhandled_exception(test_constants):
     from backoffice.models import AgentConfig
 
     agent_config = AgentConfig(
-        nombre="ValidadorDocumental",
+        nombre="ClasificadorExpediente",
         system_prompt="Test",
         modelo="claude-3-5-sonnet-20241022",
         herramientas=[]
