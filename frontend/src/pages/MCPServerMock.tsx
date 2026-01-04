@@ -151,6 +151,66 @@ export const MCPServerMock: React.FC = () => {
           });
           return parseToolContent(result);
         }
+      },
+      // === Nuevas Tools de Documentos ===
+      {
+        id: 'obtener-texto-documento',
+        title: 'Tool: obtener_texto_documento (DOC-001)',
+        run: async () => {
+          const result = await callTool(token, 'obtener_texto_documento', {
+            expediente_id: expedienteId,
+            documento_id: 'DOC-001'
+          });
+          return parseToolContent(result);
+        }
+      },
+      {
+        id: 'obtener-metadatos-documento',
+        title: 'Tool: obtener_metadatos_documento (DOC-002 DNI)',
+        run: async () => {
+          const result = await callTool(token, 'obtener_metadatos_documento', {
+            expediente_id: expedienteId,
+            documento_id: 'DOC-002'
+          });
+          return parseToolContent(result);
+        }
+      },
+      {
+        id: 'actualizar-metadatos-documento',
+        title: 'Tool: actualizar_metadatos_documento (ESCRITURA)',
+        run: async () => {
+          const timestamp = new Date().toISOString();
+          const result = await callTool(token, 'actualizar_metadatos_documento', {
+            expediente_id: expedienteId,
+            documento_id: 'DOC-001',
+            metadatos: {
+              validado_desde_dashboard: true,
+              fecha_validacion_dashboard: timestamp,
+              notas_revision: 'Validación automática desde panel MCP'
+            },
+            reemplazar: false  // merge con metadatos existentes
+          });
+          return parseToolContent(result);
+        }
+      },
+      {
+        id: 'crear-documento-markdown',
+        title: 'Tool: crear_documento_desde_markdown (ESCRITURA)',
+        run: async () => {
+          const timestamp = new Date().toLocaleString('es-ES');
+          const result = await callTool(token, 'crear_documento_desde_markdown', {
+            expediente_id: expedienteId,
+            nombre: 'informe_dashboard.md',
+            tipo: 'INFORME',
+            texto_markdown: `# Informe de Prueba Dashboard\n\n**Generado:** ${timestamp}\n\n## Resumen\n\nEste documento fue creado automáticamente desde el panel de pruebas MCP.\n\n## Datos del Test\n\n| Campo | Valor |\n|-------|-------|\n| Expediente | ${expedienteId} |\n| Origen | Dashboard Frontend |\n| Propósito | Verificar tool crear_documento_desde_markdown |`,
+            metadatos: {
+              generado_por: 'dashboard_mcp_test',
+              tipo_informe: 'TEST',
+              automatico: true
+            }
+          });
+          return parseToolContent(result);
+        }
       }
     ];
 
