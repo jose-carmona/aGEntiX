@@ -16,7 +16,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from prometheus_fastapi_instrumentator import Instrumentator
 
-from .routers import agent, auth, health, logs
+from .routers import agent, auth, health, logs, expedientes
 from backoffice.settings import settings
 
 # Configurar logging
@@ -95,6 +95,12 @@ app.include_router(
 app.include_router(
     logs.router,
     tags=["Logs"]
+)
+
+app.include_router(
+    expedientes.router,
+    prefix="/api/v1/expedientes",
+    tags=["Expedientes"]
 )
 
 # Configurar Prometheus

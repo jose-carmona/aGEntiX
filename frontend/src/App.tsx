@@ -7,6 +7,7 @@ import { Dashboard } from '@/pages/Dashboard';
 import { Logs } from '@/pages/Logs';
 import { TestPanel } from '@/pages/TestPanel';
 import { MCPServerMock } from '@/pages/MCPServerMock';
+import { ExpedienteViewer } from '@/pages/ExpedienteViewer';
 
 function App() {
   return (
@@ -32,6 +33,7 @@ function App() {
             <Route path="logs" element={<Logs />} />
             <Route path="test-panel" element={<TestPanel />} />
             <Route path="mcp-server" element={<MCPServerMock />} />
+            <Route path="expedientes" element={<ExpedienteViewer />} />
           </Route>
 
           {/* Ruta catch-all para 404 */}
