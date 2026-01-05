@@ -142,7 +142,10 @@ class AgentReal(ABC):
             model=model,
             api_key=settings.ANTHROPIC_API_KEY,
             max_tokens=llm_config.max_tokens,
-            temperature=llm_config.temperature
+            temperature=llm_config.temperature,
+            # Rate limiting - reintentos automáticos para errores 429
+            num_retries=llm_config.num_retries,
+            timeout=llm_config.request_timeout
         )
 
     def _format_template(self, template: str) -> str:
@@ -187,15 +190,20 @@ class AgentReal(ABC):
 
             # Crear agente CrewAI con configuración YAML
             agent_cfg = self.config.crewai_agent
-            agent = Agent(
-                role=agent_cfg.role,
-                goal=self._format_template(agent_cfg.goal),
-                backstory=agent_cfg.backstory,
-                llm=self.llm,
-                tools=self.mcp_tools,
-                verbose=agent_cfg.verbose,
-                allow_delegation=agent_cfg.allow_delegation
-            )
+            agent_kwargs = {
+                "role": agent_cfg.role,
+                "goal": self._format_template(agent_cfg.goal),
+                "backstory": agent_cfg.backstory,
+                "llm": self.llm,
+                "tools": self.mcp_tools,
+                "verbose": agent_cfg.verbose,
+                "allow_delegation": agent_cfg.allow_delegation,
+            }
+            # Rate limiting - max requests por minuto
+            if agent_cfg.max_rpm is not None:
+                agent_kwargs["max_rpm"] = agent_cfg.max_rpm
+
+            agent = Agent(**agent_kwargs)
 
             # Crear tarea con descripción formateada
             task_cfg = self.config.crewai_task

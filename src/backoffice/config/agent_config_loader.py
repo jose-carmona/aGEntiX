@@ -26,6 +26,9 @@ class LLMConfig(BaseModel):
     model: str = Field("claude-3-5-sonnet-20241022", description="Modelo a usar")
     max_tokens: int = Field(4096, description="Máximo de tokens")
     temperature: float = Field(0.1, description="Temperatura del modelo")
+    # Rate limiting
+    num_retries: int = Field(5, description="Reintentos en caso de error 429")
+    request_timeout: int = Field(120, description="Timeout por request en segundos")
 
 
 class CrewAIAgentConfig(BaseModel):
@@ -35,6 +38,8 @@ class CrewAIAgentConfig(BaseModel):
     backstory: str = Field(..., description="Historia/contexto del agente")
     verbose: bool = Field(True, description="Modo verbose")
     allow_delegation: bool = Field(False, description="Permitir delegación")
+    # Rate limiting
+    max_rpm: Optional[int] = Field(None, description="Máx requests por minuto (None=sin límite)")
 
 
 class CrewAITaskConfig(BaseModel):
