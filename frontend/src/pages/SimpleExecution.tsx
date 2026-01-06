@@ -1,19 +1,19 @@
-// pages/TestPanel.tsx
-// Paso 4: Panel de pruebas con API simplificada
+// pages/SimpleExecution.tsx
+// Interfaz simplificada para ejecución de agentes
 
 import React, { useState, useEffect } from 'react';
 import { AgentSelector } from '../components/test-panel/AgentSelector';
-import { IntegratedExecutionForm } from '../components/test-panel/IntegratedExecutionForm';
+import { SimpleExecutionForm } from '../components/simple-execution/SimpleExecutionForm';
 import { ResultsViewer } from '../components/test-panel/ResultsViewer';
 import { ExecutionHistory } from '../components/test-panel/ExecutionHistory';
 import { ErrorBoundary } from '../components/ErrorBoundary';
 import { useAgentExecution } from '../hooks/useAgentExecution';
 import type { JWTClaims, ExecutionHistoryItem, ExecuteAgentRequest } from '../types/agent';
 
-const STORAGE_KEY_PREFIX = 'agentix_test_panel_';
+const STORAGE_KEY_PREFIX = 'agentix_simple_exec_';
 const MAX_HISTORY_ITEMS = 10;
 
-export const TestPanel: React.FC = () => {
+export const SimpleExecution: React.FC = () => {
   // Estado básico
   const [selectedAgentId, setSelectedAgentId] = useState<string | null>(null);
 
@@ -85,7 +85,7 @@ export const TestPanel: React.FC = () => {
   };
 
   /**
-   * Handler de ejecución con API simplificada (Paso 4)
+   * Handler de ejecución simplificada
    */
   const handleExecute = async (
     jwtToken: string,
@@ -104,20 +104,20 @@ export const TestPanel: React.FC = () => {
   };
 
   return (
-    <div className="p-6">
+    <div className="p-6 h-full">
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900 mb-2">
-          Panel de Pruebas de Agentes
+          Ejecutar Agente
         </h1>
         <p className="text-gray-600">
-          Ejecuta agentes con la API simplificada. Solo necesitas: agente y contexto. El objetivo adicional es opcional.
+          Ejecuta agentes con los parámetros mínimos necesarios.
         </p>
       </div>
 
-      {/* Layout Grid */}
+      {/* Layout de 2 columnas */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Columna izquierda: Configuración */}
+        {/* Panel Principal (izquierda) - 2/3 del espacio */}
         <div className="lg:col-span-2 space-y-6">
           {/* Selector de agente */}
           <AgentSelector
@@ -126,9 +126,9 @@ export const TestPanel: React.FC = () => {
             disabled={isExecuting}
           />
 
-          {/* Formulario integrado de ejecución */}
+          {/* Formulario simplificado de ejecución */}
           <ErrorBoundary>
-            <IntegratedExecutionForm
+            <SimpleExecutionForm
               selectedAgentId={selectedAgentId}
               isExecuting={isExecuting}
               executionError={error}
@@ -168,11 +168,8 @@ export const TestPanel: React.FC = () => {
               </div>
             </div>
           )}
-        </div>
 
-        {/* Columna derecha: Resultados e Historial */}
-        <div className="space-y-6">
-          {/* Resultados */}
+          {/* Panel de resultado (inmediatamente debajo del botón) */}
           <ErrorBoundary>
             <ResultsViewer
               execution={execution}
@@ -181,31 +178,16 @@ export const TestPanel: React.FC = () => {
               onReset={handleReset}
             />
           </ErrorBoundary>
+        </div>
 
-          {/* Historial */}
+        {/* Panel Lateral (derecha) - 1/3 del espacio */}
+        <div className="space-y-6">
+          {/* Historial de ejecuciones */}
           <ErrorBoundary>
             <ExecutionHistory
               history={executionHistory}
             />
           </ErrorBoundary>
-        </div>
-      </div>
-
-      {/* Información de ayuda */}
-      <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <div className="flex items-start gap-3">
-          <svg className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <div className="flex-1">
-            <p className="text-sm font-medium text-blue-900 mb-2">
-              API Simplificada:
-            </p>
-            <div className="text-sm text-blue-800 space-y-1">
-              <p><strong>Request:</strong> <code className="bg-blue-100 px-1 rounded">agent</code>, <code className="bg-blue-100 px-1 rounded">context</code>, <code className="bg-blue-100 px-1 rounded">additional_goal</code> (opcional)</p>
-              <p>La configuración del agente (modelo, goal, tools) se carga automáticamente desde <code className="bg-blue-100 px-1 rounded">agents.yaml</code></p>
-            </div>
-          </div>
         </div>
       </div>
     </div>

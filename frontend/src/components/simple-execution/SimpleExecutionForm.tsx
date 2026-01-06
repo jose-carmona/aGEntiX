@@ -1,5 +1,5 @@
-// components/test-panel/IntegratedExecutionForm.tsx
-// Paso 4: Formulario simplificado para ejecución de agentes
+// components/simple-execution/SimpleExecutionForm.tsx
+// Formulario simplificado para ejecución de agentes
 
 import React, { useState, useEffect } from 'react';
 import { getAvailablePermissions, generateJWT } from '../../services/agentService';
@@ -8,7 +8,7 @@ import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 
-interface IntegratedExecutionFormProps {
+interface SimpleExecutionFormProps {
   selectedAgentId: string | null;
   isExecuting: boolean;
   executionError: string | null;
@@ -16,37 +16,30 @@ interface IntegratedExecutionFormProps {
   onResetError?: () => void;
 }
 
-export const IntegratedExecutionForm: React.FC<IntegratedExecutionFormProps> = ({
+const STORAGE_KEY = 'agentix_simple_exec_config';
+
+export const SimpleExecutionForm: React.FC<SimpleExecutionFormProps> = ({
   selectedAgentId,
   isExecuting,
   executionError,
   onExecute,
   onResetError
 }) => {
-  // Estados del formulario
+  // Estados del formulario - Solo parámetros necesarios
   const [expedienteId, setExpedienteId] = useState('EXP-2024-001');
-  const [expTipo, setExpTipo] = useState('SUBVENCIONES');
-  const [tareaId, setTareaId] = useState('TAREA-TEST-001');
-  const [tareaNombre, setTareaNombre] = useState('VALIDAR_DOCUMENTACION');
-  const [additionalGoal, setAdditionalGoal] = useState('');
+  const [tareaId, setTareaId] = useState('TAREA-001');
   const [permisos, setPermisos] = useState<string[]>(['consulta']);
-  const [expHours, setExpHours] = useState(1);
+  const [additionalGoal, setAdditionalGoal] = useState('');
+  const [callbackUrl, setCallbackUrl] = useState('');
 
   // Estados de validación y UI
   const [availablePermissions, setAvailablePermissions] = useState<Permission[]>([]);
   const [loadingPermissions, setLoadingPermissions] = useState(true);
   const [expedienteError, setExpedienteError] = useState<string | null>(null);
+  const [tareaError, setTareaError] = useState<string | null>(null);
   const [isGeneratingToken, setIsGeneratingToken] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
   const [errorType, setErrorType] = useState<'validation' | 'jwt' | 'execution' | null>(null);
-
-  // Objetivos adicionales sugeridos por agente (opcionales)
-  const suggestedGoals: Record<string, string> = {
-    'ValidadorDocumental': 'Priorizar la verificación de los NIFs y fechas de documentos',
-    'AnalizadorSubvencion': 'Enfatizar el cumplimiento de plazos y requisitos económicos',
-    'GeneradorInforme': 'Incluir recomendaciones de mejora en el informe',
-    'ClasificadorExpediente': 'Considerar la antigüedad del expediente para determinar urgencia'
-  };
 
   // Cargar configuración guardada y permisos disponibles
   useEffect(() => {
@@ -54,19 +47,10 @@ export const IntegratedExecutionForm: React.FC<IntegratedExecutionFormProps> = (
     loadPermissions();
   }, []);
 
-  // Sugerir objetivo adicional cuando cambia el agente (el usuario puede modificarlo o dejarlo vacío)
-  useEffect(() => {
-    if (selectedAgentId && suggestedGoals[selectedAgentId]) {
-      setAdditionalGoal(suggestedGoals[selectedAgentId]);
-    } else {
-      setAdditionalGoal('');
-    }
-  }, [selectedAgentId]);
-
   // Guardar configuración cuando cambia
   useEffect(() => {
     saveConfiguration();
-  }, [expedienteId, expTipo, tareaId, tareaNombre, permisos, expHours]);
+  }, [expedienteId, tareaId, permisos, callbackUrl]);
 
   // Resetear errores cuando el usuario cambia configuraciones
   useEffect(() => {
@@ -77,19 +61,17 @@ export const IntegratedExecutionForm: React.FC<IntegratedExecutionFormProps> = (
     if (executionError && onResetError) {
       onResetError();
     }
-  }, [expedienteId, expTipo, tareaId, tareaNombre, permisos, selectedAgentId]);
+  }, [expedienteId, tareaId, permisos, selectedAgentId]);
 
   const loadSavedConfiguration = () => {
     try {
-      const saved = localStorage.getItem('agentix_test_panel_config_v2');
+      const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
         const config = JSON.parse(saved);
         setExpedienteId(config.expedienteId || 'EXP-2024-001');
-        setExpTipo(config.expTipo || 'SUBVENCIONES');
-        setTareaId(config.tareaId || 'TAREA-TEST-001');
-        setTareaNombre(config.tareaNombre || 'VALIDAR_DOCUMENTACION');
+        setTareaId(config.tareaId || 'TAREA-001');
         setPermisos(config.permisos || ['consulta']);
-        setExpHours(config.expHours || 1);
+        setCallbackUrl(config.callbackUrl || '');
       }
     } catch (err) {
       console.error('Error loading saved configuration:', err);
@@ -100,13 +82,11 @@ export const IntegratedExecutionForm: React.FC<IntegratedExecutionFormProps> = (
     try {
       const config = {
         expedienteId,
-        expTipo,
         tareaId,
-        tareaNombre,
         permisos,
-        expHours
+        callbackUrl
       };
-      localStorage.setItem('agentix_test_panel_config_v2', JSON.stringify(config));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
     } catch (err) {
       console.error('Error saving configuration:', err);
     }
@@ -125,16 +105,20 @@ export const IntegratedExecutionForm: React.FC<IntegratedExecutionFormProps> = (
   };
 
   const validateExpedienteId = (value: string): boolean => {
-    const regex = /^EXP-\d{4}-\d{3,}$/;
-    if (!value) {
+    if (!value.trim()) {
       setExpedienteError('El ID de expediente es requerido');
       return false;
     }
-    if (!regex.test(value)) {
-      setExpedienteError('Formato inválido. Use: EXP-YYYY-NNN (ej: EXP-2024-001)');
+    setExpedienteError(null);
+    return true;
+  };
+
+  const validateTareaId = (value: string): boolean => {
+    if (!value.trim()) {
+      setTareaError('El ID de tarea es requerido');
       return false;
     }
-    setExpedienteError(null);
+    setTareaError(null);
     return true;
   };
 
@@ -142,6 +126,12 @@ export const IntegratedExecutionForm: React.FC<IntegratedExecutionFormProps> = (
     const value = e.target.value;
     setExpedienteId(value);
     validateExpedienteId(value);
+  };
+
+  const handleTareaIdChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setTareaId(value);
+    validateTareaId(value);
   };
 
   const handlePermisoToggle = (permisoId: string) => {
@@ -184,8 +174,9 @@ export const IntegratedExecutionForm: React.FC<IntegratedExecutionFormProps> = (
 
     // Validar formulario
     const isExpedienteValid = validateExpedienteId(expedienteId);
+    const isTareaValid = validateTareaId(tareaId);
 
-    if (!isExpedienteValid) {
+    if (!isExpedienteValid || !isTareaValid) {
       setLocalError('Por favor, corrige los errores de validación antes de continuar');
       setErrorType('validation');
       return;
@@ -197,32 +188,34 @@ export const IntegratedExecutionForm: React.FC<IntegratedExecutionFormProps> = (
       return;
     }
 
-    // additional_goal es opcional, no requiere validación
+    if (permisos.length === 0) {
+      setLocalError('Debes seleccionar al menos un permiso');
+      setErrorType('validation');
+      return;
+    }
 
     setIsGeneratingToken(true);
 
     try {
-      // 1. Generar JWT
+      // 1. Generar JWT con parámetros mínimos
       const jwtRequest: GenerateJWTRequest = {
         exp_id: expedienteId,
-        exp_tipo: expTipo,
         tarea_id: tareaId,
-        tarea_nombre: tareaNombre,
-        permisos: permisos.length > 0 ? permisos : ['consulta'],
-        exp_hours: expHours
+        permisos: permisos,
+        exp_hours: 1  // Valor fijo por defecto
       };
 
       const jwtResponse = await generateJWT(jwtRequest);
 
-      // 2. Construir request simplificado (Paso 4)
+      // 2. Construir request simplificado
       const executeRequest: ExecuteAgentRequest = {
         agent: selectedAgentId,
-        additional_goal: additionalGoal.trim() || undefined,  // Solo incluir si tiene valor
         context: {
           expediente_id: expedienteId,
           tarea_id: tareaId
-        }
-        // callback_url omitido para testing
+        },
+        additional_goal: additionalGoal.trim() || undefined,
+        callback_url: callbackUrl.trim() || undefined
       };
 
       // 3. Ejecutar agente
@@ -277,7 +270,10 @@ export const IntegratedExecutionForm: React.FC<IntegratedExecutionFormProps> = (
   const canExecute =
     selectedAgentId &&
     expedienteId &&
+    tareaId &&
     !expedienteError &&
+    !tareaError &&
+    permisos.length > 0 &&
     !isExecuting &&
     !isGeneratingToken;
 
@@ -285,10 +281,10 @@ export const IntegratedExecutionForm: React.FC<IntegratedExecutionFormProps> = (
     <Card className="p-6">
       <div className="mb-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-2">
-          Configuración de Ejecución
+          Parámetros de Ejecución
         </h3>
         <p className="text-sm text-gray-600">
-          Configura los parámetros del expediente y el prompt. El token JWT se genera automáticamente.
+          Configura los parámetros mínimos para ejecutar el agente.
         </p>
       </div>
 
@@ -315,117 +311,52 @@ export const IntegratedExecutionForm: React.FC<IntegratedExecutionFormProps> = (
       )}
 
       <div className="space-y-6">
-        {/* Sección: Datos del Expediente */}
-        <div>
-          <h4 className="text-sm font-semibold text-gray-700 mb-3 pb-2 border-b">
-            1. Datos del Expediente
-          </h4>
-
-          <div className="grid grid-cols-2 gap-4">
-            {/* Expediente ID */}
-            <div>
-              <label htmlFor="expediente-id" className="block text-sm font-medium text-gray-700 mb-2">
-                ID de Expediente *
-              </label>
-              <Input
-                id="expediente-id"
-                type="text"
-                value={expedienteId}
-                onChange={handleExpedienteIdChange}
-                placeholder="EXP-2024-001"
-                disabled={isExecuting || isGeneratingToken}
-                className={expedienteError ? 'border-red-300' : ''}
-              />
-              {expedienteError && (
-                <p className="mt-1 text-sm text-red-600">{expedienteError}</p>
-              )}
-            </div>
-
-            {/* Tipo de Expediente */}
-            <div>
-              <label htmlFor="exp-tipo" className="block text-sm font-medium text-gray-700 mb-2">
-                Tipo de Expediente
-              </label>
-              <Input
-                id="exp-tipo"
-                type="text"
-                value={expTipo}
-                onChange={(e) => setExpTipo(e.target.value)}
-                placeholder="SUBVENCIONES"
-                disabled={isExecuting || isGeneratingToken}
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Sección: Datos de la Tarea */}
-        <div>
-          <h4 className="text-sm font-semibold text-gray-700 mb-3 pb-2 border-b">
-            2. Datos de la Tarea BPMN
-          </h4>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label htmlFor="tarea-id" className="block text-sm font-medium text-gray-700 mb-2">
-                ID de Tarea
-              </label>
-              <Input
-                id="tarea-id"
-                type="text"
-                value={tareaId}
-                onChange={(e) => setTareaId(e.target.value)}
-                placeholder="TAREA-TEST-001"
-                disabled={isExecuting || isGeneratingToken}
-              />
-            </div>
-
-            <div>
-              <label htmlFor="tarea-nombre" className="block text-sm font-medium text-gray-700 mb-2">
-                Nombre de Tarea
-              </label>
-              <Input
-                id="tarea-nombre"
-                type="text"
-                value={tareaNombre}
-                onChange={(e) => setTareaNombre(e.target.value)}
-                placeholder="VALIDAR_DOCUMENTACION"
-                disabled={isExecuting || isGeneratingToken}
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Sección: Objetivo Adicional (Opcional) */}
-        <div>
-          <h4 className="text-sm font-semibold text-gray-700 mb-3 pb-2 border-b">
-            3. Objetivo Adicional (Opcional)
-          </h4>
-
+        {/* ID Expediente e ID Tarea */}
+        <div className="grid grid-cols-2 gap-4">
+          {/* ID Expediente */}
           <div>
-            <label htmlFor="additional-goal" className="block text-sm font-medium text-gray-700 mb-2">
-              Objetivo Adicional
+            <label htmlFor="expediente-id" className="block text-sm font-medium text-gray-700 mb-2">
+              ID Expediente *
             </label>
-            <textarea
-              id="additional-goal"
-              value={additionalGoal}
-              onChange={(e) => setAdditionalGoal(e.target.value)}
-              placeholder="Opcional: añade instrucciones adicionales al objetivo del agente..."
+            <Input
+              id="expediente-id"
+              type="text"
+              value={expedienteId}
+              onChange={handleExpedienteIdChange}
+              placeholder="EXP-2024-001"
               disabled={isExecuting || isGeneratingToken}
-              rows={2}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-500"
+              className={expedienteError ? 'border-red-300' : ''}
             />
-            <p className="mt-1 text-xs text-gray-500">
-              Se añade al objetivo base del agente definido en agents.yaml. Déjalo vacío para usar solo el objetivo predeterminado.
-            </p>
+            {expedienteError && (
+              <p className="mt-1 text-sm text-red-600">{expedienteError}</p>
+            )}
+          </div>
+
+          {/* ID Tarea */}
+          <div>
+            <label htmlFor="tarea-id" className="block text-sm font-medium text-gray-700 mb-2">
+              ID Tarea *
+            </label>
+            <Input
+              id="tarea-id"
+              type="text"
+              value={tareaId}
+              onChange={handleTareaIdChange}
+              placeholder="TAREA-001"
+              disabled={isExecuting || isGeneratingToken}
+              className={tareaError ? 'border-red-300' : ''}
+            />
+            {tareaError && (
+              <p className="mt-1 text-sm text-red-600">{tareaError}</p>
+            )}
           </div>
         </div>
 
-        {/* Sección: Permisos JWT */}
+        {/* Permisos JWT */}
         <div>
-          <h4 className="text-sm font-semibold text-gray-700 mb-3 pb-2 border-b">
-            4. Permisos del Token JWT
-          </h4>
-
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Permisos JWT *
+          </label>
           {loadingPermissions ? (
             <div className="text-sm text-gray-600">Cargando permisos...</div>
           ) : (
@@ -468,26 +399,38 @@ export const IntegratedExecutionForm: React.FC<IntegratedExecutionFormProps> = (
           )}
         </div>
 
-        {/* Sección: Configuración del Token */}
+        {/* Objetivo Adicional (Opcional) */}
         <div>
-          <h4 className="text-sm font-semibold text-gray-700 mb-3 pb-2 border-b">
-            5. Configuración del Token
-          </h4>
+          <label htmlFor="additional-goal" className="block text-sm font-medium text-gray-700 mb-2">
+            Objetivo Adicional <span className="text-gray-400 font-normal">(opcional)</span>
+          </label>
+          <textarea
+            id="additional-goal"
+            value={additionalGoal}
+            onChange={(e) => setAdditionalGoal(e.target.value)}
+            placeholder="Instrucciones adicionales para el agente..."
+            disabled={isExecuting || isGeneratingToken}
+            rows={2}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-500"
+          />
+        </div>
 
-          <div className="w-1/2">
-            <label htmlFor="exp-hours" className="block text-sm font-medium text-gray-700 mb-2">
-              Horas hasta expiración
-            </label>
-            <Input
-              id="exp-hours"
-              type="number"
-              min="1"
-              max="24"
-              value={expHours}
-              onChange={(e) => setExpHours(parseInt(e.target.value) || 1)}
-              disabled={isExecuting || isGeneratingToken}
-            />
-          </div>
+        {/* URL Callback (Opcional) */}
+        <div>
+          <label htmlFor="callback-url" className="block text-sm font-medium text-gray-700 mb-2">
+            URL Callback <span className="text-gray-400 font-normal">(opcional)</span>
+          </label>
+          <Input
+            id="callback-url"
+            type="url"
+            value={callbackUrl}
+            onChange={(e) => setCallbackUrl(e.target.value)}
+            placeholder="https://ejemplo.com/webhook"
+            disabled={isExecuting || isGeneratingToken}
+          />
+          <p className="mt-1 text-xs text-gray-500">
+            URL para notificar cuando finalice la ejecución
+          </p>
         </div>
 
         {/* Botón de ejecución */}
@@ -502,7 +445,7 @@ export const IntegratedExecutionForm: React.FC<IntegratedExecutionFormProps> = (
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
               </svg>
-              Generando token JWT...
+              Generando token...
             </span>
           ) : isExecuting ? (
             <span className="flex items-center justify-center gap-2">
@@ -510,20 +453,12 @@ export const IntegratedExecutionForm: React.FC<IntegratedExecutionFormProps> = (
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
               </svg>
-              Ejecutando agente...
+              Ejecutando...
             </span>
           ) : (
-            'Ejecutar Agente'
+            'Ejecutar'
           )}
         </Button>
-
-        {/* Info de ayuda */}
-        <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
-          <p className="text-xs text-gray-600">
-            <strong>API Simplificada:</strong> Solo se envía el nombre del agente, contexto y opcionalmente un objetivo adicional.
-            La configuración del agente (modelo, goal, tools) se carga automáticamente desde agents.yaml en el servidor.
-          </p>
-        </div>
       </div>
     </Card>
   );

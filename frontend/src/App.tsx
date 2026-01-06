@@ -5,7 +5,7 @@ import { Layout } from '@/components/layout/Layout';
 import { Login } from '@/pages/Login';
 import { Dashboard } from '@/pages/Dashboard';
 import { Logs } from '@/pages/Logs';
-import { TestPanel } from '@/pages/TestPanel';
+import { SimpleExecution } from '@/pages/SimpleExecution';
 import { MCPServerMock } from '@/pages/MCPServerMock';
 import { ExpedienteViewer } from '@/pages/ExpedienteViewer';
 
@@ -30,8 +30,8 @@ function App() {
             }
           >
             <Route path="dashboard" element={<Dashboard />} />
+            <Route path="execute" element={<SimpleExecution />} />
             <Route path="logs" element={<Logs />} />
-            <Route path="test-panel" element={<TestPanel />} />
             <Route path="mcp-server" element={<MCPServerMock />} />
             <Route path="expedientes" element={<ExpedienteViewer />} />
           </Route>
