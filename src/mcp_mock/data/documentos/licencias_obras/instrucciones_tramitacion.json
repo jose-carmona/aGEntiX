@@ -1,0 +1,8 @@
+{
+  "id": "LOB-INST-001",
+  "tipo": "instrucciones_tramitacion",
+  "tipo_expediente": "licencias_obras",
+  "descripcion": "Instrucciones detalladas para la tramitación de expedientes de licencias de obras, diferenciando entre obra mayor y obra menor, incluyendo documentación necesaria, plazos y criterios de concesión.",
+  "instrucciones_agente": "Primero determina si se trata de obra mayor o menor según las características de la actuación. Verifica que la documentación técnica esté completa y visada. Comprueba la conformidad urbanística consultando el PGOU. Si detectas incumplimientos, genera un informe técnico detallado.",
+  "contenido": "instrucciones_tramitacion.md"
+}

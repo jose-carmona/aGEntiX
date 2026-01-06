@@ -1,0 +1,9 @@
+{
+  "id": "SUB-TPL-002",
+  "tipo": "plantilla",
+  "subtipo": "requerimiento_documentacion",
+  "tipo_expediente": "subvenciones",
+  "descripcion": "Plantilla para generar requerimientos de subsanación de documentación faltante o defectuosa en expedientes de subvención.",
+  "instrucciones_agente": "Utiliza esta plantilla cuando detectes que falta documentación obligatoria o que algún documento presenta defectos. Especifica claramente cada documento faltante o defectuoso. El plazo de subsanación es de 10 días hábiles. Advierte de las consecuencias de no subsanar (desistimiento).",
+  "contenido": "plantilla_requerimiento_documentacion.md"
+}

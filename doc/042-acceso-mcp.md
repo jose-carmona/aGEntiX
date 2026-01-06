@@ -23,3 +23,4 @@ BPMN → Agente → MCP → API → GEX
 - Ver: [Información accesible](032-contexto-agente.md)
 - Ver: [Propagación de permisos](052-propagacion-permisos.md)
 - Ver: [Herramientas disponibles](031-configuracion-agente.md)
+- Ver: [MCP Documentación de Expedientes](070-mcp-documentacion-expedientes.md)

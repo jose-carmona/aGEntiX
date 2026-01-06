@@ -1,0 +1,9 @@
+{
+  "id": "SUB-TPL-001",
+  "tipo": "plantilla",
+  "subtipo": "propuesta_resolucion",
+  "tipo_expediente": "subvenciones",
+  "descripcion": "Plantilla para generar la propuesta de resolución de expedientes de subvención, tanto para concesión como para denegación.",
+  "instrucciones_agente": "Utiliza esta plantilla para generar la propuesta de resolución. Rellena los campos marcados con {{campo}} con los datos del expediente. Asegúrate de incluir la fundamentación jurídica adecuada según el resultado (aprobación o denegación). El campo {{fundamentacion}} debe contener los artículos específicos que justifican la decisión.",
+  "contenido": "plantilla_propuesta_resolucion.md"
+}

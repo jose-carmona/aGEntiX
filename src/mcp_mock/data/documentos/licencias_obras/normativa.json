@@ -1,0 +1,8 @@
+{
+  "id": "LOB-NORM-001",
+  "tipo": "normativa",
+  "tipo_expediente": "licencias_obras",
+  "descripcion": "Normativa regulatoria aplicable a los expedientes de licencias de obras. Incluye la Ley de Ordenación de la Edificación, el Código Técnico de la Edificación, la normativa urbanística andaluza y las ordenanzas municipales.",
+  "instrucciones_agente": "Utiliza esta normativa para verificar que las obras solicitadas cumplen con la legalidad urbanística. Comprueba especialmente la clasificación del suelo, los usos permitidos, las condiciones de edificabilidad y las distancias a linderos. Verifica que el proyecto técnico cumple con el CTE.",
+  "contenido": "normativa.md"
+}

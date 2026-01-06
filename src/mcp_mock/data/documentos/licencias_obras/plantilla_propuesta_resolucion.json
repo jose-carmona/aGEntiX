@@ -1,0 +1,9 @@
+{
+  "id": "LOB-TPL-001",
+  "tipo": "plantilla",
+  "subtipo": "propuesta_resolucion",
+  "tipo_expediente": "licencias_obras",
+  "descripcion": "Plantilla para generar la propuesta de resolución de expedientes de licencia de obras, incluyendo las condiciones de la licencia en caso de concesión.",
+  "instrucciones_agente": "Utiliza esta plantilla para generar la propuesta de resolución. Incluye siempre el informe técnico urbanístico como fundamento. Si es concesión, especifica las condiciones particulares (plazos, obligaciones). Si es denegación, detalla los incumplimientos normativos específicos con referencia a los artículos.",
+  "contenido": "plantilla_propuesta_resolucion.md"
+}

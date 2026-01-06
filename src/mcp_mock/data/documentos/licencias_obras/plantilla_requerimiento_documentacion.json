@@ -1,0 +1,9 @@
+{
+  "id": "LOB-TPL-002",
+  "tipo": "plantilla",
+  "subtipo": "requerimiento_documentacion",
+  "tipo_expediente": "licencias_obras",
+  "descripcion": "Plantilla para generar requerimientos de subsanación de documentación técnica faltante o defectuosa en expedientes de licencia de obras.",
+  "instrucciones_agente": "Utiliza esta plantilla cuando detectes que falta documentación técnica obligatoria o que el proyecto presenta deficiencias. Distingue entre documentos administrativos y documentos técnicos. Especifica claramente los defectos del proyecto si los hay. El plazo de subsanación es de 10 días hábiles.",
+  "contenido": "plantilla_requerimiento_documentacion.md"
+}

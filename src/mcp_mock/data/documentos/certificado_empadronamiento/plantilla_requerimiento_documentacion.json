@@ -1,0 +1,9 @@
+{
+  "id": "EMP-TPL-002",
+  "tipo": "plantilla",
+  "subtipo": "requerimiento_documentacion",
+  "tipo_expediente": "certificado_empadronamiento",
+  "descripcion": "Plantilla para generar requerimientos de documentación cuando la solicitud de certificado de empadronamiento está incompleta o presenta deficiencias.",
+  "instrucciones_agente": "Utiliza esta plantilla cuando falte documentación para expedir el certificado solicitado. Especifica claramente qué documentos faltan según el tipo de certificado (individual, colectivo, histórico). El plazo de subsanación es de 10 días hábiles. Si falta la autorización de convivientes para certificado colectivo, indica los nombres de las personas que deben autorizar.",
+  "contenido": "plantilla_requerimiento_documentacion.md"
+}

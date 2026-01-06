@@ -1,0 +1,8 @@
+{
+  "id": "SUB-INST-001",
+  "tipo": "instrucciones_tramitacion",
+  "tipo_expediente": "subvenciones",
+  "descripcion": "Instrucciones detalladas para la tramitación de expedientes de subvenciones, incluyendo documentación necesaria, plazos y criterios de valoración.",
+  "instrucciones_agente": "Sigue estas instrucciones paso a paso para tramitar correctamente el expediente. Verifica cada documento de la lista de documentación obligatoria. Si falta algún documento, genera un requerimiento de subsanación usando la plantilla correspondiente. Calcula la puntuación según los criterios establecidos.",
+  "contenido": "instrucciones_tramitacion.md"
+}

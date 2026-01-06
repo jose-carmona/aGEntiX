@@ -1,0 +1,9 @@
+{
+  "id": "EMP-TPL-001",
+  "tipo": "plantilla",
+  "subtipo": "certificado_empadronamiento",
+  "tipo_expediente": "certificado_empadronamiento",
+  "descripcion": "Plantilla para generar certificados de empadronamiento en sus diferentes modalidades: individual, colectivo e histórico.",
+  "instrucciones_agente": "Utiliza esta plantilla para generar el certificado de empadronamiento según el tipo solicitado. Rellena todos los campos con los datos exactos del Padrón Municipal. El certificado debe ser firmado electrónicamente por el Secretario/a o funcionario habilitado. Incluye siempre el código seguro de verificación (CSV).",
+  "contenido": "plantilla_certificado.md"
+}

@@ -1,0 +1,8 @@
+{
+  "id": "EMP-INST-001",
+  "tipo": "instrucciones_tramitacion",
+  "tipo_expediente": "certificado_empadronamiento",
+  "descripcion": "Instrucciones detalladas para la tramitación de solicitudes de certificados de empadronamiento, incluyendo los diferentes tipos de certificados, documentación necesaria y criterios de expedición.",
+  "instrucciones_agente": "Verifica primero la legitimación del solicitante para obtener el certificado. Comprueba que el tipo de certificado solicitado es el adecuado para el fin indicado. Si se solicita certificado colectivo, verifica la autorización de todos los mayores de edad del domicilio. Consulta los datos del Padrón para confirmar que la persona está inscrita.",
+  "contenido": "instrucciones_tramitacion.md"
+}
