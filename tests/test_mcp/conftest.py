@@ -65,7 +65,8 @@ def restore_expediente_data():
             pass
     """
     root_dir = Path(__file__).parent.parent.parent
-    data_dir = root_dir / "src" / "mcp_mock" / "mcp_expedientes" / "data" / "expedientes"
+    # Nueva ubicación compartida de datos de expedientes
+    data_dir = root_dir / "src" / "mcp_mock" / "data" / "expedientes"
 
     def _restore_from_backup():
         """Restaura todos los expedientes desde sus backups"""

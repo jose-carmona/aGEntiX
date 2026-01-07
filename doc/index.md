@@ -36,9 +36,14 @@
 
 ## Construcción (Entorno de Desarrollo)
 
-- [Servidor MCP Mock](080-mock-mcp.md)
-- [Datos Mock disponibles](081-datos-mock.md)
-- [MCP Documentación de Tipos de Expediente (mock)](070-mcp-documentacion-expedientes.md)
+### Servidor MCP Mock Unificado
+
+- [Servidor MCP Mock](080-mock-mcp.md) - Arquitectura y uso del servidor unificado (puerto 8000)
+- [Datos Mock disponibles](081-datos-mock.md) - Inventario de expedientes y documentación
+
+### Módulos MCP Disponibles
+
+- [MCP Documentación de Tipos de Expediente](070-mcp-documentacion-expedientes.md) - Normativa, instrucciones y plantillas
 
 ## Permisos y Seguridad
 

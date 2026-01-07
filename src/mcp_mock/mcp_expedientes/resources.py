@@ -14,8 +14,8 @@ from .models import Expediente
 from .auth import AuthError
 
 
-# Directorio de datos
-DATA_DIR = Path(__file__).parent / "data" / "expedientes"
+# Directorio de datos (compartido en el nivel raíz de mcp_mock)
+DATA_DIR = Path(__file__).parent.parent / "data" / "expedientes"
 
 
 def load_expediente(exp_id: str) -> Expediente:

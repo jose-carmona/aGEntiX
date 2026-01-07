@@ -72,8 +72,18 @@ from starlette.middleware.cors import CORSMiddleware
 from mcp.server.sse import SseServerTransport
 from .server import create_server, get_server_info
 from .auth import validate_jwt, AuthError
-from .tools import list_tools, call_tool
-from .resources import list_resources, get_resource
+from .tools import list_tools as list_exp_tools, call_tool as call_exp_tool
+from .resources import list_resources as list_exp_resources, get_resource as get_exp_resource
+
+# Importar módulo de documentación
+from ..mcp_documentacion import (
+    list_tools as list_doc_tools,
+    call_tool as call_doc_tool,
+    list_resources as list_doc_resources,
+    get_resource as get_doc_resource,
+)
+from ..mcp_documentacion.tools import TOOL_NAMES as DOC_TOOL_NAMES
+from ..mcp_documentacion.data_loader import DocumentacionError
 
 # Configurar logging
 logging.basicConfig(
@@ -87,10 +97,42 @@ app_core, context = create_server()
 info = get_server_info()
 
 logger.info("=" * 60)
-logger.info("MCP Mock de Expedientes - Transporte HTTP/SSE")
+logger.info("MCP Mock Unificado - Expedientes + Documentación")
 logger.info("=" * 60)
 logger.info(f"Servidor: {info['name']} v{info['version']}")
 logger.info(f"Protocolo MCP: {info['protocol_version']}")
+
+
+# ========== FUNCIONES COMBINADAS PARA MÓDULOS ==========
+
+async def list_all_tools():
+    """Combina tools de todos los módulos."""
+    exp_tools = await list_exp_tools()
+    doc_tools = await list_doc_tools()
+    return exp_tools + doc_tools
+
+
+async def list_all_resources():
+    """Combina resources de todos los módulos."""
+    exp_resources = await list_exp_resources()
+    doc_resources = await list_doc_resources()
+    return exp_resources + doc_resources
+
+
+async def call_tool(name: str, arguments: dict):
+    """Dispatch al módulo correcto según el nombre de la tool."""
+    if name in DOC_TOOL_NAMES:
+        return await call_doc_tool(name, arguments)
+    # Default: tools de expedientes
+    return await call_exp_tool(name, arguments)
+
+
+async def get_resource(uri: str):
+    """Dispatch al módulo correcto según el esquema de la URI."""
+    if uri.startswith("documentacion://"):
+        return await get_doc_resource(uri)
+    # Default: resources de expedientes
+    return await get_exp_resource(uri)
 
 
 async def handle_sse(request: Request) -> Response:
@@ -269,7 +311,7 @@ async def handle_rpc(request: Request) -> JSONResponse:
     # 4. Ejecutar método
     try:
         if method == "tools/list":
-            tools = await list_tools()
+            tools = await list_all_tools()
             result = {
                 "tools": [
                     {
@@ -315,7 +357,7 @@ async def handle_rpc(request: Request) -> JSONResponse:
             }
 
         elif method == "resources/list":
-            resources = await list_resources()
+            resources = await list_all_resources()
             result = {
                 "resources": [
                     {
@@ -393,6 +435,20 @@ async def handle_rpc(request: Request) -> JSONResponse:
                 "id": request_id,
                 "error": {
                     "code": -32001,
+                    "message": e.message
+                }
+            }
+        )
+
+    except DocumentacionError as e:
+        logger.warning(f"❌ Error de documentación en {method}: {e.message}")
+        return JSONResponse(
+            status_code=e.status_code,
+            content={
+                "jsonrpc": "2.0",
+                "id": request_id,
+                "error": {
+                    "code": -32002,
                     "message": e.message
                 }
             }

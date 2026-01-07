@@ -2,23 +2,38 @@
 
 ## Descripción
 
-Conjunto de datos ficticios utilizados por los servidores MCP mock durante el desarrollo. Todos los datos han sido **generados por LLM** y no representan información real.
+Conjunto de datos ficticios utilizados por el servidor MCP mock durante el desarrollo. Todos los datos han sido **generados por LLM** y no representan información real.
+
+## Ubicación
+
+Todos los datos mock están centralizados en:
+
+```
+src/mcp_mock/data/
+├── expedientes/                # Expedientes individuales
+│   ├── EXP-2024-001.json       # Subvención (EN_TRAMITE)
+│   ├── EXP-2024-002.json       # Licencia obra (PENDIENTE_DOCUMENTACION)
+│   └── EXP-2024-003.json       # Certificado (ARCHIVADO)
+│
+└── documentos/                 # Documentación por tipo de expediente
+    ├── subvenciones/
+    ├── licencias_obras/
+    └── certificado_empadronamiento/
+```
 
 ## Inventario de Datos Mock
 
-### Expedientes (`mcp_expedientes`)
+### Expedientes
 
-| Ubicación | Contenido |
-|-----------|-----------|
-| `src/mcp_mock/mcp_expedientes/data/expedientes.json` | Expedientes de ejemplo |
+| Archivo | Tipo | Estado | Descripción |
+|---------|------|--------|-------------|
+| `EXP-2024-001.json` | SUBVENCIONES | EN_TRAMITE | Solicitud de ayuda para local comercial |
+| `EXP-2024-002.json` | LICENCIA_OBRA | PENDIENTE_DOCUMENTACION | Licencia de obra menor |
+| `EXP-2024-003.json` | CERTIFICADO_EMPADRONAMIENTO | ARCHIVADO | Certificado emitido |
 
-### Documentación por Tipo de Expediente (`mcp_documentacion`)
+### Documentación por Tipo de Expediente
 
-| Ubicación | Contenido |
-|-----------|-----------|
-| `src/mcp_mock/data/documentos/` | Documentación de tipos de expediente |
-
-#### Subvenciones
+#### Subvenciones (`documentos/subvenciones/`)
 
 | Archivo | Tipo | ID |
 |---------|------|-----|
@@ -27,7 +42,7 @@ Conjunto de datos ficticios utilizados por los servidores MCP mock durante el de
 | `plantilla_propuesta_resolucion.json` + `.md` | Plantilla | SUB-TPL-001 |
 | `plantilla_requerimiento_documentacion.json` + `.md` | Plantilla | SUB-TPL-002 |
 
-#### Licencias de Obras
+#### Licencias de Obras (`documentos/licencias_obras/`)
 
 | Archivo | Tipo | ID |
 |---------|------|-----|
@@ -36,7 +51,7 @@ Conjunto de datos ficticios utilizados por los servidores MCP mock durante el de
 | `plantilla_propuesta_resolucion.json` + `.md` | Plantilla | LOB-TPL-001 |
 | `plantilla_requerimiento_documentacion.json` + `.md` | Plantilla | LOB-TPL-002 |
 
-#### Certificado de Empadronamiento
+#### Certificado de Empadronamiento (`documentos/certificado_empadronamiento/`)
 
 | Archivo | Tipo | ID |
 |---------|------|-----|
@@ -45,9 +60,9 @@ Conjunto de datos ficticios utilizados por los servidores MCP mock durante el de
 | `plantilla_certificado.json` + `.md` | Plantilla | EMP-TPL-001 |
 | `plantilla_requerimiento_documentacion.json` + `.md` | Plantilla | EMP-TPL-002 |
 
-## Estructura de Documentos
+## Estructura de Documentos de Documentación
 
-Cada documento de documentación tiene dos archivos:
+Cada documento tiene dos archivos:
 
 - **JSON**: Metadatos (id, tipo, descripción, instrucciones para agente)
 - **MD**: Contenido en Markdown (facilita edición humana)
@@ -67,10 +82,24 @@ Cada documento de documentación tiene dos archivos:
 
 | Categoría | Cantidad |
 |-----------|----------|
+| Expedientes | 3 |
 | Tipos de expediente | 3 |
 | Documentos por tipo | 4 |
 | **Total documentos** | **12** |
 | Archivos (JSON + MD) | 24 |
+
+## Backups
+
+Los datos de expedientes incluyen archivos `.json.backup` que permiten restaurar el estado original después de tests que modifican datos:
+
+```
+src/mcp_mock/data/expedientes/
+├── EXP-2024-001.json
+├── EXP-2024-001.json.backup    # Estado original
+├── EXP-2024-002.json
+├── EXP-2024-002.json.backup
+└── ...
+```
 
 ## Aviso Legal
 
