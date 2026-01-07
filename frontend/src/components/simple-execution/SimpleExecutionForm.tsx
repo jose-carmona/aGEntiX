@@ -1,12 +1,18 @@
 // components/simple-execution/SimpleExecutionForm.tsx
 // Formulario simplificado para ejecución de agentes
+// Usa componentes JWT unificados
 
-import React, { useState, useEffect } from 'react';
-import { getAvailablePermissions, generateJWT } from '../../services/agentService';
-import type { Permission, GenerateJWTRequest, JWTClaims, ExecuteAgentRequest } from '../../types/agent';
+import React, { useState, useEffect, useCallback } from 'react';
+import { generateJWT } from '../../services/agentService';
+import type { GenerateJWTRequest, JWTClaims, ExecuteAgentRequest } from '../../types/agent';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
+import {
+  ExpedienteSelector,
+  PermisosSelector,
+  DEFAULT_PERMISOS
+} from '@/components/jwt';
 
 interface SimpleExecutionFormProps {
   selectedAgentId: string | null;
@@ -25,26 +31,23 @@ export const SimpleExecutionForm: React.FC<SimpleExecutionFormProps> = ({
   onExecute,
   onResetError
 }) => {
-  // Estados del formulario - Solo parámetros necesarios
+  // Estados del formulario
   const [expedienteId, setExpedienteId] = useState('EXP-2024-001');
   const [tareaId, setTareaId] = useState('TAREA-001');
-  const [permisos, setPermisos] = useState<string[]>(['consulta']);
+  const [permisos, setPermisos] = useState<string[]>([...DEFAULT_PERMISOS]);
   const [additionalGoal, setAdditionalGoal] = useState('');
   const [callbackUrl, setCallbackUrl] = useState('');
 
   // Estados de validación y UI
-  const [availablePermissions, setAvailablePermissions] = useState<Permission[]>([]);
-  const [loadingPermissions, setLoadingPermissions] = useState(true);
   const [expedienteError, setExpedienteError] = useState<string | null>(null);
   const [tareaError, setTareaError] = useState<string | null>(null);
   const [isGeneratingToken, setIsGeneratingToken] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
   const [errorType, setErrorType] = useState<'validation' | 'jwt' | 'execution' | null>(null);
 
-  // Cargar configuración guardada y permisos disponibles
+  // Cargar configuración guardada
   useEffect(() => {
     loadSavedConfiguration();
-    loadPermissions();
   }, []);
 
   // Guardar configuración cuando cambia
@@ -70,7 +73,14 @@ export const SimpleExecutionForm: React.FC<SimpleExecutionFormProps> = ({
         const config = JSON.parse(saved);
         setExpedienteId(config.expedienteId || 'EXP-2024-001');
         setTareaId(config.tareaId || 'TAREA-001');
-        setPermisos(config.permisos || ['consulta']);
+        // Migrar permisos antiguos a los nuevos si es necesario
+        const savedPermisos = config.permisos || [];
+        // Si tiene permisos antiguos, usar los nuevos por defecto
+        if (savedPermisos.length === 0 || savedPermisos.includes('lectura') || savedPermisos.includes('escritura')) {
+          setPermisos([...DEFAULT_PERMISOS]);
+        } else {
+          setPermisos(savedPermisos);
+        }
         setCallbackUrl(config.callbackUrl || '');
       }
     } catch (err) {
@@ -92,18 +102,6 @@ export const SimpleExecutionForm: React.FC<SimpleExecutionFormProps> = ({
     }
   };
 
-  const loadPermissions = async () => {
-    try {
-      setLoadingPermissions(true);
-      const permissions = await getAvailablePermissions();
-      setAvailablePermissions(permissions);
-    } catch (err) {
-      console.error('Error loading permissions:', err);
-    } finally {
-      setLoadingPermissions(false);
-    }
-  };
-
   const validateExpedienteId = (value: string): boolean => {
     if (!value.trim()) {
       setExpedienteError('El ID de expediente es requerido');
@@ -122,11 +120,10 @@ export const SimpleExecutionForm: React.FC<SimpleExecutionFormProps> = ({
     return true;
   };
 
-  const handleExpedienteIdChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setExpedienteId(value);
-    validateExpedienteId(value);
-  };
+  const handleExpedienteChange = useCallback((id: string) => {
+    setExpedienteId(id);
+    validateExpedienteId(id);
+  }, []);
 
   const handleTareaIdChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -134,18 +131,14 @@ export const SimpleExecutionForm: React.FC<SimpleExecutionFormProps> = ({
     validateTareaId(value);
   };
 
-  const handlePermisoToggle = (permisoId: string) => {
-    if (permisos.includes(permisoId)) {
-      setPermisos(permisos.filter(p => p !== permisoId));
-    } else {
-      setPermisos([...permisos, permisoId]);
-    }
-  };
+  const handlePermisosChange = useCallback((newPermisos: string[]) => {
+    setPermisos(newPermisos);
+  }, []);
 
-  const parseValidationError = (detail: any): string => {
+  const parseValidationError = (detail: unknown): string => {
     try {
       if (Array.isArray(detail)) {
-        const errors = detail.map((err: any) => {
+        const errors = detail.map((err: { loc?: string[]; msg?: string }) => {
           const field = err.loc ? err.loc.join('.') : 'campo';
           const message = err.msg || 'error de validación';
           return `${field}: ${message}`;
@@ -155,8 +148,8 @@ export const SimpleExecutionForm: React.FC<SimpleExecutionFormProps> = ({
       if (typeof detail === 'string') {
         return detail;
       }
-      if (detail?.message) {
-        return detail.message;
+      if (detail && typeof detail === 'object' && 'message' in detail) {
+        return String((detail as { message: unknown }).message);
       }
       return JSON.stringify(detail);
     } catch {
@@ -197,17 +190,17 @@ export const SimpleExecutionForm: React.FC<SimpleExecutionFormProps> = ({
     setIsGeneratingToken(true);
 
     try {
-      // 1. Generar JWT con parámetros mínimos
+      // 1. Generar JWT con parámetros
       const jwtRequest: GenerateJWTRequest = {
         exp_id: expedienteId,
         tarea_id: tareaId,
         permisos: permisos,
-        exp_hours: 1  // Valor fijo por defecto
+        exp_hours: 1
       };
 
       const jwtResponse = await generateJWT(jwtRequest);
 
-      // 2. Construir request simplificado
+      // 2. Construir request de ejecución
       const executeRequest: ExecuteAgentRequest = {
         agent: selectedAgentId,
         context: {
@@ -225,35 +218,36 @@ export const SimpleExecutionForm: React.FC<SimpleExecutionFormProps> = ({
         executeRequest
       );
 
-      // Si llegamos aquí sin errores, limpiamos cualquier error previo
       setLocalError(null);
       setErrorType(null);
 
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error during execution:', err);
 
       let errorMessage = 'Error desconocido';
       let type: 'jwt' | 'execution' | 'validation' = 'execution';
 
+      const error = err as { response?: { status?: number; data?: { detail?: unknown } }; message?: string };
+
       try {
-        if (err.response?.status === 401) {
+        if (error.response?.status === 401) {
           errorMessage = 'No autorizado. Por favor, inicia sesión nuevamente.';
           type = 'jwt';
-        } else if (err.response?.status === 422) {
-          errorMessage = parseValidationError(err.response.data?.detail);
+        } else if (error.response?.status === 422) {
+          errorMessage = parseValidationError(error.response.data?.detail);
           type = 'validation';
-        } else if (err.response?.status === 400) {
-          const detail = err.response.data?.detail;
+        } else if (error.response?.status === 400) {
+          const detail = error.response.data?.detail;
           errorMessage = typeof detail === 'string' ? detail : parseValidationError(detail);
           if (errorMessage.toLowerCase().includes('jwt') || errorMessage.toLowerCase().includes('token')) {
             type = 'jwt';
           }
-        } else if (err.response?.data?.detail) {
-          errorMessage = typeof err.response.data.detail === 'string'
-            ? err.response.data.detail
-            : parseValidationError(err.response.data.detail);
-        } else if (err.message) {
-          errorMessage = err.message;
+        } else if (error.response?.data?.detail) {
+          errorMessage = typeof error.response.data.detail === 'string'
+            ? error.response.data.detail
+            : parseValidationError(error.response.data.detail);
+        } else if (error.message) {
+          errorMessage = error.message;
         }
       } catch (parseError) {
         console.error('Error parsing error message:', parseError);
@@ -276,6 +270,8 @@ export const SimpleExecutionForm: React.FC<SimpleExecutionFormProps> = ({
     permisos.length > 0 &&
     !isExecuting &&
     !isGeneratingToken;
+
+  const isDisabled = isExecuting || isGeneratingToken;
 
   return (
     <Card className="p-6">
@@ -311,30 +307,22 @@ export const SimpleExecutionForm: React.FC<SimpleExecutionFormProps> = ({
       )}
 
       <div className="space-y-6">
-        {/* ID Expediente e ID Tarea */}
+        {/* Expediente y Tarea */}
         <div className="grid grid-cols-2 gap-4">
-          {/* ID Expediente */}
-          <div>
-            <label htmlFor="expediente-id" className="block text-sm font-medium text-gray-700 mb-2">
-              ID Expediente *
-            </label>
-            <Input
-              id="expediente-id"
-              type="text"
-              value={expedienteId}
-              onChange={handleExpedienteIdChange}
-              placeholder="EXP-2024-001"
-              disabled={isExecuting || isGeneratingToken}
-              className={expedienteError ? 'border-red-300' : ''}
-            />
-            {expedienteError && (
-              <p className="mt-1 text-sm text-red-600">{expedienteError}</p>
-            )}
-          </div>
+          {/* Expediente - usando input libre */}
+          <ExpedienteSelector
+            value={expedienteId}
+            onChange={handleExpedienteChange}
+            mode="input"
+            disabled={isDisabled}
+            showTipo={false}
+            label="ID Expediente *"
+            error={expedienteError || undefined}
+          />
 
           {/* ID Tarea */}
           <div>
-            <label htmlFor="tarea-id" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="tarea-id" className="block text-sm font-medium text-gray-700 mb-1">
               ID Tarea *
             </label>
             <Input
@@ -343,7 +331,7 @@ export const SimpleExecutionForm: React.FC<SimpleExecutionFormProps> = ({
               value={tareaId}
               onChange={handleTareaIdChange}
               placeholder="TAREA-001"
-              disabled={isExecuting || isGeneratingToken}
+              disabled={isDisabled}
               className={tareaError ? 'border-red-300' : ''}
             />
             {tareaError && (
@@ -352,52 +340,14 @@ export const SimpleExecutionForm: React.FC<SimpleExecutionFormProps> = ({
           </div>
         </div>
 
-        {/* Permisos JWT */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Permisos JWT *
-          </label>
-          {loadingPermissions ? (
-            <div className="text-sm text-gray-600">Cargando permisos...</div>
-          ) : (
-            <div className="grid grid-cols-2 gap-2">
-              {availablePermissions.map((permiso) => (
-                <label
-                  key={permiso.id}
-                  className={`
-                    flex items-center p-2 rounded-lg border cursor-pointer transition-colors
-                    ${permisos.includes(permiso.id)
-                      ? 'border-blue-300 bg-blue-50'
-                      : 'border-gray-200 hover:border-gray-300'
-                    }
-                    ${isExecuting || isGeneratingToken ? 'opacity-50 cursor-not-allowed' : ''}
-                  `}
-                >
-                  <input
-                    type="checkbox"
-                    checked={permisos.includes(permiso.id)}
-                    onChange={() => handlePermisoToggle(permiso.id)}
-                    disabled={isExecuting || isGeneratingToken}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                  />
-                  <div className="ml-2">
-                    <span className="text-sm font-medium text-gray-900">
-                      {permiso.nombre}
-                    </span>
-                    <span className={`
-                      ml-2 text-xs px-1.5 py-0.5 rounded
-                      ${permiso.category === 'lectura' ? 'bg-green-100 text-green-800' : ''}
-                      ${permiso.category === 'escritura' ? 'bg-yellow-100 text-yellow-800' : ''}
-                      ${permiso.category === 'admin' ? 'bg-red-100 text-red-800' : ''}
-                    `}>
-                      {permiso.category}
-                    </span>
-                  </div>
-                </label>
-              ))}
-            </div>
-          )}
-        </div>
+        {/* Permisos JWT - usando componente unificado */}
+        <PermisosSelector
+          selected={permisos}
+          onChange={handlePermisosChange}
+          disabled={isDisabled}
+          layout="grid"
+          label="Permisos JWT *"
+        />
 
         {/* Objetivo Adicional (Opcional) */}
         <div>
@@ -409,7 +359,7 @@ export const SimpleExecutionForm: React.FC<SimpleExecutionFormProps> = ({
             value={additionalGoal}
             onChange={(e) => setAdditionalGoal(e.target.value)}
             placeholder="Instrucciones adicionales para el agente..."
-            disabled={isExecuting || isGeneratingToken}
+            disabled={isDisabled}
             rows={2}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-500"
           />
@@ -426,7 +376,7 @@ export const SimpleExecutionForm: React.FC<SimpleExecutionFormProps> = ({
             value={callbackUrl}
             onChange={(e) => setCallbackUrl(e.target.value)}
             placeholder="https://ejemplo.com/webhook"
-            disabled={isExecuting || isGeneratingToken}
+            disabled={isDisabled}
           />
           <p className="mt-1 text-xs text-gray-500">
             URL para notificar cuando finalice la ejecución

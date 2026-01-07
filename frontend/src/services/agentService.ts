@@ -8,7 +8,6 @@ import type {
   ExecuteAgentResponse,
   AgentExecution,
   AgentInfo,
-  Permission,
   MCPServer
 } from '../types/agent';
 
@@ -84,44 +83,6 @@ export const getAgentStatus = async (
 export const getAvailableAgents = async (): Promise<AgentInfo[]> => {
   const response = await api.get<{ agents: AgentInfo[] }>('/api/v1/agent/agents');
   return response.data.agents;
-};
-
-// ============================================================================
-// Permissions (Mock Data)
-// ============================================================================
-
-/**
- * Obtiene la lista de permisos disponibles
- * TODO: Implementar endpoint real en backend cuando esté disponible
- */
-export const getAvailablePermissions = async (): Promise<Permission[]> => {
-  // Mock data - permisos del sistema
-  return Promise.resolve([
-    {
-      id: 'consulta',
-      nombre: 'Consulta',
-      descripcion: 'Permite leer expedientes y documentos',
-      category: 'lectura'
-    },
-    {
-      id: 'gestion',
-      nombre: 'Gestión',
-      descripcion: 'Permite modificar expedientes y documentos',
-      category: 'escritura'
-    },
-    {
-      id: 'firma',
-      nombre: 'Firma',
-      descripcion: 'Permite firmar documentos',
-      category: 'escritura'
-    },
-    {
-      id: 'administracion',
-      nombre: 'Administración',
-      descripcion: 'Permisos administrativos completos',
-      category: 'admin'
-    }
-  ]);
 };
 
 // ============================================================================
