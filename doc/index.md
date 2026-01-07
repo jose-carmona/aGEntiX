@@ -33,7 +33,12 @@
 - [Principios arquitectónicos del sistema](040-criterios-diseño.md)
 - [Estrategia conservadora en automatización](041-enfoque-conservador.md)
 - [Acceso a información y herramientas vía MCP](042-acceso-mcp.md)
-- [MCP Documentación de Tipos de Expediente](070-mcp-documentacion-expedientes.md)
+
+## Construcción (Entorno de Desarrollo)
+
+- [Servidor MCP Mock](080-mock-mcp.md)
+- [Datos Mock disponibles](081-datos-mock.md)
+- [MCP Documentación de Tipos de Expediente (mock)](070-mcp-documentacion-expedientes.md)
 
 ## Permisos y Seguridad
 
