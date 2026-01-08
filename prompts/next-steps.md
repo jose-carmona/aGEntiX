@@ -12,4 +12,5 @@
    1) Empezamos por un agente (el más simple posible) con CrewIA. Usaremos Anthropic como proveedor, tenemos un API Key definido (ANTHROPIC_API_KEY).
 7) crear un nuevo mock MCP sobre documentos.
 8) crear un nuevo mock MCP sobre documentación asociada al expediente.
-9) mejorar el sistema de agentes para que pueda escalar horizontalmente con Celery + redis con diferentes workers.
+9) nuevo agente capaz de generar un documento basado en una plantilla.
+10) mejorar el sistema de agentes para que pueda escalar horizontalmente con Celery + redis con diferentes workers.

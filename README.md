@@ -10,101 +10,23 @@ GEX es la aplicación central de gestión administrativa desarrollada por Eprins
 
 ## Estado del Proyecto
 
-**Fase actual:** Paso 3 - Frontend Dashboard (Fase 3: Visor de Logs) ✅ COMPLETADO
+**Fase actual:** Paso 8 - MCP Documentación de Tipos de Expediente ✅ COMPLETADO
 
-### Implementado
+| Paso | Descripción | Estado |
+|------|-------------|--------|
+| 1-3 | Infraestructura (Back-Office, API, Frontend) | ✅ Completado |
+| 4-6 | Agentes reales con CrewAI | ✅ Completado |
+| 7-8 | MCPs adicionales (Documentos, Documentación) | ✅ Completado |
+| 9-10 | Generador documentos, Escalabilidad | 🔜 Pendiente |
 
-#### Paso 1: Back-Office Mock ✅
-
-Sistema funcional con agentes mock que demuestra la arquitectura completa:
-
-- ✅ **Validación JWT completa** con 10 claims obligatorios (issuer, subject, audience, exp_id, permisos)
-- ✅ **Arquitectura multi-MCP plug-and-play** (solo MCP Expedientes habilitado, otros por configuración)
-- ✅ **MCPClientRegistry** con routing automático de herramientas entre MCPs
-- ✅ **Conexión a servidores MCP reales** vía JSON-RPC 2.0 sobre HTTP/SSE
-- ✅ **Propagación de errores estructurados** con códigos semánticos
-- ✅ **Redacción automática de PII** en logs (8 tipos: DNI, NIE, email, teléfonos, IBAN, tarjetas, CCC)
-- ✅ **Auditoría completa** con logs estructurados JSON lines
-- ✅ **3 agentes mock funcionales** (validador documental, analizador subvención, generador informe)
-- ✅ **Suite de 86 tests** (19 JWT + 15 MCP + 12 PII + 33 unitarios) - 100% PASS
-- ✅ **Configuración externalizada** (.env para secrets, YAML para MCPs)
-
-Ver [code-review/commit-c039abe](code-review/commit-c039abe/) para análisis detallado.
-
-#### Paso 2: API REST con FastAPI ✅
-
-API REST profesional para ejecución asíncrona de agentes:
-
-- ✅ **6 endpoints RESTful** (execute, status, health, info, metrics, docs)
-- ✅ **Ejecución asíncrona** con FastAPI BackgroundTasks y timeouts configurables
-- ✅ **Webhooks automáticos** para notificar a BPMN al completar
-- ✅ **Seguridad JWT** con validación completa en endpoints de agentes
-- ✅ **Protección SSRF** en webhook_url (previene localhost, IPs privadas, require HTTPS en producción)
-- ✅ **Métricas Prometheus** para observabilidad
-- ✅ **Documentación OpenAPI** interactiva con Swagger UI
-- ✅ **Task tracking** en memoria thread-safe con cleanup automático
-- ✅ **Patrón lifespan moderno** (migrado de `on_event` deprecado)
-- ✅ **Configuración flexible** vía variables de entorno
-- ✅ **Suite de 22 tests** de API (health, agent endpoints, webhook validation) - 100% PASS
-
-Ver [code-review/commit-64fda4d](code-review/commit-64fda4d/) para análisis detallado y plan de mejoras (2/11 implementadas: P1.1 y P2.1).
-
-#### Paso 3: Dashboard Web Frontend ✅
-
-Dashboard web profesional para gestión y monitorización del sistema aGEntiX con React + TypeScript.
-
-**Fases completadas:**
-- ✅ **Fase 1: Sistema de Autenticación** - Login con token de admin, rutas protegidas, interceptor HTTP
-- ✅ **Fase 2: Dashboard de Métricas** - 8 KPIs, 4 gráficos interactivos, auto-refresh, exportación CSV/JSON
-- ✅ **Fase 3: Visor de Logs** - Filtros avanzados, búsqueda, streaming SSE, exportación, 2000+ logs sin degradación
-
-**Tecnologías:** React 18, TypeScript, Vite, TailwindCSS, Recharts, date-fns, Axios
-
-**Documentación detallada:** Ver [frontend/README.md](frontend/README.md) para:
-- Instalación y configuración
-- Estructura completa del proyecto
-- Descripción detallada de cada fase
-- Componentes, hooks y servicios implementados
-- Scripts disponibles y desarrollo
-
-**Documentos técnicos específicos:**
-- [doc/paso-3-fase-1-autenticacion.md](doc/paso-3-fase-1-autenticacion.md) - Sistema de autenticación
-- [doc/paso-3-fase-2-dashboard-metricas.md](doc/paso-3-fase-2-dashboard-metricas.md) - Dashboard de métricas
-- [doc/paso-3-fase-3-visor-logs.md](doc/paso-3-fase-3-visor-logs.md) - Visor de logs
-
-#### Mejoras de Robustez y Error Handling ✅
-
-Sistema fortalecido con manejo completo de errores y casos edge:
-
-- ✅ **15 tests de error handling** (12 activos + 3 skip para futuro)
-  - Errores MCP (conexión, timeout, tools, auth, conflict 409)
-  - Errores JWT (formato inválido, firma incorrecta)
-  - Errores de webhook (retry con exponential backoff)
-  - Errores de agente (crashes, configuración inválida)
-  - Errores de PII redaction (datos inválidos)
-- ✅ **Webhook retry logic** con exponential backoff (3 intentos, factor 2.0)
-- ✅ **PII redactor robusto** que maneja None, bytes inválidos, tipos incorrectos
-- ✅ **Manejo HTTP 409 Conflict** para detección de modificación concurrente
-- ✅ **Código de error MCP_CONFLICT** agregado al catálogo
-
-**Commits recientes:**
-- `ae55815` - Mejorar suite de tests: 7 fases de refactorización completadas
-- `bfea795` - Reorganizar código bajo /src con estructura plana
-- `fea91f8` - Estado actual antes de reorganización /src
-- `(actual)` - Implementar tests de error handling (ERROR-1 a ERROR-15)
+**Ver [ROADMAP.md](ROADMAP.md) para detalles completos de progreso y próximos pasos.**
 
 ### Calidad del Código
 
-- **Tests:** 166/170 PASS (97.6%) - 87 backoffice + 22 API + 34 MCP + 12 contracts + 15 error handling
-  - 166 tests activos pasando
-  - 4 tests skip (1 MCP SSE + 3 error handling futuro)
-  - 0 tests fallando ✅
-- **Cobertura PII:** 8 tipos de datos personales redactados (con error handling robusto)
+- **Tests:** 306 tests (300 PASS, 6 SKIP)
+- **Cobertura PII:** 8 tipos de datos personales protegidos
 - **Vulnerabilidades:** 0
-- **Seguridad:** OWASP A10:2021 (SSRF) mitigado
-- **Resiliencia:** Manejo completo de errores MCP, JWT, webhooks, agentes
-- **Cumplimiento:** GDPR Art. 32, LOPD, ENS
-- **Calidad promedio:** 4.7/5 ⭐⭐⭐⭐⭐
+- **Cumplimiento:** GDPR/LOPD/ENS
 
 ## Concepto Central
 
@@ -155,7 +77,7 @@ mcp_servers:
   - id: expedientes
     name: "MCP Expedientes"
     url: http://localhost:8000
-    enabled: true  # ✅ Activo en Paso 1
+    enabled: true  # ✅ Activo
 
   - id: firma
     name: "MCP Firma Electrónica"
@@ -170,7 +92,7 @@ mcp_servers:
 
 **Para añadir un nuevo MCP:** Solo editar el YAML y cambiar `enabled: true`. Sin cambios en código.
 
-### Componentes Principales
+## Componentes Principales
 
 - **AgentExecutor**: Orquestador principal del sistema
 - **MCPClientRegistry**: Routing automático de herramientas entre múltiples MCPs
@@ -179,11 +101,19 @@ mcp_servers:
 - **AuditLogger**: Logging estructurado con redacción automática de PII
 - **PIIRedactor**: Protección de datos personales (GDPR/LOPD/ENS)
 
-### Agentes Mock Disponibles
+## Agentes Disponibles
 
-1. **ValidadorDocumental**: Valida documentación completa del expediente
-2. **AnalizadorSubvencion**: Analiza requisitos y elegibilidad de subvención
-3. **GeneradorInforme**: Genera informes estructurados del expediente
+### Agentes CrewAI (Reales)
+
+1. **ClasificadorExpediente**: Clasifica expedientes por tipo usando IA
+2. **RedactorSituacion**: Genera resúmenes de situación del expediente
+
+### Componentes de Soporte
+
+- **AgentReal (base_real.py)**: Clase base para agentes CrewAI
+- **MCPToolWrapper**: Expone herramientas MCP a CrewAI
+- **SchemaBuilder**: Constructor de schemas para tools
+- **AgentConfigLoader**: Carga configuraciones de agente desde YAML
 
 ## Getting Started
 
@@ -227,143 +157,41 @@ npm install -g @modelcontextprotocol/inspector
 El proyecto incluye un **script unificado v2.0** con configuración declarativa y opciones avanzadas:
 
 ```bash
-# Ejecutar todos los tests (5 suites: API, MCP, Back-Office, Contracts, Error Handling)
+# Ejecutar todos los tests (5 suites)
 ./run-tests.sh
 
-# ============================================================================
-# SELECCIÓN DE SUITES
-# ============================================================================
-
-# Ejecutar suites específicas (NUEVO)
+# Selección de suites
 ./run-tests.sh --suites=api,contracts
-./run-tests.sh --suites=backoffice,error
-
-# Excluir suites específicas (NUEVO)
 ./run-tests.sh --exclude=mcp
-./run-tests.sh --exclude=mcp,backoffice
 
-# Flags compatibles con versión anterior
-./run-tests.sh --api-only
-./run-tests.sh --mcp-only
-./run-tests.sh --backoffice-only
-./run-tests.sh --contracts-only      # NUEVO
-./run-tests.sh --error-only          # NUEVO
+# Opciones avanzadas
+./run-tests.sh --coverage      # Con coverage
+./run-tests.sh --parallel      # En paralelo
+./run-tests.sh --quiet         # Solo resultados
+./run-tests.sh --fail-fast     # Detener en primer error
 
-# ============================================================================
-# OPCIONES AVANZADAS
-# ============================================================================
-
-# Ejecutar con coverage (NUEVO - requiere pytest-cov)
-./run-tests.sh --coverage
-
-# Ejecutar en paralelo (NUEVO - requiere pytest-xdist)
-./run-tests.sh --parallel
-
-# Modo silencioso (NUEVO - solo muestra resultados finales)
-./run-tests.sh --quiet
-
-# Detener en el primer error de cualquier suite (NUEVO)
-./run-tests.sh --fail-fast
-
-# ============================================================================
-# COMBINACIONES ÚTILES
-# ============================================================================
-
-# API y Contracts con coverage
-./run-tests.sh --suites=api,contracts --coverage
-
-# Todo excepto MCP en modo silencioso
-./run-tests.sh --exclude=mcp --quiet
-
-# Solo tests de autenticación con verbose
-./run-tests.sh -k auth -v
-
-# Re-ejecutar solo tests fallidos
-./run-tests.sh --failed
-
-# ============================================================================
-# AYUDA Y UTILIDADES
-# ============================================================================
-
-# Ver todas las opciones disponibles
+# Ayuda
 ./run-tests.sh --help
-
-# Listar suites disponibles
 ./run-tests.sh --list-suites
 ```
 
-### Características del Script v2.0
+### Suite de Tests
 
-- ✅ **Configuración declarativa**: Agregar nueva suite = 1 línea de código
-- ✅ **Selección múltiple**: `--suites=api,contracts` o `--exclude=mcp`
-- ✅ **Coverage integrado**: `--coverage` con pytest-cov
-- ✅ **Ejecución paralela**: `--parallel` con pytest-xdist
-- ✅ **Modo silencioso**: `--quiet` para CI/CD
-- ✅ **Compatibilidad**: Todos los flags anteriores funcionan
-- ✅ **Resumen detallado**: Muestra estado por suite automáticamente
+**Total: 306 tests (300 PASS, 6 SKIP)**
 
-### Suite de Tests Actual
-
-**Total: 170 tests (166 PASS, 4 SKIP)**
-
-#### Back-Office (87 tests)
-- **19 tests JWT** - Validación de seguridad y autenticación
-- **15 tests MCP** - Integración con servidores MCP
-- **12 tests PII** - Cumplimiento normativo GDPR/LOPD/ENS
-- **34 tests Executor** - Tests unitarios del AgentExecutor
-- **7 tests Protocols** - Interfaces y abstracciones
-
-#### API REST (22 tests)
-- **4 tests Health** - Health check, metrics, docs
-- **18 tests Agent Endpoints** - Execute, status, webhook validation, error handling
-
-#### MCP Mock Expedientes (34 tests)
-- **10 tests Auth** - Validación JWT en servidor MCP
-- **7 tests Resources** - Recursos MCP (expedientes, documentos)
-- **7 tests Server HTTP** - Servidor HTTP/SSE (1 skip SSE)
-- **10 tests Tools** - Herramientas MCP (consulta, actualización)
-
-#### Contracts (12 tests)
-- **4 tests MCP Client** - Contract testing para MCPClient
-- **4 tests Agent Registry** - Contract testing para AgentRegistry
-- **4 tests Config Loader** - Contract testing para ConfigLoader
-
-#### Error Handling (15 tests)
-- **12 tests activos** - Manejo de errores MCP, JWT, webhook, agente, PII
-- **3 tests skip** - Casos futuros (BD, OOM, rate limiting)
+| Suite | Tests | Descripción |
+|-------|-------|-------------|
+| Back-Office | 165 | JWT, MCP, PII, Executor, Protocols, Agents |
+| API REST | 34 | Health, Agent endpoints, Webhooks |
+| MCP Mock | 78 | Auth, Resources, Tools, Server |
+| Contracts | 14 | Interfaces y contratos |
+| Error Handling | 15 | Resilience (12 activos, 3 skip) |
 
 ## Uso del Sistema
 
-### Opción A: Dashboard Web (Recomendado - Paso 3)
+### Opción A: API REST (Recomendado para Integración)
 
-La forma más intuitiva de usar aGEntiX es mediante el dashboard web.
-
-**Inicio rápido:**
-
-```bash
-# Terminal 1: Backend API (puerto 8080)
-./run-api.sh
-
-# Terminal 2: Frontend Dashboard (puerto 5173)
-cd frontend && npm run dev
-```
-
-**Acceso:**
-- GitHub Codespaces: Panel PORTS → Puerto 5173 → Abrir en navegador
-- Local: `http://localhost:5173`
-
-**Login:** Token de desarrollo: `agentix-admin-dev-token-2024`
-
-**📖 Documentación completa del frontend:** Ver [frontend/README.md](frontend/README.md) para:
-- Instalación detallada y configuración
-- Descripción de las 3 fases completadas (Autenticación, Métricas, Logs)
-- Guía de uso de cada funcionalidad
-- Scripts disponibles y desarrollo
-- Estructura del proyecto
-
-### Opción B: API REST (Programático)
-
-Para integración programática o testing automatizado:
+Para integración programática o automatización:
 
 #### 1. Iniciar Servidor MCP Expedientes
 
@@ -399,10 +227,10 @@ curl -X POST http://localhost:8080/api/v1/agent/execute \
     "expediente_id": "EXP-2024-001",
     "tarea_id": "TAREA-001",
     "agent_config": {
-      "nombre": "ValidadorDocumental",
-      "system_prompt": "Eres un validador de documentación administrativa",
+      "nombre": "ClasificadorExpediente",
+      "system_prompt": "Eres un clasificador de expedientes administrativos",
       "modelo": "claude-3-5-sonnet",
-      "prompt_tarea": "Valida que todos los documentos requeridos estén presentes",
+      "prompt_tarea": "Clasifica el expediente según su tipo",
       "herramientas": ["consultar_expediente"]
     },
     "webhook_url": "http://example.com/callback",
@@ -422,18 +250,31 @@ curl http://localhost:8080/api/v1/agent/status/<RUN_ID>
 - **GET** `/docs` - Documentación Swagger interactiva
 - **GET** `/` - Info de la API
 
-### Opción B: Uso Programático (Back-Office Directo)
+### Opción B: Dashboard Web (Demostración)
 
-Para integración avanzada o testing, puedes usar el back-office directamente:
+El dashboard web permite visualizar y gestionar el sistema de forma interactiva:
 
-#### 1. Iniciar Servidor MCP Expedientes
+**Inicio rápido:**
 
 ```bash
-cd src/mcp_mock/mcp_expedientes
-python -m uvicorn mcp_expedientes.server_http:app --reload --port 8000
+# Terminal 1: Backend API (puerto 8080)
+./run-api.sh
+
+# Terminal 2: Frontend Dashboard (puerto 5173)
+cd frontend && npm run dev
 ```
 
-#### 2. Ejecutar un Agente
+**Acceso:**
+- GitHub Codespaces: Panel PORTS → Puerto 5173 → Abrir en navegador
+- Local: `http://localhost:5173`
+
+**Login:** Token de desarrollo: `agentix-admin-dev-token-2024`
+
+**Documentación completa del frontend:** Ver [frontend/README.md](frontend/README.md)
+
+### Opción C: Uso Programático (Back-Office Directo)
+
+Para integración avanzada o testing:
 
 ```python
 import asyncio
@@ -451,21 +292,21 @@ async def main():
 
     # 2. Configurar agente
     agent_config = AgentConfig(
-        nombre="ValidadorDocumental",
-        system_prompt="Eres un validador de documentación administrativa",
+        nombre="ClasificadorExpediente",
+        system_prompt="Eres un clasificador de expedientes administrativos",
         modelo="claude-3-5-sonnet-20241022",
-        prompt_tarea="Valida que todos los documentos requeridos estén presentes",
-        herramientas=["consultar_expediente", "actualizar_datos", "añadir_anotacion"]
+        prompt_tarea="Clasifica el expediente según su tipo",
+        herramientas=["consultar_expediente", "actualizar_datos"]
     )
 
-    # 3. Generar token JWT (usar generate_token.py)
-    token = "eyJ..."  # Token JWT válido para EXP-2024-001
+    # 3. Token JWT válido (usar generate_token.py)
+    token = "eyJ..."
 
     # 4. Ejecutar agente
     resultado = await executor.execute(
         token=token,
         expediente_id="EXP-2024-001",
-        tarea_id="TAREA-VALIDAR-DOC-001",
+        tarea_id="TAREA-CLASIFICAR-001",
         agent_config=agent_config
     )
 
@@ -473,19 +314,14 @@ async def main():
     if resultado.success:
         print(f"✅ Agente ejecutado: {resultado.agent_run_id}")
         print(f"   Mensaje: {resultado.resultado['mensaje']}")
-        print(f"   Herramientas usadas: {resultado.herramientas_usadas}")
-        print("\n📋 Log de auditoría:")
-        for log in resultado.log_auditoria:
-            print(f"   - {log}")
     else:
         print(f"❌ Error: {resultado.error.codigo}")
-        print(f"   {resultado.error.mensaje}")
 
 if __name__ == "__main__":
     asyncio.run(main())
 ```
 
-### 3. Generar Token JWT
+### Generar Token JWT
 
 ```bash
 cd src/mcp_mock/mcp_expedientes
@@ -496,114 +332,93 @@ python -m mcp_expedientes.generate_token EXP-2024-001
 
 ```
 aGEntiX/
-├── frontend/                        # Dashboard Web (Paso 3) - Ver frontend/README.md
+├── frontend/                        # Dashboard Web
 │   ├── src/
-│   │   ├── components/              # auth/, dashboard/, logs/, layout/, ui/
-│   │   ├── contexts/                # AuthContext
-│   │   ├── hooks/                   # useAuth, useMetrics, useLogs, useLogStream
-│   │   ├── mocks/                   # Datos mock (metrics, logs)
-│   │   ├── pages/                   # Login, Dashboard, Logs, TestPanel
-│   │   ├── services/                # API clients (auth, metrics, logs)
-│   │   ├── types/                   # TypeScript types
-│   │   └── utils/                   # Utilidades
-│   ├── vite.config.ts
-│   ├── tailwind.config.js
-│   ├── package.json
-│   ├── .env                         # VITE_API_URL
-│   └── README.md                    # 📖 Documentación completa del frontend
+│   │   ├── components/
+│   │   │   ├── auth/               # Autenticación
+│   │   │   ├── dashboard/          # Métricas y KPIs
+│   │   │   ├── logs/               # Visor de logs
+│   │   │   ├── jwt/                # Generador JWT
+│   │   │   ├── mcp/                # Exploradores MCP
+│   │   │   │   ├── explorer/       # Explorador genérico
+│   │   │   │   ├── documentacion/  # Panel documentación
+│   │   │   │   └── expedientes/    # Panel expedientes
+│   │   │   ├── test-panel/         # Panel de pruebas
+│   │   │   ├── layout/             # Header, Sidebar
+│   │   │   └── ui/                 # Componentes UI
+│   │   ├── contexts/               # AuthContext
+│   │   ├── hooks/                  # Custom hooks
+│   │   ├── pages/                  # Páginas principales
+│   │   ├── services/               # API clients
+│   │   └── types/                  # TypeScript types
+│   └── README.md                   # Documentación frontend
 │
-├── src/                             # Código fuente Python (estructura plana)
-│   ├── api/                         # API REST con FastAPI (Paso 2)
-│   │   ├── main.py                  # FastAPI app
-│   │   ├── models.py                # Modelos Pydantic
-│   │   ├── routers/                 # Endpoints REST
-│   │   │   ├── auth.py              # Autenticación admin (Paso 3)
-│   │   │   ├── agent.py             # Ejecución de agentes
-│   │   │   └── health.py            # Health check
-│   │   └── services/                # Servicios (webhook, task_tracker)
+├── src/                            # Código fuente Python
+│   ├── api/                        # API REST con FastAPI
+│   │   ├── main.py                 # FastAPI app
+│   │   ├── models.py               # Modelos Pydantic
+│   │   ├── routers/
+│   │   │   ├── auth.py             # Autenticación
+│   │   │   ├── agent.py            # Ejecución de agentes
+│   │   │   ├── expedientes.py      # Endpoints expedientes
+│   │   │   ├── logs.py             # Endpoints logs
+│   │   │   └── health.py           # Health check
+│   │   └── services/               # Webhook, task_tracker
 │   │
-│   ├── backoffice/                  # Back-Office de Agentes IA (Paso 1)
-│   │   ├── executor.py              # AgentExecutor (punto de entrada)
-│   │   ├── models.py                # Modelos Pydantic
-│   │   ├── settings.py              # Configuración con variables de entorno
+│   ├── backoffice/                 # Back-Office de Agentes IA
+│   │   ├── executor.py             # AgentExecutor
+│   │   ├── executor_factory.py     # Factory pattern
+│   │   ├── models.py               # Modelos Pydantic
+│   │   ├── settings.py             # Configuración
+│   │   ├── protocols.py            # Interfaces
 │   │   ├── auth/
-│   │   │   └── jwt_validator.py     # Validación JWT (10 claims)
+│   │   │   ├── jwt_validator.py    # Validación JWT
+│   │   │   └── jwt_generator.py    # Generación JWT
 │   │   ├── agents/
-│   │   │   ├── base.py              # Clase base agentes
-│   │   │   ├── registry.py          # Registro de agentes
-│   │   │   ├── validador_documental.py
-│   │   │   ├── analizador_subvencion.py
-│   │   │   └── generador_informe.py
+│   │   │   ├── base_real.py        # Base para CrewAI
+│   │   │   ├── clasificador_expediente.py
+│   │   │   ├── redactor_situacion.py
+│   │   │   ├── registry.py         # Registro de agentes
+│   │   │   ├── mcp_tool_wrapper.py # Wrapper MCP → CrewAI
+│   │   │   └── schema_builder.py   # Constructor schemas
 │   │   ├── config/
-│   │   │   ├── models.py            # Modelos configuración MCP
-│   │   │   └── mcp_servers.yaml     # Catálogo de servidores MCP
+│   │   │   ├── agent_config_loader.py
+│   │   │   └── mcp_servers.yaml
 │   │   ├── mcp/
-│   │   │   ├── client.py            # Cliente MCP (JSON-RPC 2.0)
-│   │   │   ├── registry.py          # MCPClientRegistry (routing)
-│   │   │   └── exceptions.py        # Excepciones MCP
+│   │   │   ├── client.py           # MCPClient
+│   │   │   ├── registry.py         # MCPClientRegistry
+│   │   │   └── exceptions.py
 │   │   └── logging/
-│   │       ├── pii_redactor.py      # Redactor PII (GDPR/LOPD)
-│   │       └── audit_logger.py      # Logger auditoría
+│   │       ├── pii_redactor.py     # Redactor PII
+│   │       └── audit_logger.py     # Logger auditoría
 │   │
-│   └── mcp_mock/                    # Servidores MCP Mock (renombrado de mcp-mock)
-│       └── mcp_expedientes/         # Servidor MCP Expedientes
-│           ├── server_http.py       # Servidor HTTP/SSE
-│           ├── server_stdio.py      # Servidor STDIO
-│           ├── auth.py              # Validación JWT
-│           ├── models.py            # Modelos de datos
-│           ├── tools.py             # Tools MCP
-│           ├── resources.py         # Resources MCP
-│           ├── generate_token.py    # Generador de tokens
-│           └── data/                # Datos mock
-│               └── expedientes/
+│   └── mcp_mock/                   # Servidores MCP
+│       ├── mcp_expedientes/        # MCP Expedientes
+│       │   ├── server_http.py
+│       │   ├── auth.py
+│       │   ├── tools.py
+│       │   ├── resources.py
+│       │   ├── generate_token.py
+│       │   └── data/
+│       └── mcp_documentacion/      # MCP Documentación
+│           ├── data_loader.py
+│           ├── tools.py
+│           └── resources.py
 │
-├── tests/                           # Tests organizados por componente
-│   ├── api/                         # Tests de API REST (22 tests)
-│   │   ├── test_health.py           # 4 tests health/metrics/docs
-│   │   └── test_agent_endpoints.py  # 18 tests execute/status/webhook
-│   ├── test_backoffice/             # Tests de Back-Office (87 tests)
-│   │   ├── test_jwt_validator.py    # 19 tests JWT
-│   │   ├── test_mcp_integration.py  # 15 tests MCP
-│   │   ├── test_logging.py          # 12 tests PII
-│   │   ├── test_executor.py         # 34 tests AgentExecutor
-│   │   └── test_protocols.py        # 7 tests protocolos
-│   ├── test_mcp/                    # Tests de MCP Mock (34 tests)
-│   │   ├── test_auth.py             # 10 tests autenticación
-│   │   ├── test_tools.py            # 10 tests tools
-│   │   ├── test_resources.py        # 7 tests resources
-│   │   └── test_server_http.py      # 7 tests servidor
-│   ├── test_contracts/              # Tests de Contracts (12 tests)
-│   │   └── test_interfaces.py  # 12 tests de interfaces y contratos
-│   └── test_error_handling/         # Tests de Error Handling (15 tests)
-│       └── test_resilience.py       # 12 activos + 3 skip
+├── tests/                          # Tests por componente
+│   ├── api/                        # 34 tests
+│   ├── test_backoffice/            # 165 tests
+│   ├── test_mcp/                   # 78 tests
+│   ├── test_contracts/             # 14 tests
+│   └── test_error_handling/        # 15 tests
 │
-├── doc/                             # Documentación Zettelkasten
-│   ├── index.md                     # Índice de temas
-│   ├── memoria.md                   # Memoria del proyecto
-│   └── [001-099].md                 # Notas interconectadas
-│
-├── code-review/                     # Code reviews por commit
-│   ├── README.md                    # Estructura de reviews
-│   ├── commit-c039abe/              # Review Paso 1
-│   │   ├── README.md                # Resumen ejecutivo
-│   │   ├── revision-commit-*.md     # Análisis detallado
-│   │   ├── metricas.md              # Métricas de calidad
-│   │   └── plan-mejoras.md          # Plan de mejoras (✅ 100% implementadas)
-│   └── fix-*/                       # Reviews de fixes
-│
-├── setup.py                         # Configuración del paquete (package_dir="src")
-├── conftest.py                      # Configuración global de pytest
-├── .env.example                     # Template de configuración
-├── run-tests.sh                     # Script unificado de tests (170 tests)
-├── requirements.txt                 # Dependencias Python
-└── README.md                        # Este archivo
+├── doc/                            # Documentación Zettelkasten
+├── code-review/                    # Code reviews por commit
+├── ROADMAP.md                      # Hoja de ruta del proyecto
+├── run-tests.sh                    # Script unificado de tests
+├── run-api.sh                      # Script para iniciar API
+└── README.md                       # Este archivo
 ```
-
-**Nota sobre la estructura:**
-- Todo el código Python está bajo `/src` siguiendo las mejores prácticas de Python
-- Los tests están organizados bajo `/tests` en la raíz del proyecto
-- Los nombres de directorios siguen PEP-8 (`mcp_mock` en lugar de `mcp-mock`)
-- Los imports usan la estructura plana: `from backoffice.executor import AgentExecutor`
 
 ## Cumplimiento Normativo
 
@@ -616,7 +431,6 @@ El sistema implementa protección de datos personales según normativa europea y
 - **Logs estructurados** en JSON lines para auditoría
 - **Control de acceso** a logs por expediente
 - **Retención configurable** de logs
-- **12 tests obligatorios** que verifican cumplimiento
 
 ### Patrones Redactados
 
@@ -636,17 +450,20 @@ El sistema implementa protección de datos personales según normativa europea y
 ### Variables de Entorno Backend (.env)
 
 ```bash
-# JWT - Autenticación de Agentes (Paso 1)
+# JWT - Autenticación de Agentes
 JWT_SECRET=your-secret-key-here  # PRODUCCIÓN: openssl rand -hex 32
 JWT_ALGORITHM=HS256
 JWT_EXPECTED_ISSUER=agentix-bpmn
 JWT_EXPECTED_SUBJECT=Automático
 JWT_REQUIRED_AUDIENCE=agentix-mcp-expedientes
 
-# Admin Authentication - Dashboard Web (Paso 3)
-API_ADMIN_TOKEN=agentix-admin-dev-token-2024  # PRODUCCIÓN: python -c "import secrets; print(secrets.token_urlsafe(32))"
+# Admin Authentication - Dashboard Web
+API_ADMIN_TOKEN=agentix-admin-dev-token-2024  # PRODUCCIÓN: secrets.token_urlsafe(32)
 
-# CORS - Incluir puerto del frontend
+# LLM Provider
+ANTHROPIC_API_KEY=your-anthropic-api-key
+
+# CORS
 CORS_ORIGINS=http://localhost:3000,http://localhost:5173,http://localhost:8080,*
 
 # MCP Configuration
@@ -660,23 +477,28 @@ LOG_DIR=logs/agent_runs
 ### Variables de Entorno Frontend (frontend/.env)
 
 ```bash
-# URL del backend API
 VITE_API_URL=http://localhost:8080
 ```
 
-Ver [.env.example](.env.example) para documentación completa de configuración.
+Ver [.env.example](.env.example) para documentación completa.
 
-## Añadir Nuevo MCP (Futuro)
+## Añadir Nuevo MCP
 
-Para añadir MCP de Firma cuando esté disponible:
+Para añadir un nuevo servidor MCP:
 
-1. **Editar configuración** (`backoffice/config/mcp_servers.yaml`):
+1. **Editar configuración** (`src/backoffice/config/mcp_servers.yaml`):
 
 ```yaml
-  - id: firma
-    name: "MCP Firma Electrónica"
-    url: http://mcp-firma:8001
-    enabled: true  # ⬅️ Cambiar a true
+  - id: nuevo_mcp
+    name: "MCP Nuevo Servicio"
+    description: "Descripción del nuevo MCP"
+    url: http://mcp-nuevo:8003
+    type: http
+    auth:
+      type: jwt
+      audience: agentix-mcp-nuevo
+    timeout: 30
+    enabled: true  # ⬅️ Activar
 ```
 
 2. **Reiniciar el servicio** (NO requiere cambios en código)
@@ -685,33 +507,10 @@ Para añadir MCP de Firma cuando esté disponible:
 
 ```python
 # El registry automáticamente descubre y enruta herramientas
-await mcp_registry.call_tool("firmar_documento", {
-    "documento_id": "DOC-123",
-    "tipo_firma": "avanzada"
+await mcp_registry.call_tool("nueva_herramienta", {
+    "param": "valor"
 })
 ```
-
-## Próximos Pasos
-
-### Paso 3 - Fase 4: Panel de Pruebas de Agentes (Siguiente)
-- Endpoint `POST /api/v1/auth/generate-jwt`
-- Selector de agentes disponibles
-- Generador de JWT de prueba
-- Visualización de resultados en tiempo real
-- Historial de ejecuciones
-
-### Paso 4: Agentes Reales con LLMs
-- Integración LangGraph/CrewAI
-- LLMs reales (Anthropic Claude, OpenAI)
-- Razonamiento dinámico multi-paso
-- Sistema de memoria y contexto
-- Mantiene interfaz `AgentExecutor` (retrocompatible)
-
-### Paso 5: Escalabilidad Horizontal
-- Celery + Redis para cola de trabajos
-- Múltiples workers concurrentes
-- Load balancing automático
-- Monitorización y métricas avanzadas
 
 ## Documentación
 
@@ -730,20 +529,9 @@ La documentación técnica completa del proyecto está organizada en un sistema 
 
 **Punto de entrada**: [doc/index.md](doc/index.md)
 
-**Temas principales cubiertos:**
-
-- **Sistema GEX**: Componentes, flujos de información e integraciones → [doc/001-gex-definicion.md](doc/001-gex-definicion.md)
-- **Automatización de Tareas**: Tipos de tareas y candidatas para IA → [doc/010-tipos-tareas.md](doc/010-tipos-tareas.md)
-- **Modelo BPMN**: Estructura de workflows y acciones de agente → [doc/020-bpmn-modelo.md](doc/020-bpmn-modelo.md)
-- **Agentes IA**: Configuración, contexto y auditoría → [doc/030-propuesta-agentes.md](doc/030-propuesta-agentes.md)
-- **Arquitectura**: Criterios de diseño y acceso MCP → [doc/040-criterios-diseño.md](doc/040-criterios-diseño.md)
-- **Permisos**: Sistema de permisos y propagación → [doc/050-permisos-agente.md](doc/050-permisos-agente.md)
-
 ### Code Reviews
 
-Los code reviews del proyecto están organizados por commit en [code-review/](code-review/):
-
-- **commit-c039abe**: Análisis completo del Paso 1 con métricas, plan de mejoras (100% implementado) y verificación de cumplimiento normativo
+Los code reviews del proyecto están organizados por commit en [code-review/](code-review/)
 
 ## Viabilidad del Proyecto
 
@@ -759,7 +547,3 @@ El proyecto se considera viable por las siguientes razones:
 ## Licencia
 
 Este proyecto es parte de un Capstone Project académico desarrollado para Eprinsa (Empresa Provincial de Informática de Córdoba).
-
-## Contacto
-
-Para preguntas sobre este proyecto, consulta la documentación en `/doc` o revisa los code reviews en `/code-review`.
