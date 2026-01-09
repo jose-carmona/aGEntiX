@@ -181,3 +181,158 @@ agents:
       - expediente.lectura
       - documento.escritura
     timeout_seconds: 600
+
+  # ==========================================================================
+  # RedactorPropuestaResolucion - Genera Propuestas de Resolución (Paso 9)
+  # ==========================================================================
+
+  RedactorPropuestaResolucion:
+    type: crewai
+    enabled: true
+    description: "Genera una Propuesta de Resolución basada en plantilla y datos del expediente (cualquier tipo)"
+
+    # Configuración del LLM
+    llm:
+      provider: anthropic
+      model: claude-3-haiku-20240307
+      max_tokens: 8192
+      temperature: 0.1  # Baja para mayor consistencia en documentos formales
+      num_retries: 5
+      request_timeout: 180
+
+    # Definición del agente CrewAI
+    crewai_agent:
+      role: "Redactor de Propuestas de Resolución Administrativa"
+      goal: |
+        Generar una Propuesta de Resolución formal y completa para el expediente {expediente_id},
+        utilizando la plantilla oficial correspondiente al tipo de expediente y los datos extraídos
+        del expediente y su informe de situación.
+        {additional_goal}
+      backstory: |
+        Eres un experto jurídico-administrativo de la administración pública española,
+        especializado en la redacción de propuestas de resolución para cualquier tipo de expediente
+        administrativo.
+
+        Tu experiencia incluye:
+        - Conocimiento profundo del procedimiento administrativo común (Ley 39/2015)
+        - Dominio de normativa sectorial: subvenciones (Ley 38/2003), urbanismo, autorizaciones, etc.
+        - Redacción de documentos administrativos siguiendo plantillas oficiales
+        - Análisis de expedientes y valoración de solicitudes de diversa naturaleza
+        - Fundamentación jurídica adaptada a cada tipo de procedimiento
+
+        Siempre sigues estrictamente la plantilla proporcionada para el tipo de expediente,
+        sustituyendo los campos marcados con {{campo}} por los valores correspondientes.
+
+        Generas documentos formales, precisos y jurídicamente correctos, adaptando el lenguaje
+        y la fundamentación al tipo específico de expediente.
+      verbose: true
+      allow_delegation: false
+      max_rpm: 10
+
+    # Tarea a ejecutar
+    crewai_task:
+      description: |
+        Genera una Propuesta de Resolución para el expediente {expediente_id}.
+
+        PASOS OBLIGATORIOS:
+
+        1. CONSULTAR EXPEDIENTE
+           - Usa 'consultar_expediente' con expediente_id="{expediente_id}"
+           - Extrae:
+             * Tipo de expediente (subvenciones, licencias_obras, etc.)
+             * Datos del solicitante (nombre, NIF/CIF)
+             * Datos del proyecto/solicitud
+             * Estado actual y fechas
+
+        2. OBTENER PLANTILLA
+           - Usa 'obtener_doc_documentacion' con:
+             * tipo_expediente = el tipo obtenido en el paso 1
+             * tipo_documento = "plantilla_propuesta_resolucion"
+           - Guarda la plantilla para usarla como base del documento
+           - Lee las instrucciones del agente incluidas en el documento
+
+        3. BUSCAR INFORME DE SITUACIÓN
+           - Usa 'listar_documentos' con expediente_id="{expediente_id}"
+           - Busca un documento de tipo "INFORME" con nombre similar a "informe_situacion"
+           - Si existe, guarda su documento_id
+
+        4. LEER INFORME DE SITUACIÓN
+           - Si encontraste el informe, usa 'obtener_texto_documento' con:
+             * expediente_id="{expediente_id}"
+             * documento_id=<id del informe encontrado>
+           - Extrae del informe:
+             * Análisis y valoración de la solicitud
+             * Puntuaciones si aplica (criterios de evaluación)
+             * Observaciones relevantes
+             * Recomendación (aprobar/denegar)
+
+        5. DETERMINAR TIPO DE RESOLUCIÓN
+           - Basándote en los datos y el informe, determina:
+             * Si la propuesta es de APROBACIÓN o DENEGACIÓN
+             * El importe a conceder si es subvención y aprobación
+             * Los motivos de denegación si es denegación
+             * Las condiciones particulares si aplica
+
+        6. GENERAR PROPUESTA DE RESOLUCIÓN
+           - Usa la plantilla obtenida en el paso 2
+           - Sustituye TODOS los campos {{campo}} por los valores correspondientes:
+             * Campos del expediente (paso 1)
+             * Campos del informe (paso 4)
+             * Campos generados (fecha actual, fundamentación)
+           - IMPORTANTE: No dejes ningún {{campo}} sin sustituir
+           - IMPORTANTE: La fundamentación jurídica debe ser coherente con el tipo de resolución
+           - IMPORTANTE: Elimina las secciones condicionales {{#if}} que no apliquen
+
+        7. GUARDAR DOCUMENTO
+           - Usa 'crear_documento_desde_markdown' con:
+             * expediente_id="{expediente_id}"
+             * nombre="propuesta_resolucion.md"
+             * tipo="PROPUESTA_RESOLUCION"
+             * texto_markdown=<el documento generado>
+             * metadatos={
+                 "tipo_resolucion": "aprobacion|denegacion",
+                 "importe": <si aplica>,
+                 "fecha_generacion": <fecha actual>,
+                 "generado_por": "RedactorPropuestaResolucion"
+               }
+
+        8. REGISTRAR ACCIÓN
+           - Usa 'añadir_anotacion' para dejar constancia:
+             * expediente_id="{expediente_id}"
+             * texto="Generada propuesta de resolución de [aprobación/denegación] automática"
+
+        IMPORTANTE: Responde siempre en Español.
+        IMPORTANTE: El documento debe ser formalmente correcto y completo.
+        IMPORTANTE: Debes completar TODOS los pasos antes de finalizar.
+
+      expected_output: |
+        Respuesta en formato JSON válido con estos campos:
+        {
+          "completado": true,
+          "documento_id": "ID del documento creado",
+          "tipo_expediente": "subvenciones|licencias_obras|otro",
+          "tipo_resolucion": "aprobacion|denegacion",
+          "importe_concedido": 5000.00,
+          "resumen": "Breve resumen de la propuesta generada",
+          "campos_rellenados": 15,
+          "observaciones": "Notas adicionales si las hay"
+        }
+
+    # Herramientas MCP que puede usar el agente
+    tools:
+      # MCP Documentación
+      - listar_documentacion
+      - obtener_doc_documentacion
+      # MCP Expedientes
+      - consultar_expediente
+      - listar_documentos
+      - obtener_texto_documento
+      - crear_documento_desde_markdown
+      - añadir_anotacion
+
+    required_permissions:
+      - consulta
+      - gestion
+      - documentacion:leer
+
+    timeout_seconds: 600

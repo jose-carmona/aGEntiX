@@ -15,12 +15,14 @@ try:
     from .base_real import AgentReal
     from .clasificador_expediente import ClasificadorExpediente
     from .redactor_situacion import RedactorSituacion
+    from .redactor_propuesta_resolucion import RedactorPropuestaResolucion
     CREWAI_AVAILABLE = True
 except (ImportError, RuntimeError) as e:
     # RuntimeError captura problemas como SQLite incompatible
     AgentReal = None
     ClasificadorExpediente = None
     RedactorSituacion = None
+    RedactorPropuestaResolucion = None
     CREWAI_AVAILABLE = False
 
 
@@ -37,6 +39,8 @@ if CREWAI_AVAILABLE:
         AGENT_REGISTRY["ClasificadorExpediente"] = ClasificadorExpediente
     if RedactorSituacion is not None:
         AGENT_REGISTRY["RedactorSituacion"] = RedactorSituacion
+    if RedactorPropuestaResolucion is not None:
+        AGENT_REGISTRY["RedactorPropuestaResolucion"] = RedactorPropuestaResolucion
 
 
 def get_agent_class(agent_name: str) -> AgentType:
@@ -79,7 +83,11 @@ def list_crewai_agents() -> list[str]:
         Lista de nombres de agentes CrewAI (vacía si CrewAI no está instalado)
     """
     if CREWAI_AVAILABLE:
-        return ["ClasificadorExpediente", "RedactorSituacion"]
+        return [
+            "ClasificadorExpediente",
+            "RedactorSituacion",
+            "RedactorPropuestaResolucion"
+        ]
     return []
 
 

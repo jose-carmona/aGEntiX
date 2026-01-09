@@ -2,7 +2,7 @@
 
 ## Objetivo
 
-Crear un nuevo agente (`RedactorPropuestaResolucion`) capaz de generar automáticamente un documento de **Propuesta de Resolución** para expedientes de subvenciones, utilizando:
+Crear un nuevo agente (`RedactorPropuestaResolucion`) capaz de generar automáticamente un documento de **Propuesta de Resolución** para **cualquier tipo de expediente**, utilizando:
 
 1. **Plantilla de documentación** leída via MCP Documentación
 2. **Datos del expediente** leídos via MCP Expedientes
@@ -29,7 +29,7 @@ Crear un nuevo agente (`RedactorPropuestaResolucion`) capaz de generar automáti
 │                                                                         │
 │  1. OBTENER PLANTILLA (MCP Documentación)                               │
 │     └─> obtener_doc_documentacion(                                      │
-│           tipo_expediente="subvenciones",                               │
+│           tipo_expediente=<tipo del expediente>,                        │
 │           tipo_documento="plantilla_propuesta_resolucion"               │
 │         )                                                               │
 │                                                                         │
@@ -86,38 +86,55 @@ Crear un nuevo agente (`RedactorPropuestaResolucion`) capaz de generar automáti
 
 La plantilla usa formato **Mustache** con placeholders `{{campo}}`:
 
-### Campos de la Plantilla (Subvenciones)
+### Campos de la Plantilla (Genéricos)
 
-#### Datos del Expediente
+Los campos varían según el tipo de expediente. La plantilla correspondiente define los campos específicos.
+
+#### Campos Comunes a Todos los Tipos de Expediente
 | Campo | Origen | Descripción |
 |-------|--------|-------------|
 | `{{numero_expediente}}` | expediente.id | Número del expediente |
-| `{{nombre_convocatoria}}` | expediente.datos | Nombre de la convocatoria |
+| `{{tipo_expediente}}` | expediente.tipo | Tipo de expediente |
 | `{{fecha_propuesta}}` | Generado | Fecha actual de la propuesta |
 | `{{fecha_solicitud}}` | expediente.fecha_inicio | Fecha de la solicitud |
 | `{{nombre_solicitante}}` | expediente.datos.solicitante | Nombre del solicitante |
 | `{{tipo_documento}}` | expediente.datos | DNI/NIF/CIF |
 | `{{numero_documento}}` | expediente.datos | Número del documento |
-| `{{nombre_proyecto}}` | expediente.datos | Título del proyecto |
+| `{{fundamentacion}}` | Generado | Artículos y normas aplicables |
+| `{{localidad}}` | Config | Municipio de emisión |
+| `{{nombre_tecnico}}` | JWT.sub | Nombre del técnico |
 
-#### Datos de Evaluación (del Informe de Situación)
+#### Campos Específicos del Informe de Situación
 | Campo | Origen | Descripción |
 |-------|--------|-------------|
-| `{{puntos_calidad}}` | informe | Puntuación calidad técnica (0-40) |
-| `{{puntos_viabilidad}}` | informe | Puntuación viabilidad (0-25) |
-| `{{puntos_impacto}}` | informe | Puntuación impacto social (0-20) |
-| `{{puntos_experiencia}}` | informe | Puntuación experiencia (0-15) |
-| `{{puntuacion_total}}` | Calculado | Suma de puntuaciones |
+| `{{valoracion}}` | informe | Valoración técnica del expediente |
+| `{{observaciones}}` | informe | Observaciones relevantes |
+| `{{recomendacion}}` | informe | Recomendación de resolución |
+| `{{antecedentes_adicionales}}` | informe | Hechos relevantes |
+
+#### Campos Específicos por Tipo de Expediente
+
+**Subvenciones:**
+- `{{nombre_convocatoria}}`, `{{nombre_proyecto}}`, `{{importe_solicitado}}`, `{{importe_concedido}}`
+- Puntuaciones: `{{puntos_calidad}}`, `{{puntos_viabilidad}}`, `{{puntos_impacto}}`, `{{puntuacion_total}}`
+
+**Licencias de Obras:**
+- `{{direccion_obra}}`, `{{tipo_obra}}`, `{{superficie}}`, `{{presupuesto_ejecucion}}`
+- Condiciones: `{{condiciones_licencia}}`, `{{plazo_ejecucion}}`
+
+**Autorizaciones:**
+- `{{tipo_autorizacion}}`, `{{objeto_autorizacion}}`, `{{vigencia}}`
+- Condiciones: `{{condiciones_especificas}}`, `{{limitaciones}}`
+
+**Otros tipos:**
+- El agente adapta los campos según la plantilla obtenida del MCP Documentación
 
 #### Datos de la Propuesta (Generados por el Agente)
 | Campo | Origen | Descripción |
 |-------|--------|-------------|
-| `{{fundamentacion}}` | Generado | Artículos y normas aplicables |
-| `{{antecedentes_adicionales}}` | informe | Hechos relevantes |
-| `{{importe_concedido}}` | informe/datos | Importe si aprobación |
+| `{{tipo_resolucion}}` | Determinado | "aprobacion" o "denegacion" |
 | `{{motivos_denegacion}}` | Generado | Motivos si denegación |
-| `{{localidad}}` | Config | Municipio de emisión |
-| `{{nombre_tecnico}}` | JWT.sub | Nombre del técnico |
+| `{{condiciones}}` | Generado | Condiciones si aprobación parcial |
 
 ---
 
@@ -133,7 +150,7 @@ La plantilla usa formato **Mustache** con placeholders `{{campo}}`:
 RedactorPropuestaResolucion:
   type: crewai
   enabled: true
-  description: "Genera una Propuesta de Resolución basada en plantilla y datos del expediente"
+  description: "Genera una Propuesta de Resolución basada en plantilla y datos del expediente (cualquier tipo)"
 
   # Configuración del LLM
   llm:
@@ -149,22 +166,26 @@ RedactorPropuestaResolucion:
     role: "Redactor de Propuestas de Resolución Administrativa"
     goal: |
       Generar una Propuesta de Resolución formal y completa para el expediente {expediente_id},
-      utilizando la plantilla oficial y los datos extraídos del expediente y su informe de situación.
+      utilizando la plantilla oficial correspondiente al tipo de expediente y los datos extraídos
+      del expediente y su informe de situación.
       {additional_goal}
     backstory: |
       Eres un experto jurídico-administrativo de la administración pública española,
-      especializado en la redacción de propuestas de resolución para expedientes de subvenciones.
+      especializado en la redacción de propuestas de resolución para cualquier tipo de expediente
+      administrativo.
 
       Tu experiencia incluye:
-      - Conocimiento profundo de la Ley 38/2003 General de Subvenciones
+      - Conocimiento profundo del procedimiento administrativo común (Ley 39/2015)
+      - Dominio de normativa sectorial: subvenciones (Ley 38/2003), urbanismo, autorizaciones, etc.
       - Redacción de documentos administrativos siguiendo plantillas oficiales
-      - Análisis de expedientes y valoración de solicitudes
-      - Fundamentación jurídica de resoluciones
+      - Análisis de expedientes y valoración de solicitudes de diversa naturaleza
+      - Fundamentación jurídica adaptada a cada tipo de procedimiento
 
-      Siempre sigues estrictamente la plantilla proporcionada, sustituyendo los campos
-      marcados con {{campo}} por los valores correspondientes del expediente.
+      Siempre sigues estrictamente la plantilla proporcionada para el tipo de expediente,
+      sustituyendo los campos marcados con {{campo}} por los valores correspondientes.
 
-      Generas documentos formales, precisos y jurídicamente correctos.
+      Generas documentos formales, precisos y jurídicamente correctos, adaptando el lenguaje
+      y la fundamentación al tipo específico de expediente.
     verbose: true
     allow_delegation: false
     max_rpm: 10
@@ -277,9 +298,13 @@ RedactorPropuestaResolucion:
 
 ---
 
-## Ejemplo de Ejecución
+## Ejemplos de Ejecución
 
-### Input
+El agente funciona con cualquier tipo de expediente. A continuación se muestran ejemplos para diferentes tipos.
+
+### Ejemplo 1: Expediente de Subvenciones
+
+#### Input
 
 ```json
 {
@@ -292,12 +317,13 @@ RedactorPropuestaResolucion:
 }
 ```
 
-### Output Esperado
+#### Output Esperado
 
 ```json
 {
   "completado": true,
   "documento_id": "DOC-123456",
+  "tipo_expediente": "subvenciones",
   "tipo_resolucion": "aprobacion",
   "importe_concedido": 5000.00,
   "resumen": "Propuesta de resolución favorable para subvención de 5.000€ a la Asociación Cultural Sol Naciente para el proyecto Festival de Primavera 2024. Puntuación total: 78/100.",
@@ -306,12 +332,42 @@ RedactorPropuestaResolucion:
 }
 ```
 
-### Documento Generado (Ejemplo)
+### Ejemplo 2: Expediente de Licencia de Obras
+
+#### Input
+
+```json
+{
+  "agent": "RedactorPropuestaResolucion",
+  "context": {
+    "expediente_id": "LIC-2024-0456",
+    "tarea_id": "TAREA-PROPUESTA-002"
+  }
+}
+```
+
+#### Output Esperado
+
+```json
+{
+  "completado": true,
+  "documento_id": "DOC-789012",
+  "tipo_expediente": "licencias_obras",
+  "tipo_resolucion": "aprobacion",
+  "resumen": "Propuesta de concesión de licencia de obras para reforma de local comercial en C/ Mayor 15. Superficie: 120m². Plazo de ejecución: 6 meses.",
+  "campos_rellenados": 14,
+  "observaciones": "Sujeta a cumplimiento de normativa de accesibilidad"
+}
+```
+
+### Documento Generado (Ejemplo Subvenciones)
 
 ```markdown
 # PROPUESTA DE RESOLUCIÓN
 
 **Expediente:** EXP-2024-001
+
+**Tipo:** Subvenciones
 
 **Convocatoria:** Subvenciones Culturales 2024
 
@@ -405,25 +461,28 @@ Si el informe no existe, el agente puede:
 
 ## Plan de Implementación
 
-### Fase 1: Configuración del Agente
-- [ ] Añadir configuración a `agents.yaml`
-- [ ] Verificar que las tools de MCP documentación están disponibles
-- [ ] Probar acceso a plantillas via MCP documentación
+### Fase 1: Configuración del Agente ✅ COMPLETADA
+- [x] Añadir configuración a `agents.yaml`
+- [x] Verificar que las tools de MCP documentación están disponibles
+- [x] Probar acceso a plantillas via MCP documentación
 
-### Fase 2: Integración MCP Multi-Server
-- [ ] Verificar routing de tools a MCPs correctos
-- [ ] Probar flujo completo: documentación → expedientes → documentación
-- [ ] Validar permisos JWT para ambos MCPs
+### Fase 2: Integración MCP Multi-Server ✅ COMPLETADA
+- [x] Verificar routing de tools a MCPs correctos (servidor unificado)
+- [x] Probar flujo completo: documentación → expedientes → documentación
+- [x] Validar permisos JWT para ambos módulos
 
-### Fase 3: Generación de Documento
-- [ ] Implementar sustitución de campos {{campo}}
-- [ ] Validar que no queden campos sin sustituir
-- [ ] Probar con diferentes tipos de expediente
+### Fase 3: Generación de Documento ✅ COMPLETADA
+- [x] Implementar sustitución de campos {{campo}} (en task description)
+- [x] Validar que no queden campos sin sustituir (instrucciones al agente)
+- [x] Verificar plantillas para subvenciones y licencias_obras
 
-### Fase 4: Pruebas End-to-End
-- [ ] Test con expediente completo (informe previo)
+### Fase 4: Pruebas End-to-End ⏳ PENDIENTE
+- [ ] Test con expediente de subvenciones (completo con informe previo)
+- [ ] Test con expediente de licencias de obras
+- [ ] Test con expediente de autorizaciones
 - [ ] Test con expediente sin informe (modo flexible)
 - [ ] Test de error (expediente inexistente)
+- [ ] Test de error (tipo de expediente sin plantilla)
 - [ ] Test de permisos insuficientes
 
 ---
@@ -435,7 +494,8 @@ Si el informe no existe, el agente puede:
 1. **Consistencia**: La misma plantilla para humanos y agentes
 2. **Mantenibilidad**: Cambios en plantilla se reflejan automáticamente
 3. **Auditoría**: Registro de qué versión de plantilla se usó
-4. **Flexibilidad**: Diferentes plantillas por tipo de expediente
+4. **Flexibilidad**: Diferentes plantillas por tipo de expediente (subvenciones, licencias, autorizaciones, etc.)
+5. **Escalabilidad**: Nuevos tipos de expediente solo requieren añadir su plantilla al MCP Documentación
 
 ### Por qué depender del Informe de Situación
 
@@ -449,9 +509,9 @@ Si el informe no existe, el agente puede:
 | Aspecto | Decisión | Motivo |
 |---------|----------|--------|
 | Tipo de resolución (aprobar/denegar) | **Humano** | Decisión final legal |
-| Importe exacto | **Humano** | Decisión presupuestaria |
+| Condiciones específicas (importes, plazos, requisitos) | **Humano** | Decisión discrecional |
 | Redacción del documento | **IA** | Tarea mecánica basada en plantilla |
 | Fundamentación jurídica | **IA** | Basada en normativa predefinida |
 | Revisión final | **Humano** | Control de calidad obligatorio |
 
-El agente genera una **PROPUESTA** que debe ser revisada y aprobada por un humano antes de convertirse en RESOLUCIÓN definitiva.
+El agente genera una **PROPUESTA** que debe ser revisada y aprobada por un humano antes de convertirse en RESOLUCIÓN definitiva. Esto aplica a todos los tipos de expediente: subvenciones, licencias, autorizaciones, etc.
