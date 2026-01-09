@@ -88,7 +88,7 @@ agents:
       temperature: 0.2
       # Rate limiting para evitar errores 429
       num_retries: 5          # Reintentos automáticos
-      request_timeout: 120    # Timeout por request (segundos)
+      request_timeout: 240    # Timeout por request (segundos)
 
     # Definición del agente CrewAI
     crewai_agent:
@@ -114,7 +114,7 @@ agents:
         el estado de cualquier expediente sin tener que revisar todos los documentos.
       verbose: true
       allow_delegation: false
-      max_rpm: 10             # Máx 10 requests/minuto a la API
+      max_rpm: 5             # Máx 10 requests/minuto a la API
 
     # Tarea a ejecutar
     crewai_task:
