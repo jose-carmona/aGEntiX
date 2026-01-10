@@ -197,8 +197,8 @@ Para comprobar que todo el sistema funciona correctamente, usa el script `test-a
 
 ```bash
 # 1. Iniciar los servidores (en terminales separadas)
-./run-api.sh                                    # API REST (puerto 8080)
-cd src/mcp_mock/mcp_expedientes && uvicorn mcp_expedientes.server_http:app --port 8000  # MCP
+./run-api.sh                                    # API REST (puerto 8080) en una shell
+./run-mcp.sh                                    # MCP (puerto 8001) en otra shell
 
 # 2. Ejecutar test E2E
 ./test-agent.sh EXP-2024-001 AgenteTestSimple
@@ -250,9 +250,13 @@ La API estará disponible en `http://localhost:8080` con documentación interact
 #### 3. Ejecutar Agente vía API
 
 ```bash
-# Generar token JWT válido
-cd src/mcp_mock/mcp_expedientes
-python -m mcp_expedientes.generate_token EXP-2024-001
+# Generar token JWT válido (desde la raíz del proyecto)
+python3 -c "
+import sys; sys.path.insert(0, 'src')
+from backoffice.auth.jwt_generator import generate_jwt
+result = generate_jwt(expediente_id='EXP-2024-001', permisos=['consulta', 'gestion'])
+print(result.token)
+"
 
 # Ejecutar agente (reemplazar <TOKEN> con el token generado)
 curl -X POST http://localhost:8080/api/v1/agent/execute \
@@ -359,9 +363,16 @@ if __name__ == "__main__":
 ### Generar Token JWT
 
 ```bash
-cd src/mcp_mock/mcp_expedientes
-python -m mcp_expedientes.generate_token EXP-2024-001
+# Desde la raíz del proyecto
+python3 -c "
+import sys; sys.path.insert(0, 'src')
+from backoffice.auth.jwt_generator import generate_jwt
+result = generate_jwt(expediente_id='EXP-2024-001', permisos=['consulta', 'gestion'])
+print(result.token)
+"
 ```
+
+O usar el script `test-agent.sh` que genera el token automáticamente.
 
 ## Estructura del Proyecto
 
