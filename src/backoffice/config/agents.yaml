@@ -335,3 +335,42 @@ agents:
       - documentacion:leer
 
     timeout_seconds: 600
+
+  # ==========================================================================
+  # AgenteTestSimple - Agente de prueba E2E (solo responde OK)
+  # ==========================================================================
+
+  AgenteTestSimple:
+    type: crewai
+    enabled: true
+    description: "Agente de prueba E2E - solo responde OK"
+
+    llm:
+      provider: anthropic
+      model: claude-3-haiku-20240307
+      max_tokens: 100
+      temperature: 0
+
+    crewai_agent:
+      role: "Agente de Prueba"
+      goal: "Responder OK para confirmar que el sistema funciona"
+      backstory: |
+        Eres un agente de prueba. Tu única función es responder "OK"
+        para verificar que el sistema de ejecución de agentes funciona correctamente.
+      verbose: false
+      allow_delegation: false
+
+    crewai_task:
+      description: |
+        Responde exactamente "OK" para confirmar que el sistema funciona.
+        No hagas nada más. Solo responde OK.
+      expected_output: |
+        Respuesta en formato JSON válido con estos campos:
+        {
+          "resultado": "OK"
+        }
+
+    tools: []
+
+    required_permissions: []
+    timeout_seconds: 30

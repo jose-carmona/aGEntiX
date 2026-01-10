@@ -107,6 +107,8 @@ mcp_servers:
 
 1. **ClasificadorExpediente**: Clasifica expedientes por tipo usando IA
 2. **RedactorSituacion**: Genera resúmenes de situación del expediente
+3. **RedactorPropuestaResolucion**: Genera propuestas de resolución basadas en plantilla
+4. **AgenteTestSimple**: Agente de prueba E2E (solo responde "OK")
 
 ### Componentes de Soporte
 
@@ -188,6 +190,39 @@ El proyecto incluye un **script unificado v2.0** con configuración declarativa 
 | Error Handling | 15 | Resilience (12 activos, 3 skip) |
 
 ## Uso del Sistema
+
+### Verificación Rápida del Sistema
+
+Para comprobar que todo el sistema funciona correctamente, usa el script `test-agent.sh` con el agente de prueba `AgenteTestSimple`:
+
+```bash
+# 1. Iniciar los servidores (en terminales separadas)
+./run-api.sh                                    # API REST (puerto 8080)
+cd src/mcp_mock/mcp_expedientes && uvicorn mcp_expedientes.server_http:app --port 8000  # MCP
+
+# 2. Ejecutar test E2E
+./test-agent.sh EXP-2024-001 AgenteTestSimple
+```
+
+El script automatiza todo el flujo:
+1. Genera un token JWT válido
+2. Lista los agentes disponibles
+3. Ejecuta el agente seleccionado
+4. Consulta el estado de la ejecución
+
+**AgenteTestSimple** es un agente de prueba que solo responde "OK", útil para verificar que:
+- La API REST responde correctamente
+- La carga de agentes desde `agents.yaml` funciona
+- CrewAI se invoca correctamente
+- El pipeline completo de ejecución funciona
+
+```bash
+# Ejemplos de uso
+./test-agent.sh                                  # Usa EXP-2024-001 y ValidadorDocumental
+./test-agent.sh EXP-2024-002                     # Especifica expediente
+./test-agent.sh EXP-2024-001 ClasificadorExpediente  # Especifica agente
+./test-agent.sh EXP-2024-001 AgenteTestSimple    # Agente de prueba (solo responde OK)
+```
 
 ### Opción A: API REST (Recomendado para Integración)
 
@@ -378,6 +413,8 @@ aGEntiX/
 │   │   │   ├── base_real.py        # Base para CrewAI
 │   │   │   ├── clasificador_expediente.py
 │   │   │   ├── redactor_situacion.py
+│   │   │   ├── redactor_propuesta_resolucion.py
+│   │   │   ├── agente_test_simple.py  # Agente E2E de prueba
 │   │   │   ├── registry.py         # Registro de agentes
 │   │   │   ├── mcp_tool_wrapper.py # Wrapper MCP → CrewAI
 │   │   │   └── schema_builder.py   # Constructor schemas
@@ -417,6 +454,7 @@ aGEntiX/
 ├── ROADMAP.md                      # Hoja de ruta del proyecto
 ├── run-tests.sh                    # Script unificado de tests
 ├── run-api.sh                      # Script para iniciar API
+├── test-agent.sh                   # Script para probar agentes E2E
 └── README.md                       # Este archivo
 ```
 
