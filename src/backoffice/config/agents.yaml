@@ -194,8 +194,8 @@ agents:
     # Configuración del LLM
     llm:
       provider: anthropic
-      model: claude-3-haiku-20240307
-      max_tokens: 8192
+      model: claude-sonnet-4-5-20250929
+      max_tokens: 4096
       temperature: 0.1  # Baja para mayor consistencia en documentos formales
       num_retries: 5
       request_timeout: 180
@@ -227,7 +227,7 @@ agents:
         y la fundamentación al tipo específico de expediente.
       verbose: true
       allow_delegation: false
-      max_rpm: 10
+      max_rpm: 5
 
     # Tarea a ejecutar
     crewai_task:
@@ -289,12 +289,11 @@ agents:
              * nombre="propuesta_resolucion.md"
              * tipo="PROPUESTA_RESOLUCION"
              * texto_markdown=<el documento generado>
-             * metadatos={
-                 "tipo_resolucion": "aprobacion|denegacion",
-                 "importe": <si aplica>,
-                 "fecha_generacion": <fecha actual>,
-                 "generado_por": "RedactorPropuestaResolucion"
-               }
+             * metadatos con los campos:
+               - tipo_resolucion: "aprobacion" o "denegacion"
+               - importe: el importe concedido si aplica
+               - fecha_generacion: fecha actual
+               - generado_por: "RedactorPropuestaResolucion"
 
         8. REGISTRAR ACCIÓN
            - Usa 'añadir_anotacion' para dejar constancia:
