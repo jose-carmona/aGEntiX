@@ -263,17 +263,11 @@ curl -X POST http://localhost:8080/api/v1/agent/execute \
   -H "Authorization: Bearer <TOKEN>" \
   -H "Content-Type: application/json" \
   -d '{
-    "expediente_id": "EXP-2024-001",
-    "tarea_id": "TAREA-001",
-    "agent_config": {
-      "nombre": "ClasificadorExpediente",
-      "system_prompt": "Eres un clasificador de expedientes administrativos",
-      "modelo": "claude-3-5-sonnet",
-      "prompt_tarea": "Clasifica el expediente según su tipo",
-      "herramientas": ["consultar_expediente"]
-    },
-    "webhook_url": "http://example.com/callback",
-    "timeout_seconds": 300
+    "agent": "AgenteTestSimple",
+    "context": {
+      "expediente_id": "EXP-2024-001",
+      "tarea_id": "TAREA-001"
+    }
   }'
 
 # Consultar estado (reemplazar <RUN_ID> con el ID retornado)
@@ -282,12 +276,12 @@ curl http://localhost:8080/api/v1/agent/status/<RUN_ID>
 
 #### Endpoints Disponibles
 
+- **GET** `/api/v1/agent/agents` - Listar agentes disponibles
 - **POST** `/api/v1/agent/execute` - Ejecutar agente asíncronamente
 - **GET** `/api/v1/agent/status/{run_id}` - Consultar estado de ejecución
 - **GET** `/health` - Health check
 - **GET** `/metrics` - Métricas Prometheus
 - **GET** `/docs` - Documentación Swagger interactiva
-- **GET** `/` - Info de la API
 
 ### Opción B: Dashboard Web (Demostración)
 
