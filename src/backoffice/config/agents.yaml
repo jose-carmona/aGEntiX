@@ -83,7 +83,7 @@ agents:
     # Configuración del LLM
     llm:
       provider: anthropic
-      model: claude-3-haiku-20240307
+      model: claude-sonnet-4-5-20250929
       max_tokens: 4096
       temperature: 0.2
       # Rate limiting para evitar errores 429
