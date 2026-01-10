@@ -1,0 +1,240 @@
+{
+  "id": "EXP-2026-004",
+  "tipo": "SUBVENCIONES",
+  "estado": "EN_TRAMITE",
+  "fecha_inicio": "2026-01-02T09:00:00+00:00",
+  "datos": {
+    "solicitante": {
+      "nombre": "Asociación Cultural Sol Naciente",
+      "nif": "G14567890",
+      "direccion": "Avenida de la Cultura 45, 14005 Córdoba",
+      "email": "info@solnaciente.org",
+      "telefono": "+34 957 456 789"
+    },
+    "importe_solicitado": 8500.0,
+    "concepto": "Organización del Festival de Primavera 2026",
+    "cuenta_bancaria": "ES91 2100 4321 0123 4567 8901",
+    "documentacion_valida": true,
+    "convocatoria": {
+      "nombre": "Subvenciones para Actividades Culturales 2026",
+      "fecha_publicacion": "2025-12-01",
+      "medio_publicacion": "BOP de Córdoba núm. 230"
+    },
+    "proyecto": {
+      "nombre": "Festival de Primavera 2026",
+      "descripcion": "Festival cultural con actuaciones musicales, talleres artísticos y exposiciones durante el mes de abril, con especial énfasis en la promoción de artistas locales y la participación ciudadana.",
+      "fecha_inicio": "2026-04-01",
+      "fecha_fin": "2026-04-30",
+      "presupuesto_total": 12000.0,
+      "otras_aportaciones": 3500.0
+    }
+  },
+  "documentos": [
+    {
+      "id": "DOC-2026-004-001",
+      "nombre": "solicitud_subvencion.pdf",
+      "fecha": "2026-01-02T09:00:00Z",
+      "tipo": "SOLICITUD",
+      "ruta": "data/documentos/EXP-2026-004/solicitud_subvencion.pdf",
+      "hash_sha256": "a1b2c3d4e5f6789012345678901234567890123456789012345678901234abcd",
+      "tamano_bytes": 285432,
+      "validado": true,
+      "metadatos_extraidos": {
+        "tipo_procedimiento": "SUBVENCIONES",
+        "fecha_solicitud": "2026-01-02",
+        "solicitante": "Asociación Cultural Sol Naciente",
+        "nif_solicitante": "G14567890",
+        "importe_solicitado": 8500.0,
+        "concepto": "Organización del Festival de Primavera 2026",
+        "datos_contacto": {
+          "email": "info@solnaciente.org",
+          "telefono": "+34 957 456 789",
+          "direccion": "Avenida de la Cultura 45, 14005 Córdoba"
+        },
+        "cuenta_bancaria": "ES91 2100 4321 0123 4567 8901",
+        "representante_legal": "Antonio Ruiz Molina",
+        "cargo_representante": "Presidente"
+      },
+      "texto_markdown": "# Solicitud de Subvención\n\n## Convocatoria\n**Subvenciones para Actividades Culturales 2026**\n\n---\n\n## Datos del Solicitante\n\n| Campo | Valor |\n|-------|-------|\n| Denominación | Asociación Cultural Sol Naciente |\n| CIF | G14567890 |\n| Domicilio social | Avenida de la Cultura 45, 14005 Córdoba |\n| Email | info@solnaciente.org |\n| Teléfono | +34 957 456 789 |\n| Representante legal | Antonio Ruiz Molina |\n| Cargo | Presidente |\n\n## Datos del Proyecto\n\n**Título:** Festival de Primavera 2026\n\n**Descripción:**\nFestival cultural con actuaciones musicales, talleres artísticos y exposiciones durante el mes de abril de 2026. El evento se desarrollará en diversos espacios públicos de Córdoba, con especial énfasis en la promoción de artistas locales y la participación ciudadana.\n\n**Actividades previstas:**\n- 8 conciertos de música en directo (grupos locales y regionales)\n- 12 talleres artísticos para todas las edades\n- 3 exposiciones de arte contemporáneo\n- Mercadillo de artesanía local\n- Actividades infantiles\n\n**Período de ejecución:** 1 al 30 de abril de 2026\n\n## Presupuesto\n\n| Concepto | Importe |\n|----------|--------:|\n| Cachés artísticos | 4.500,00 € |\n| Alquiler equipos sonido/iluminación | 2.800,00 € |\n| Material talleres | 1.200,00 € |\n| Publicidad y cartelería | 1.500,00 € |\n| Seguros y permisos | 800,00 € |\n| Coordinación y logística | 1.200,00 € |\n| **TOTAL** | **12.000,00 €** |\n\n## Financiación\n\n| Fuente | Importe |\n|--------|--------:|\n| Subvención solicitada | 8.500,00 € |\n| Fondos propios asociación | 2.000,00 € |\n| Patrocinadores privados | 1.500,00 € |\n| **TOTAL** | **12.000,00 €** |\n\n**Importe solicitado:** 8.500,00 €\n\n**Cuenta bancaria para ingreso:**\nES91 2100 4321 0123 4567 8901\n\n## Documentación Aportada\n\n- [x] Estatutos de la asociación\n- [x] CIF de la entidad\n- [x] Acta de nombramiento del representante legal\n- [x] Justificante de titularidad bancaria\n- [x] Memoria descriptiva del proyecto\n- [x] Presupuesto detallado\n- [x] Declaración responsable\n\n## Declaración Responsable\n\nEl representante legal de la entidad solicitante declara bajo su responsabilidad que:\n- Los datos consignados son veraces\n- La entidad no se encuentra incursa en ninguna de las prohibiciones del artículo 13 de la Ley General de Subvenciones\n- La entidad se encuentra al corriente de sus obligaciones tributarias y con la Seguridad Social\n- No ha solicitado ni obtenido otras subvenciones para el mismo proyecto\n\n---\n\n**Firma del representante legal**\n\nEn Córdoba, a 2 de enero de 2026\n\n[Firma electrónica]\n\n*Antonio Ruiz Molina*\n*Presidente de la Asociación Cultural Sol Naciente*"
+    },
+    {
+      "id": "DOC-2026-004-002",
+      "nombre": "cif_asociacion.pdf",
+      "fecha": "2026-01-02T09:00:00Z",
+      "tipo": "IDENTIFICACION",
+      "ruta": "data/documentos/EXP-2026-004/cif_asociacion.pdf",
+      "hash_sha256": "b2c3d4e5f6789012345678901234567890123456789012345678901234abcde",
+      "tamano_bytes": 98765,
+      "validado": true,
+      "metadatos_extraidos": {
+        "numero_documento": "G14567890",
+        "tipo_documento": "CIF",
+        "denominacion": "Asociación Cultural Sol Naciente",
+        "forma_juridica": "Asociación",
+        "fecha_constitucion": "2015-03-20",
+        "domicilio_fiscal": "Avenida de la Cultura 45, 14005 Córdoba"
+      },
+      "texto_markdown": "# Certificado de Identificación Fiscal\n\n**AGENCIA ESTATAL DE ADMINISTRACIÓN TRIBUTARIA**\n\n---\n\n## CERTIFICADO\n\nSe certifica que la entidad:\n\n**ASOCIACIÓN CULTURAL SOL NACIENTE**\n\nCon domicilio fiscal en:\n**Avenida de la Cultura 45, 14005 CÓRDOBA**\n\nFigura inscrita en el Censo de Obligados Tributarios con el siguiente número de identificación fiscal:\n\n### CIF: G14567890\n\n| Dato | Valor |\n|------|-------|\n| Forma jurídica | Asociación |\n| Fecha de constitución | 20/03/2015 |\n| Actividad principal | Actividades culturales |\n| Epígrafe IAE | 965.2 - Espectáculos |\n\n---\n\nCertificado expedido a efectos de acreditar la identificación fiscal de la entidad.\n\nMadrid, a 15 de diciembre de 2025\n\n[Sello de la AEAT]\n\n*Código de verificación: AEAT-2025-G14567890-001*"
+    },
+    {
+      "id": "DOC-2026-004-003",
+      "nombre": "justificante_bancario.pdf",
+      "fecha": "2026-01-02T09:00:00Z",
+      "tipo": "BANCARIO",
+      "ruta": "data/documentos/EXP-2026-004/justificante_bancario.pdf",
+      "hash_sha256": "c3d4e5f6789012345678901234567890123456789012345678901234abcdef",
+      "tamano_bytes": 87654,
+      "validado": true,
+      "metadatos_extraidos": {
+        "entidad": "Banco Santander S.A.",
+        "codigo_entidad": "2100",
+        "codigo_oficina": "4321",
+        "numero_cuenta_completo": "ES91 2100 4321 0123 4567 8901",
+        "iban": "ES91",
+        "digito_control": "01",
+        "numero_cuenta": "2345678901",
+        "tipo_cuenta": "CUENTA CORRIENTE",
+        "titular": "Asociación Cultural Sol Naciente",
+        "cif_titular": "G14567890",
+        "fecha_certificado": "2025-12-28",
+        "validez_dias": 30
+      },
+      "texto_markdown": "# Certificado de Titularidad Bancaria\n\n**BANCO SANTANDER S.A.**\n\nCIF: A39000013\nDomicilio Social: Paseo de Pereda 9-12, 39004 Santander\n\n---\n\n## CERTIFICADO\n\nD./Dña. **RESPONSABLE DE OFICINA 4321**\n\nEn calidad de apoderado de BANCO SANTANDER S.A.\n\n**CERTIFICA:**\n\nQue según los registros de esta entidad, la cuenta número:\n\n### ES91 2100 4321 0123 4567 8901\n\nFigura abierta a nombre de:\n\n**ASOCIACIÓN CULTURAL SOL NACIENTE**\nCIF: G14567890\n\n| Dato | Valor |\n|------|-------|\n| Tipo de cuenta | CUENTA CORRIENTE |\n| Fecha de apertura | 15/04/2015 |\n| Estado | ACTIVA |\n| Oficina | 4321 - CÓRDOBA CENTRO |\n\n---\n\nY para que conste y surta los efectos oportunos ante **DIPUTACIÓN PROVINCIAL DE CÓRDOBA**, se expide el presente certificado.\n\nEn Córdoba, a 28 de diciembre de 2025\n\n[Firma electrónica avanzada]\n\n---\n\n*Este documento ha sido firmado electrónicamente. Código de verificación: BSAN-2025-123456*\n\n*Validez: 30 días desde la fecha de expedición*"
+    },
+    {
+      "id": "DOC-2026-004-004",
+      "nombre": "memoria_proyecto.pdf",
+      "fecha": "2026-01-02T09:00:00Z",
+      "tipo": "MEMORIA",
+      "ruta": "data/documentos/EXP-2026-004/memoria_proyecto.pdf",
+      "hash_sha256": "d4e5f6789012345678901234567890123456789012345678901234abcdef01",
+      "tamano_bytes": 456789,
+      "validado": true,
+      "metadatos_extraidos": {
+        "titulo_proyecto": "Festival de Primavera 2026",
+        "tipo_memoria": "DESCRIPTIVA",
+        "paginas": 15,
+        "incluye_presupuesto": true,
+        "incluye_cronograma": true
+      },
+      "texto_markdown": "# Memoria Descriptiva del Proyecto\n\n## Festival de Primavera 2026\n\n**Asociación Cultural Sol Naciente**\n\n---\n\n## 1. Introducción\n\nLa Asociación Cultural Sol Naciente presenta el proyecto \"Festival de Primavera 2026\", una iniciativa cultural que busca dinamizar la vida cultural de Córdoba durante el mes de abril, promoviendo la participación ciudadana y el talento local.\n\n## 2. Justificación\n\nCórdoba cuenta con un rico patrimonio cultural que debe ser complementado con actividades culturales contemporáneas que fomenten:\n- La participación activa de los ciudadanos\n- La promoción de artistas y creadores locales\n- El acceso universal a la cultura\n- La cohesión social a través del arte\n\n## 3. Objetivos\n\n### 3.1 Objetivo General\nOrganizar un festival cultural de calidad que dinamice la vida cultural de la ciudad durante el mes de abril.\n\n### 3.2 Objetivos Específicos\n- Programar 8 conciertos con grupos locales y regionales\n- Realizar 12 talleres artísticos para todas las edades\n- Montar 3 exposiciones de arte contemporáneo\n- Alcanzar una participación de 5.000 personas\n- Dar visibilidad a 30 artistas locales\n\n## 4. Descripción de Actividades\n\n### 4.1 Conciertos\n- 4 conciertos de música flamenca y fusión\n- 2 conciertos de música clásica\n- 2 conciertos de música contemporánea/indie\n\n### 4.2 Talleres\n- Pintura y dibujo (4 sesiones)\n- Cerámica (3 sesiones)\n- Fotografía (3 sesiones)\n- Escritura creativa (2 sesiones)\n\n### 4.3 Exposiciones\n- \"Córdoba Contemporánea\" - Artistas visuales locales\n- \"Memoria Viva\" - Fotografía documental\n- \"Nuevos Talentos\" - Jóvenes creadores\n\n## 5. Cronograma\n\n| Semana | Actividades |\n|--------|-------------|\n| 1-7 abril | Inauguración, 2 conciertos, 3 talleres |\n| 8-14 abril | 2 conciertos, 4 talleres, exposición 1 |\n| 15-21 abril | 2 conciertos, 3 talleres, exposición 2 |\n| 22-30 abril | 2 conciertos, 2 talleres, exposición 3, clausura |\n\n## 6. Presupuesto Detallado\n\n| Partida | Desglose | Importe |\n|---------|----------|--------:|\n| Cachés artísticos | 8 grupos x 562,50€ | 4.500,00 € |\n| Equipos técnicos | Sonido + iluminación | 2.800,00 € |\n| Material talleres | 12 talleres x 100€ | 1.200,00 € |\n| Publicidad | Cartelería + digital | 1.500,00 € |\n| Seguros y permisos | RC + ocupación | 800,00 € |\n| Coordinación | Personal técnico | 1.200,00 € |\n| **TOTAL** | | **12.000,00 €** |\n\n## 7. Impacto Social\n\nEl proyecto generará:\n- Empleo temporal para 15 personas\n- Visibilidad para 30 artistas locales\n- Dinamización del comercio local\n- Fortalecimiento del tejido asociativo\n- Oferta cultural gratuita para la ciudadanía\n\n## 8. Experiencia de la Entidad\n\nLa Asociación Cultural Sol Naciente, fundada en 2015, ha organizado:\n- Festival de Verano 2023, 2024 y 2025 (3.000+ asistentes/edición)\n- Ciclo de Conciertos \"Noches de Luna\" (12 ediciones)\n- Talleres permanentes de arte (500+ participantes/año)\n\n## 9. Equipo Organizador\n\n| Nombre | Cargo | Función |\n|--------|-------|--------|\n| Antonio Ruiz Molina | Presidente | Dirección general |\n| Carmen López García | Vicepresidenta | Coordinación artística |\n| Miguel Fernández Soto | Tesorero | Gestión económica |\n| Laura Martín Pérez | Secretaria | Comunicación |\n\n---\n\n*Documento elaborado por la Asociación Cultural Sol Naciente*\n*Córdoba, diciembre de 2025*"
+    },
+    {
+      "id": "DOC-2026-004-005",
+      "nombre": "informe_situacion.md",
+      "fecha": "2026-01-07T14:30:00.000000",
+      "tipo": "INFORME",
+      "ruta": "data/documentos/EXP-2026-004/informe_situacion.md",
+      "hash_sha256": "e5f6789012345678901234567890123456789012345678901234abcdef0123",
+      "tamano_bytes": 3200,
+      "validado": true,
+      "metadatos_extraidos": {
+        "tipo_informe": "SITUACION",
+        "fecha_generacion": "2026-01-07",
+        "generado_por": "RedactorSituacion",
+        "recomendacion": "APROBAR",
+        "puntuacion_total": 82
+      },
+      "texto_markdown": "# Informe de Situación - EXP-2026-004\n\n**Expediente:** EXP-2026-004\n**Tipo:** SUBVENCIONES\n**Fecha de generación:** 7 de enero de 2026\n\n---\n\n## 1. Datos Generales\n\n| Campo | Valor |\n|-------|-------|\n| Número de expediente | EXP-2026-004 |\n| Tipo de procedimiento | Subvenciones para Actividades Culturales |\n| Estado actual | EN_TRAMITE |\n| Fecha de inicio | 2 de enero de 2026 |\n| Solicitante | Asociación Cultural Sol Naciente |\n| CIF | G14567890 |\n| Importe solicitado | 8.500,00 € |\n| Proyecto | Festival de Primavera 2026 |\n| Convocatoria | Subvenciones para Actividades Culturales 2026 |\n\n---\n\n## 2. Resumen de Documentación\n\n### Documentos Analizados\n\n| Documento | Tipo | Estado | Observaciones |\n|-----------|------|--------|---------------|\n| solicitud_subvencion.pdf | SOLICITUD | Válido | Completa, firmada electrónicamente |\n| cif_asociacion.pdf | IDENTIFICACION | Válido | CIF vigente, entidad inscrita |\n| justificante_bancario.pdf | BANCARIO | Válido | Cuenta activa, titular coincide |\n| memoria_proyecto.pdf | MEMORIA | Válido | Completa con presupuesto detallado |\n\n### Estado de la Documentación\n\n**Documentación completa y válida.**\n\nTodos los documentos requeridos han sido aportados y validados satisfactoriamente.\n\n---\n\n## 3. Valoración Técnica\n\nEl proyecto \"Festival de Primavera 2026\" consiste en la organización de un festival cultural durante el mes de abril con conciertos, talleres y exposiciones, promoviendo artistas locales y la participación ciudadana.\n\n### Puntuación por Criterios\n\n| Criterio | Máximo | Obtenido | Justificación |\n|----------|--------|----------|---------------|\n| Calidad técnica del proyecto | 40 | 34 | Proyecto bien estructurado con objetivos claros, cronograma detallado y equipo experimentado |\n| Viabilidad económica | 25 | 21 | Presupuesto realista y equilibrado, con aportación propia del 29% |\n| Impacto social | 20 | 17 | Alto impacto en la comunidad: 5.000 participantes previstos, 30 artistas locales beneficiados |\n| Experiencia del solicitante | 15 | 10 | Entidad con 10 años de trayectoria y eventos exitosos previos |\n| **TOTAL** | **100** | **82** | |\n\n### Umbral de aprobación: 50 puntos\n\n**La solicitud SUPERA ampliamente el umbral mínimo requerido.**\n\n---\n\n## 4. Análisis Presupuestario\n\n| Concepto | Importe |\n|----------|--------:|\n| Presupuesto total del proyecto | 12.000,00 € |\n| Subvención solicitada | 8.500,00 € |\n| Aportación propia | 2.000,00 € |\n| Otras aportaciones | 1.500,00 € |\n| **Porcentaje de subvención** | **70,83%** |\n\nEl porcentaje de subvención solicitado (70,83%) está dentro de los límites establecidos en las bases de la convocatoria (máximo 80%).\n\n---\n\n## 5. Cronología de Tramitación\n\n| Fecha | Acción | Usuario | Detalles |\n|-------|--------|---------|----------|\n| 02/01/2026 | Inicio expediente | Sistema | Registro electrónico |\n| 02/01/2026 | Documentación completa | Sistema | Todos los documentos aportados |\n| 03/01/2026 | Validación documentación | Automático | Agente ValidadorDocumental |\n| 07/01/2026 | Informe de situación | Automático | Agente RedactorSituacion |\n\n---\n\n## 6. Situación Actual y Observaciones\n\n### Estado\nEl expediente se encuentra en tramitación con **documentación completa y validada**.\n\n### Observaciones\n\n1. **Documentación completa**: Se han aportado todos los documentos requeridos por las bases de la convocatoria.\n\n2. **Puntuación muy favorable**: El proyecto obtiene 82 puntos sobre 100, superando ampliamente el umbral mínimo de 50 puntos.\n\n3. **Entidad solvente**: La Asociación Cultural Sol Naciente tiene una trayectoria consolidada de 10 años con eventos exitosos.\n\n4. **Impacto social significativo**: El proyecto beneficiará a más de 5.000 ciudadanos y dará visibilidad a 30 artistas locales.\n\n5. **Viabilidad económica**: El presupuesto es realista y la entidad aporta el 29% de fondos propios y patrocinios.\n\n### Recomendación\n\n**APROBAR** la subvención por importe de **8.500,00 €** para la organización del Festival de Primavera 2026.\n\nNo se detectan incidencias ni motivos para reducción del importe solicitado. El proyecto cumple todos los requisitos de las bases y obtiene una puntuación destacada.\n\n---\n\n*Informe generado automáticamente por el agente RedactorSituacion*\n\n**Fecha:** 7 de enero de 2026"
+    }
+  ],
+  "historial": [
+    {
+      "id": "HIST-2026-004-001",
+      "fecha": "2026-01-02T09:00:00Z",
+      "usuario": "Sistema",
+      "tipo": "SISTEMA",
+      "accion": "INICIAR_EXPEDIENTE",
+      "detalles": "Expediente iniciado desde registro electrónico"
+    },
+    {
+      "id": "HIST-2026-004-002",
+      "fecha": "2026-01-02T09:01:00Z",
+      "usuario": "Sistema",
+      "tipo": "SISTEMA",
+      "accion": "DOCUMENTACION_COMPLETA",
+      "detalles": "Todos los documentos requeridos han sido aportados"
+    },
+    {
+      "id": "HIST-2026-004-003",
+      "fecha": "2026-01-03T10:00:00Z",
+      "usuario": "Automático",
+      "tipo": "AGENTE",
+      "accion": "VALIDAR_DOCUMENTACION",
+      "detalles": "Agente ValidadorDocumental: Documentación validada correctamente"
+    },
+    {
+      "id": "HIST-2026-004-004",
+      "fecha": "2026-01-07T14:30:00Z",
+      "usuario": "Automático",
+      "tipo": "AGENTE",
+      "accion": "CREAR_DOCUMENTO_MARKDOWN",
+      "detalles": "Documento DOC-2026-004-005 creado: informe_situacion.md (tipo: INFORME)"
+    }
+  ],
+  "metadatos": {
+    "flujo_bpmn": {
+      "id": "SUBVENCIONES_CULTURALES_v2.0",
+      "nombre": "Tramitación de Subvenciones Culturales",
+      "version": "2.0",
+      "fecha_inicio_flujo": "2026-01-02T09:00:00Z"
+    },
+    "tarea_actual": {
+      "id": "TAREA-PROPUESTA-004",
+      "nombre": "GENERAR_PROPUESTA_RESOLUCION",
+      "tipo": "agent",
+      "fecha_inicio": "2026-01-07T15:00:00Z",
+      "fecha_limite": "2026-01-10T15:00:00Z",
+      "estado": "PENDIENTE",
+      "intentos": 0,
+      "responsable": "Automático",
+      "agente_asignado": "RedactorPropuestaResolucion"
+    },
+    "tareas_completadas": [
+      {
+        "id": "TAREA-INICIO-004",
+        "nombre": "INICIAR_EXPEDIENTE",
+        "fecha_inicio": "2026-01-02T09:00:00Z",
+        "fecha_fin": "2026-01-02T09:01:00Z",
+        "responsable": "Sistema",
+        "resultado": "COMPLETADO"
+      },
+      {
+        "id": "TAREA-VALIDAR-DOC-004",
+        "nombre": "VALIDAR_DOCUMENTACION",
+        "fecha_inicio": "2026-01-03T10:00:00Z",
+        "fecha_fin": "2026-01-03T10:15:00Z",
+        "responsable": "Automático",
+        "resultado": "COMPLETADO"
+      },
+      {
+        "id": "TAREA-INFORME-004",
+        "nombre": "GENERAR_INFORME_SITUACION",
+        "fecha_inicio": "2026-01-07T14:00:00Z",
+        "fecha_fin": "2026-01-07T14:30:00Z",
+        "responsable": "Automático",
+        "resultado": "COMPLETADO"
+      }
+    ],
+    "siguiente_tarea": {
+      "candidatos": [
+        {
+          "id": "TAREA-RESOLVER-004",
+          "nombre": "RESOLVER_SUBVENCION",
+          "condicion": "propuesta_resolucion_generada == true"
+        }
+      ]
+    },
+    "evaluacion": {
+      "puntuacion_total": 82,
+      "umbral_aprobacion": 50,
+      "resultado": "SUPERA_UMBRAL",
+      "criterios": {
+        "calidad_tecnica": {"maximo": 40, "obtenido": 34},
+        "viabilidad_economica": {"maximo": 25, "obtenido": 21},
+        "impacto_social": {"maximo": 20, "obtenido": 17},
+        "experiencia_solicitante": {"maximo": 15, "obtenido": 10}
+      }
+    }
+  }
+}
