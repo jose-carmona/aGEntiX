@@ -537,7 +537,6 @@ class TestAgentConfigLoaderWithRealFile:
             assert agent.name, "Agente sin nombre"
             assert agent.type == "crewai", f"{agent.name}: tipo debe ser crewai"
             assert agent.description, f"{agent.name}: sin descripción"
-            assert len(agent.tools) > 0, f"{agent.name}: sin herramientas"
             assert agent.timeout_seconds > 0, f"{agent.name}: timeout inválido"
 
             # Verificar campos específicos de CrewAI

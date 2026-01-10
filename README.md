@@ -305,55 +305,6 @@ cd frontend && npm run dev
 
 **Documentación completa del frontend:** Ver [frontend/README.md](frontend/README.md)
 
-### Opción C: Uso Programático (Back-Office Directo)
-
-Para integración avanzada o testing:
-
-```python
-import asyncio
-from backoffice.executor import AgentExecutor
-from backoffice.models import AgentConfig
-from backoffice.settings import settings
-
-async def main():
-    # 1. Crear executor
-    executor = AgentExecutor(
-        mcp_config_path=settings.MCP_CONFIG_PATH,
-        log_dir=settings.LOG_DIR,
-        jwt_secret=settings.JWT_SECRET
-    )
-
-    # 2. Configurar agente
-    agent_config = AgentConfig(
-        nombre="ClasificadorExpediente",
-        system_prompt="Eres un clasificador de expedientes administrativos",
-        modelo="claude-3-5-sonnet-20241022",
-        prompt_tarea="Clasifica el expediente según su tipo",
-        herramientas=["consultar_expediente", "actualizar_datos"]
-    )
-
-    # 3. Token JWT válido (usar generate_token.py)
-    token = "eyJ..."
-
-    # 4. Ejecutar agente
-    resultado = await executor.execute(
-        token=token,
-        expediente_id="EXP-2024-001",
-        tarea_id="TAREA-CLASIFICAR-001",
-        agent_config=agent_config
-    )
-
-    # 5. Verificar resultado
-    if resultado.success:
-        print(f"✅ Agente ejecutado: {resultado.agent_run_id}")
-        print(f"   Mensaje: {resultado.resultado['mensaje']}")
-    else:
-        print(f"❌ Error: {resultado.error.codigo}")
-
-if __name__ == "__main__":
-    asyncio.run(main())
-```
-
 ### Generar Token JWT
 
 ```bash
