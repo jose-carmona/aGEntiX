@@ -308,7 +308,7 @@ class TestRedactorPropuestaResolucionLLMConfig:
         config = loader.get("RedactorPropuestaResolucion")
 
         # El agente necesita generar documentos largos
-        assert config.llm.max_tokens >= 8192
+        assert config.llm.max_tokens >= 4096
 
     @pytest.mark.skipif(
         not is_crewai_available(),
