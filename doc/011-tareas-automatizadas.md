@@ -1,4 +1,4 @@
-# Tareas Ya Automatizadas
+# Tareas ya Automatizadas
 
 Tareas que actualmente GEX automatiza **sin necesidad de IA**:
 

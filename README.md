@@ -1,6 +1,6 @@
 # aGEntiX
 
-**Sistema de Agentes IA para Automatización de Workflows Administrativos en GEX**
+Sistema de Agentes IA para Automatización de Workflows Administrativos en GEX
 
 ## Descripción
 
@@ -21,13 +21,6 @@ GEX es la aplicación central de gestión administrativa desarrollada por Eprins
 
 **Ver [ROADMAP.md](ROADMAP.md) para detalles completos de progreso y próximos pasos.**
 
-### Calidad del Código
-
-- **Tests:** 306 tests (300 PASS, 6 SKIP)
-- **Cobertura PII:** 8 tipos de datos personales protegidos
-- **Vulnerabilidades:** 0
-- **Cumplimiento:** GDPR/LOPD/ENS
-
 ## Concepto Central
 
 La propuesta de aGEntiX introduce un nuevo tipo de acción en el modelo BPMN de GEX: las **acciones de tipo Agente**. Este enfoque permite:
@@ -41,7 +34,7 @@ La propuesta de aGEntiX introduce un nuevo tipo de acción en el modelo BPMN de 
 
 ### 1. Automatizar tareas administrativas de bajo riesgo
 
-Reducir la carga de trabajo manual del personal administrativo en tareas repetitivas que no requieren decisiones complejas, pero superan las capacidades de los sistemas de automatización tradicionales basados en plantillas.
+Reducir la carga de trabajo manual del personal administrativo en tareas repetitivas que no requieren decisiones complejas, pero superan las capacidades de los sistemas de automatización tradicionales basados en plantillas o en reglas.
 
 ### 2. Asistir en el análisis de información sin reemplazar el juicio humano
 
@@ -79,9 +72,9 @@ mcp_servers:
     url: http://localhost:8000
     enabled: true  # ✅ Activo
 
-  - id: firma
-    name: "MCP Firma Electrónica"
-    url: http://mcp-firma:8001
+  - id: documentacion
+    name: "MCP Documentación"
+    url: http://mcp-documentacion:8001
     enabled: false  # Futuro
 
   - id: notificaciones
@@ -94,12 +87,51 @@ mcp_servers:
 
 ## Componentes Principales
 
-- **AgentExecutor**: Orquestador principal del sistema
-- **MCPClientRegistry**: Routing automático de herramientas entre múltiples MCPs
-- **MCPClient**: Cliente de bajo nivel para comunicación JSON-RPC 2.0 con servidores MCP
-- **JWTValidator**: Validación completa de tokens (10 claims)
-- **AuditLogger**: Logging estructurado con redacción automática de PII
-- **PIIRedactor**: Protección de datos personales (GDPR/LOPD/ENS)
+El Back-Office de agentes (`src/backoffice/`) se organiza en las siguientes capas:
+
+### Orquestación
+
+| Componente | Ubicación | Descripción |
+|------------|-----------|-------------|
+| **AgentExecutor** | `executor.py` | Orquestador principal. Coordina validación JWT, configuración MCP, logging y ejecución de agentes. Soporta inyección de dependencias para testing. |
+| **ExecutorFactory** | `executor_factory.py` | Factory que crea AgentExecutor con implementaciones por defecto. Provee backward compatibility. |
+
+### Autenticación
+
+| Componente | Ubicación | Descripción |
+|------------|-----------|-------------|
+| **JWTValidator** | `auth/jwt_validator.py` | Valida tokens JWT con 10 claims obligatorios (iss, sub, aud, exp, iat, nbf, jti, exp_id, permisos, firma). |
+| **JWTGenerator** | `auth/jwt_generator.py` | Genera tokens JWT para ejecución de agentes con los claims requeridos. |
+
+### Model Context Protocol (MCP)
+
+| Componente | Ubicación | Descripción |
+|------------|-----------|-------------|
+| **MCPClient** | `mcp/client.py` | Cliente HTTP dual (sync + async) para comunicación JSON-RPC 2.0 con servidores MCP. Manejo semántico de errores. |
+| **MCPClientRegistry** | `mcp/registry.py` | Registro plug-and-play de clientes MCP. Discovery automático de tools y routing transparente. |
+
+### Agentes CrewAI
+
+| Componente | Ubicación | Descripción |
+|------------|-----------|-------------|
+| **AgentReal** | `agents/base_real.py` | Clase base abstracta para agentes CrewAI. Gestiona LLM, tools MCP y ejecución de crews. |
+| **AgentRegistry** | `agents/registry.py` | Registro centralizado de clases de agentes. Mapea nombres a implementaciones. |
+| **MCPToolFactory** | `agents/mcp_tool_wrapper.py` | Factory que expone herramientas MCP como Tools de CrewAI con schemas dinámicos. |
+| **SchemaBuilder** | `agents/schema_builder.py` | Construye modelos Pydantic dinámicamente desde JSON Schema (MCP → CrewAI). |
+
+### Logging y Compliance
+
+| Componente | Ubicación | Descripción |
+|------------|-----------|-------------|
+| **PIIRedactor** | `logging/pii_redactor.py` | Redacta automáticamente 8 tipos de PII (DNI, NIE, email, teléfonos, IBAN, tarjetas, CCC). Cumple GDPR/LOPD/ENS. |
+| **AuditLogger** | `logging/audit_logger.py` | Genera logs estructurados en JSON lines. Integra PIIRedactor automáticamente. |
+
+### Configuración
+
+| Componente | Ubicación | Descripción |
+|------------|-----------|-------------|
+| **AgentConfigLoader** | `config/agent_config_loader.py` | Carga definiciones de agentes desde `agents.yaml`. Soporta agentes mock y CrewAI. |
+| **MCPServersConfig** | `config/models.py` | Modelos Pydantic para configuración de servidores MCP desde `mcp_servers.yaml`. |
 
 ## Agentes Disponibles
 
@@ -231,8 +263,7 @@ Para integración programática o automatización:
 #### 1. Iniciar Servidor MCP Expedientes
 
 ```bash
-cd src/mcp_mock/mcp_expedientes
-python -m uvicorn mcp_expedientes.server_http:app --reload --port 8000
+./run-mcp.sh
 ```
 
 #### 2. Lanzar API REST
