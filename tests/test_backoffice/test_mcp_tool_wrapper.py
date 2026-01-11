@@ -1,10 +1,10 @@
 # tests/test_backoffice/test_mcp_tool_wrapper.py
 
 """
-Tests para MCPTool wrapper - manejo de errores semánticos.
+Tests para MCPTool wrapper - manejo de errores FAIL-FAST.
 
-Verifica que los errores MCP se propagan con códigos semánticos
-para que el agente pueda tomar decisiones de retry diferenciadas.
+Verifica que los errores MCP se propagan como excepciones para
+detener inmediatamente la ejecución del agente.
 """
 
 import pytest
@@ -62,126 +62,115 @@ def mcp_tool(mock_registry, mock_logger):
 
 
 class TestMCPToolErrorHandling:
-    """Tests para manejo de errores semánticos"""
+    """Tests para manejo de errores FAIL-FAST"""
 
-    def test_connection_error_preserves_code(self, mcp_tool, mock_registry):
-        """Test: MCPConnectionError preserva código y es retriable"""
+    def test_connection_error_raises_exception(self, mcp_tool, mock_registry):
+        """Test: MCPConnectionError lanza RuntimeError (fail-fast)"""
         mock_registry.call_tool_sync.side_effect = MCPConnectionError(
             codigo="MCP_TIMEOUT",
             mensaje="Timeout en consultar_expediente",
             detalle="Request timeout after 30s"
         )
 
-        result = mcp_tool._run(expediente_id="EXP-001")
-        parsed = json.loads(result)
+        with pytest.raises(RuntimeError) as exc_info:
+            mcp_tool._run(expediente_id="EXP-001")
 
-        assert parsed["error"] == "MCP_TIMEOUT"
-        assert "Timeout" in parsed["message"]
-        assert parsed["type"] == "connection"
-        assert parsed["retriable"] is True
+        assert "MCP Connection Error" in str(exc_info.value)
+        assert "MCP_TIMEOUT" in str(exc_info.value)
 
-    def test_connection_refused_error(self, mcp_tool, mock_registry):
-        """Test: Error de conexión rechazada"""
+    def test_connection_refused_raises_exception(self, mcp_tool, mock_registry):
+        """Test: Error de conexión rechazada lanza RuntimeError"""
         mock_registry.call_tool_sync.side_effect = MCPConnectionError(
             codigo="MCP_CONNECTION_ERROR",
             mensaje="No se puede conectar al servidor MCP",
             detalle="Connection refused"
         )
 
-        result = mcp_tool._run(expediente_id="EXP-001")
-        parsed = json.loads(result)
+        with pytest.raises(RuntimeError) as exc_info:
+            mcp_tool._run(expediente_id="EXP-001")
 
-        assert parsed["error"] == "MCP_CONNECTION_ERROR"
-        assert parsed["type"] == "connection"
-        assert parsed["retriable"] is True
+        assert "MCP Connection Error" in str(exc_info.value)
+        assert "MCP_CONNECTION_ERROR" in str(exc_info.value)
 
-    def test_auth_invalid_token_error(self, mcp_tool, mock_registry):
-        """Test: MCPAuthError con token inválido no es retriable"""
+    def test_auth_invalid_token_raises_exception(self, mcp_tool, mock_registry):
+        """Test: MCPAuthError con token inválido lanza RuntimeError"""
         mock_registry.call_tool_sync.side_effect = MCPAuthError(
             codigo="AUTH_INVALID_TOKEN",
             mensaje="Token JWT inválido o expirado",
             detalle="Invalid signature"
         )
 
-        result = mcp_tool._run(expediente_id="EXP-001")
-        parsed = json.loads(result)
+        with pytest.raises(RuntimeError) as exc_info:
+            mcp_tool._run(expediente_id="EXP-001")
 
-        assert parsed["error"] == "AUTH_INVALID_TOKEN"
-        assert parsed["type"] == "auth"
-        assert parsed["retriable"] is False
+        assert "MCP Auth Error" in str(exc_info.value)
+        assert "AUTH_INVALID_TOKEN" in str(exc_info.value)
 
-    def test_auth_permission_denied_error(self, mcp_tool, mock_registry):
-        """Test: MCPAuthError por permisos no es retriable"""
+    def test_auth_permission_denied_raises_exception(self, mcp_tool, mock_registry):
+        """Test: MCPAuthError por permisos lanza RuntimeError"""
         mock_registry.call_tool_sync.side_effect = MCPAuthError(
             codigo="AUTH_PERMISSION_DENIED",
             mensaje="Permisos insuficientes para ejecutar tool",
             detalle="Missing permission: gestion"
         )
 
-        result = mcp_tool._run(expediente_id="EXP-001")
-        parsed = json.loads(result)
+        with pytest.raises(RuntimeError) as exc_info:
+            mcp_tool._run(expediente_id="EXP-001")
 
-        assert parsed["error"] == "AUTH_PERMISSION_DENIED"
-        assert parsed["type"] == "auth"
-        assert parsed["retriable"] is False
+        assert "MCP Auth Error" in str(exc_info.value)
+        assert "AUTH_PERMISSION_DENIED" in str(exc_info.value)
 
-    def test_tool_not_found_error(self, mcp_tool, mock_registry):
-        """Test: MCPToolError por tool no encontrada"""
+    def test_tool_not_found_raises_exception(self, mcp_tool, mock_registry):
+        """Test: MCPToolError por tool no encontrada lanza RuntimeError"""
         mock_registry.call_tool_sync.side_effect = MCPToolError(
             codigo="MCP_TOOL_NOT_FOUND",
             mensaje="Tool 'unknown_tool' no encontrada",
             detalle="Available tools: [consultar_expediente]"
         )
 
-        result = mcp_tool._run(expediente_id="EXP-001")
-        parsed = json.loads(result)
+        with pytest.raises(RuntimeError) as exc_info:
+            mcp_tool._run(expediente_id="EXP-001")
 
-        assert parsed["error"] == "MCP_TOOL_NOT_FOUND"
-        assert parsed["type"] == "tool"
-        assert parsed["retriable"] is False
+        assert "MCP Tool Error" in str(exc_info.value)
+        assert "MCP_TOOL_NOT_FOUND" in str(exc_info.value)
 
-    def test_tool_conflict_is_retriable(self, mcp_tool, mock_registry):
-        """Test: MCP_CONFLICT es retriable (modificación concurrente)"""
+    def test_tool_conflict_raises_exception(self, mcp_tool, mock_registry):
+        """Test: MCP_CONFLICT lanza RuntimeError (fail-fast)"""
         mock_registry.call_tool_sync.side_effect = MCPToolError(
             codigo="MCP_CONFLICT",
             mensaje="Conflicto de modificación concurrente",
             detalle="Version mismatch"
         )
 
-        result = mcp_tool._run(expediente_id="EXP-001")
-        parsed = json.loads(result)
+        with pytest.raises(RuntimeError) as exc_info:
+            mcp_tool._run(expediente_id="EXP-001")
 
-        assert parsed["error"] == "MCP_CONFLICT"
-        assert parsed["type"] == "tool"
-        assert parsed["retriable"] is True  # Conflictos son retriables
+        assert "MCP Tool Error" in str(exc_info.value)
+        assert "MCP_CONFLICT" in str(exc_info.value)
 
-    def test_tool_business_error(self, mcp_tool, mock_registry):
-        """Test: Error de negocio de la tool"""
+    def test_tool_business_error_raises_exception(self, mcp_tool, mock_registry):
+        """Test: Error de negocio de la tool lanza RuntimeError"""
         mock_registry.call_tool_sync.side_effect = MCPToolError(
             codigo="MCP_TOOL_ERROR",
             mensaje="Expediente no encontrado: EXP-999",
             detalle="-32000"
         )
 
-        result = mcp_tool._run(expediente_id="EXP-999")
-        parsed = json.loads(result)
+        with pytest.raises(RuntimeError) as exc_info:
+            mcp_tool._run(expediente_id="EXP-999")
 
-        assert parsed["error"] == "MCP_TOOL_ERROR"
-        assert "Expediente no encontrado" in parsed["message"]
-        assert parsed["type"] == "tool"
-        assert parsed["retriable"] is False
+        assert "MCP Tool Error" in str(exc_info.value)
+        assert "Expediente no encontrado" in str(exc_info.value)
 
-    def test_unexpected_exception_handled(self, mcp_tool, mock_registry):
-        """Test: Excepciones inesperadas se manejan gracefully"""
-        mock_registry.call_tool_sync.side_effect = RuntimeError("Unexpected bug")
+    def test_unexpected_exception_raises_runtime_error(self, mcp_tool, mock_registry):
+        """Test: Excepciones inesperadas se propagan como RuntimeError"""
+        mock_registry.call_tool_sync.side_effect = ValueError("Unexpected bug")
 
-        result = mcp_tool._run(expediente_id="EXP-001")
-        parsed = json.loads(result)
+        with pytest.raises(RuntimeError) as exc_info:
+            mcp_tool._run(expediente_id="EXP-001")
 
-        assert parsed["error"] == "INTERNAL_ERROR"
-        assert "Unexpected bug" in parsed["message"]
-        assert parsed["type"] == "internal"
-        assert parsed["retriable"] is False
+        assert "Error inesperado" in str(exc_info.value)
+        assert "Unexpected bug" in str(exc_info.value)
 
     def test_successful_execution(self, mcp_tool, mock_registry):
         """Test: Ejecución exitosa retorna contenido"""
@@ -196,14 +185,15 @@ class TestMCPToolErrorHandling:
         assert parsed["estado"] == "activo"
 
     def test_logger_called_on_error(self, mcp_tool, mock_registry, mock_logger):
-        """Test: Logger se llama con información del error"""
+        """Test: Logger se llama con información del error antes de lanzar excepción"""
         mock_registry.call_tool_sync.side_effect = MCPConnectionError(
             codigo="MCP_TIMEOUT",
             mensaje="Timeout en tool",
             detalle="30s"
         )
 
-        mcp_tool._run(expediente_id="EXP-001")
+        with pytest.raises(RuntimeError):
+            mcp_tool._run(expediente_id="EXP-001")
 
         mock_logger.error.assert_called_once()
         error_call = mock_logger.error.call_args[0][0]

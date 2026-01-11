@@ -186,63 +186,48 @@ class MCPTool(BaseTool):
 
         except MCPConnectionError as e:
             # Errores de conexión (timeout, servidor caído, etc.)
-            error_response = {
-                "error": e.codigo,
-                "message": e.mensaje,
-                "type": "connection",
-                "retriable": True  # El agente podría reintentar
-            }
+            # FAIL-FAST: Propagar error para detener el agente
             if self.logger:
                 self.logger.error(f"MCP Connection Error '{self.name}': [{e.codigo}] {e.mensaje}")
-            return json.dumps(error_response)
+            raise RuntimeError(
+                f"MCP Connection Error en '{self.name}': [{e.codigo}] {e.mensaje}"
+            ) from e
 
         except MCPAuthError as e:
             # Errores de autenticación (token inválido, permisos insuficientes)
-            error_response = {
-                "error": e.codigo,
-                "message": e.mensaje,
-                "type": "auth",
-                "retriable": False  # No reintentar, error definitivo
-            }
+            # FAIL-FAST: Propagar error para detener el agente
             if self.logger:
                 self.logger.error(f"MCP Auth Error '{self.name}': [{e.codigo}] {e.mensaje}")
-            return json.dumps(error_response)
+            raise RuntimeError(
+                f"MCP Auth Error en '{self.name}': [{e.codigo}] {e.mensaje}"
+            ) from e
 
         except MCPToolError as e:
             # Errores de ejecución de la tool (tool no encontrada, error de negocio)
-            error_response = {
-                "error": e.codigo,
-                "message": e.mensaje,
-                "type": "tool",
-                "retriable": e.codigo == "MCP_CONFLICT"  # Solo conflictos son retriables
-            }
+            # FAIL-FAST: Propagar error para detener el agente
             if self.logger:
                 self.logger.error(f"MCP Tool Error '{self.name}': [{e.codigo}] {e.mensaje}")
-            return json.dumps(error_response)
+            raise RuntimeError(
+                f"MCP Tool Error en '{self.name}': [{e.codigo}] {e.mensaje}"
+            ) from e
 
         except MCPError as e:
             # Cualquier otro error MCP
-            error_response = {
-                "error": e.codigo,
-                "message": e.mensaje,
-                "type": "mcp",
-                "retriable": False
-            }
+            # FAIL-FAST: Propagar error para detener el agente
             if self.logger:
                 self.logger.error(f"MCP Error '{self.name}': [{e.codigo}] {e.mensaje}")
-            return json.dumps(error_response)
+            raise RuntimeError(
+                f"MCP Error en '{self.name}': [{e.codigo}] {e.mensaje}"
+            ) from e
 
         except Exception as e:
             # Errores inesperados (bugs, etc.)
-            error_response = {
-                "error": "INTERNAL_ERROR",
-                "message": str(e),
-                "type": "internal",
-                "retriable": False
-            }
+            # FAIL-FAST: Propagar error para detener el agente
             if self.logger:
                 self.logger.error(f"Unexpected Error in MCP Tool '{self.name}': {type(e).__name__}: {e}")
-            return json.dumps(error_response)
+            raise RuntimeError(
+                f"Error inesperado en MCP Tool '{self.name}': {type(e).__name__}: {e}"
+            ) from e
 
     def _call_mcp_tool(self, args: dict) -> dict:
         """

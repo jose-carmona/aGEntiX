@@ -239,13 +239,10 @@ class AgentReal(ABC):
             }
 
         except Exception as e:
+            # FAIL-FAST: Loguear y propagar error para detener ejecución
             error_msg = f"Error en agente CrewAI: {str(e)}"
             self.logger.error(error_msg)
-            return {
-                "completado": False,
-                "mensaje": error_msg,
-                "datos_actualizados": {}
-            }
+            raise RuntimeError(error_msg) from e
 
     def _parse_result(self, result: str) -> Dict[str, Any]:
         """
