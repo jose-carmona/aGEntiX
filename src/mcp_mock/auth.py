@@ -150,9 +150,11 @@ async def validate_jwt(
                 403
             )
 
-    if tool_args and "expediente_id" in tool_args:
-        exp_id = tool_args["expediente_id"]
-        if exp_id != claims.exp_id:
+    if tool_args:
+        exp_id = tool_args.get("expediente_id")
+        # Solo validar si expediente_id está presente y tiene valor
+        # Las tools de documentación usan tipo_expediente, no expediente_id
+        if exp_id and exp_id != claims.exp_id:
             raise AuthError(
                 f"Acceso no autorizado al expediente {exp_id}. "
                 f"Token solo autoriza {claims.exp_id}",
