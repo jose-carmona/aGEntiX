@@ -198,10 +198,17 @@ class AgentReal(ABC):
                 "tools": self.mcp_tools,
                 "verbose": agent_cfg.verbose,
                 "allow_delegation": agent_cfg.allow_delegation,
+                # FAIL-FAST: No reintentar en caso de error
+                "max_retry_limit": 0,
+                # FAIL-FAST: Fallar si el contexto se excede (no truncar)
+                "respect_context_window": False,
             }
             # Rate limiting - max requests por minuto
             if agent_cfg.max_rpm is not None:
                 agent_kwargs["max_rpm"] = agent_cfg.max_rpm
+            # Limitar iteraciones si está configurado
+            if hasattr(agent_cfg, 'max_iter') and agent_cfg.max_iter is not None:
+                agent_kwargs["max_iter"] = agent_cfg.max_iter
 
             agent = Agent(**agent_kwargs)
 
