@@ -141,15 +141,17 @@ class MCPTool(BaseTool):
     class Config:
         arbitrary_types_allowed = True
 
-    def _run(self, expediente_id: str = "", **kwargs) -> str:
+    def _run(self, **kwargs) -> str:
         """
         Ejecuta la herramienta MCP de forma síncrona.
 
         CrewAI es síncrono, así que envolvemos la llamada async.
 
         Args:
-            expediente_id: ID del expediente (parámetro común a todas las herramientas)
-            **kwargs: Argumentos adicionales para la herramienta MCP
+            **kwargs: Argumentos para la herramienta MCP.
+                      Los argumentos varían según la tool:
+                      - Tools de expedientes: usan 'expediente_id'
+                      - Tools de documentación: usan 'tipo_expediente'
 
         Returns:
             Resultado de la herramienta como string JSON
@@ -157,8 +159,8 @@ class MCPTool(BaseTool):
         if not CREWAI_AVAILABLE:
             return json.dumps({"error": "CrewAI no está instalado"})
 
-        # Combinar expediente_id con kwargs
-        all_args = {"expediente_id": expediente_id, **kwargs}
+        # Usar solo los argumentos proporcionados (sin forzar expediente_id)
+        all_args = {k: v for k, v in kwargs.items() if v is not None and v != ""}
 
         try:
             # Ejecutar llamada síncrona al MCP

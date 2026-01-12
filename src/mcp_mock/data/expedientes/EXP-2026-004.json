@@ -122,7 +122,7 @@
     {
       "id": "DOC-2026-004-005",
       "nombre": "informe_situacion.md",
-      "fecha": "2026-01-07T14:30:00.000000",
+      "fecha": "2026-01-07T14:30:00",
       "tipo": "INFORME",
       "ruta": "data/documentos/EXP-2026-004/informe_situacion.md",
       "hash_sha256": "e5f6789012345678901234567890123456789012345678901234abcdef0123",
@@ -136,6 +136,25 @@
         "puntuacion_total": 82
       },
       "texto_markdown": "# Informe de Situación - EXP-2026-004\n\n**Expediente:** EXP-2026-004\n**Tipo:** SUBVENCIONES\n**Fecha de generación:** 7 de enero de 2026\n\n---\n\n## 1. Datos Generales\n\n| Campo | Valor |\n|-------|-------|\n| Número de expediente | EXP-2026-004 |\n| Tipo de procedimiento | Subvenciones para Actividades Culturales |\n| Estado actual | EN_TRAMITE |\n| Fecha de inicio | 2 de enero de 2026 |\n| Solicitante | Asociación Cultural Sol Naciente |\n| CIF | G14567890 |\n| Importe solicitado | 8.500,00 € |\n| Proyecto | Festival de Primavera 2026 |\n| Convocatoria | Subvenciones para Actividades Culturales 2026 |\n\n---\n\n## 2. Resumen de Documentación\n\n### Documentos Analizados\n\n| Documento | Tipo | Estado | Observaciones |\n|-----------|------|--------|---------------|\n| solicitud_subvencion.pdf | SOLICITUD | Válido | Completa, firmada electrónicamente |\n| cif_asociacion.pdf | IDENTIFICACION | Válido | CIF vigente, entidad inscrita |\n| justificante_bancario.pdf | BANCARIO | Válido | Cuenta activa, titular coincide |\n| memoria_proyecto.pdf | MEMORIA | Válido | Completa con presupuesto detallado |\n\n### Estado de la Documentación\n\n**Documentación completa y válida.**\n\nTodos los documentos requeridos han sido aportados y validados satisfactoriamente.\n\n---\n\n## 3. Valoración Técnica\n\nEl proyecto \"Festival de Primavera 2026\" consiste en la organización de un festival cultural durante el mes de abril con conciertos, talleres y exposiciones, promoviendo artistas locales y la participación ciudadana.\n\n### Puntuación por Criterios\n\n| Criterio | Máximo | Obtenido | Justificación |\n|----------|--------|----------|---------------|\n| Calidad técnica del proyecto | 40 | 34 | Proyecto bien estructurado con objetivos claros, cronograma detallado y equipo experimentado |\n| Viabilidad económica | 25 | 21 | Presupuesto realista y equilibrado, con aportación propia del 29% |\n| Impacto social | 20 | 17 | Alto impacto en la comunidad: 5.000 participantes previstos, 30 artistas locales beneficiados |\n| Experiencia del solicitante | 15 | 10 | Entidad con 10 años de trayectoria y eventos exitosos previos |\n| **TOTAL** | **100** | **82** | |\n\n### Umbral de aprobación: 50 puntos\n\n**La solicitud SUPERA ampliamente el umbral mínimo requerido.**\n\n---\n\n## 4. Análisis Presupuestario\n\n| Concepto | Importe |\n|----------|--------:|\n| Presupuesto total del proyecto | 12.000,00 € |\n| Subvención solicitada | 8.500,00 € |\n| Aportación propia | 2.000,00 € |\n| Otras aportaciones | 1.500,00 € |\n| **Porcentaje de subvención** | **70,83%** |\n\nEl porcentaje de subvención solicitado (70,83%) está dentro de los límites establecidos en las bases de la convocatoria (máximo 80%).\n\n---\n\n## 5. Cronología de Tramitación\n\n| Fecha | Acción | Usuario | Detalles |\n|-------|--------|---------|----------|\n| 02/01/2026 | Inicio expediente | Sistema | Registro electrónico |\n| 02/01/2026 | Documentación completa | Sistema | Todos los documentos aportados |\n| 03/01/2026 | Validación documentación | Automático | Agente ValidadorDocumental |\n| 07/01/2026 | Informe de situación | Automático | Agente RedactorSituacion |\n\n---\n\n## 6. Situación Actual y Observaciones\n\n### Estado\nEl expediente se encuentra en tramitación con **documentación completa y validada**.\n\n### Observaciones\n\n1. **Documentación completa**: Se han aportado todos los documentos requeridos por las bases de la convocatoria.\n\n2. **Puntuación muy favorable**: El proyecto obtiene 82 puntos sobre 100, superando ampliamente el umbral mínimo de 50 puntos.\n\n3. **Entidad solvente**: La Asociación Cultural Sol Naciente tiene una trayectoria consolidada de 10 años con eventos exitosos.\n\n4. **Impacto social significativo**: El proyecto beneficiará a más de 5.000 ciudadanos y dará visibilidad a 30 artistas locales.\n\n5. **Viabilidad económica**: El presupuesto es realista y la entidad aporta el 29% de fondos propios y patrocinios.\n\n### Recomendación\n\n**APROBAR** la subvención por importe de **8.500,00 €** para la organización del Festival de Primavera 2026.\n\nNo se detectan incidencias ni motivos para reducción del importe solicitado. El proyecto cumple todos los requisitos de las bases y obtiene una puntuación destacada.\n\n---\n\n*Informe generado automáticamente por el agente RedactorSituacion*\n\n**Fecha:** 7 de enero de 2026"
+    },
+    {
+      "id": "DOC-548215",
+      "nombre": "propuesta_resolucion.md",
+      "fecha": "2026-01-11T23:52:28.215589",
+      "tipo": "PROPUESTA_RESOLUCION",
+      "ruta": "data/documentos/EXP-2026-004/propuesta_resolucion.md",
+      "hash_sha256": "",
+      "tamano_bytes": 4959,
+      "validado": null,
+      "metadatos_extraidos": {
+        "tipo_resolucion": "aprobacion",
+        "importe": 8500.0,
+        "fecha_generacion": "2026-01-08",
+        "generado_por": "RedactorPropuestaResolucion",
+        "puntuacion_total": 82,
+        "umbral_superado": true
+      },
+      "texto_markdown": "# PROPUESTA DE RESOLUCIÓN\n\n**Expediente:** EXP-2026-004\n\n**Convocatoria:** Subvenciones para Actividades Culturales 2026\n\n**Fecha:** 8 de enero de 2026\n\n---\n\n## ANTECEDENTES\n\n**PRIMERO.-** Con fecha 2 de enero de 2026, Asociación Cultural Sol Naciente, con CIF número G14567890, presentó solicitud de subvención para el proyecto denominado \"Festival de Primavera 2026\" al amparo de la convocatoria Subvenciones para Actividades Culturales 2026, publicada en BOP de Córdoba núm. 230 de fecha 1 de diciembre de 2025.\n\n**SEGUNDO.-** La documentación aportada fue validada con fecha 3 de enero de 2026, verificándose el cumplimiento de todos los requisitos establecidos en las bases reguladoras. Con fecha 7 de enero de 2026 se emitió informe de situación favorable.\n\n**TERCERO.-** Examinada la documentación aportada y evaluado el proyecto conforme a los criterios establecidos en las bases reguladoras, se ha obtenido la siguiente puntuación:\n\n| Criterio | Puntuación máxima | Puntuación obtenida |\n|----------|-------------------|---------------------|\n| Calidad técnica del proyecto | 40 | 34 |\n| Viabilidad económica | 25 | 21 |\n| Impacto social | 20 | 17 |\n| Experiencia del solicitante | 15 | 10 |\n| **TOTAL** | **100** | **82** |\n\n---\n\n## FUNDAMENTOS DE DERECHO\n\n**PRIMERO.-** La Ley 38/2003, de 17 de noviembre, General de Subvenciones, regula el régimen jurídico general de las subvenciones otorgadas por las Administraciones Públicas.\n\n**SEGUNDO.-** El artículo 24 de la Ley 38/2003 establece el procedimiento de concesión de subvenciones en régimen de concurrencia competitiva. El proyecto presentado ha obtenido una puntuación de 82 puntos sobre 100, superando ampliamente el umbral mínimo de 50 puntos establecido en las bases reguladoras, lo que justifica la concesión de la subvención solicitada. El importe solicitado (8.500,00 euros) representa el 70,83% del presupuesto total del proyecto, porcentaje que se encuentra dentro del límite máximo del 80% establecido en las bases de la convocatoria. La entidad solicitante cumple todos los requisitos del artículo 13 de la Ley General de Subvenciones y ha acreditado estar al corriente de sus obligaciones tributarias y con la Seguridad Social.\n\n**TERCERO.-** Las bases reguladoras de la convocatoria establecen los requisitos, criterios de valoración y procedimiento aplicables.\n\n---\n\n## PROPUESTA\n\nEn virtud de lo expuesto, el/la técnico/a instructor/a que suscribe PROPONE:\n\n**PRIMERO.-** CONCEDER a Asociación Cultural Sol Naciente una subvención por importe de 8.500,00 euros (OCHO MIL QUINIENTOS EUROS) para la realización del proyecto \"Festival de Primavera 2026\".\n\n**SEGUNDO.-** El plazo de ejecución del proyecto será desde el 1 de abril de 2026 hasta el 30 de abril de 2026.\n\n**TERCERO.-** El plazo para la presentación de la justificación será de 3 meses desde la finalización del proyecto.\n\n**CUARTO.-** El beneficiario deberá cumplir las obligaciones establecidas en el artículo 14 de la Ley General de Subvenciones, en particular:\n\na) Realizar la actividad que fundamenta la concesión de la subvención.\n\nb) Justificar ante el órgano concedente el cumplimiento de los requisitos y condiciones, así como la realización de la actividad y el cumplimiento de la finalidad que determinen la concesión o disfrute de la subvención.\n\nc) Someterse a las actuaciones de comprobación a efectuar por el órgano concedente, así como cualesquiera otras de comprobación y control financiero que puedan realizar los órganos de control competentes.\n\nd) Comunicar al órgano concedente la obtención de otras subvenciones, ayudas, ingresos o recursos que financien las actividades subvencionadas.\n\ne) Acreditar con anterioridad a dictarse la propuesta de resolución de concesión que se halla al corriente en el cumplimiento de sus obligaciones tributarias y frente a la Seguridad Social.\n\nf) Disponer de los libros contables, registros diligenciados y demás documentos debidamente auditados en los términos exigidos por la legislación mercantil y sectorial aplicable al beneficiario en cada caso.\n\ng) Conservar los documentos justificativos de la aplicación de los fondos recibidos, incluidos los documentos electrónicos, en tanto puedan ser objeto de las actuaciones de comprobación y control.\n\nh) Dar la adecuada publicidad del carácter público de la financiación de programas, actividades, inversiones o actuaciones de cualquier tipo que sean objeto de subvención.\n\n**QUINTO.-** El abono de la subvención se realizará mediante transferencia bancaria a la cuenta ES91 2100 4321 0123 4567 8901, previa fiscalización del gasto.\n\n---\n\n**Contra esta propuesta provisional podrá formular alegaciones en el plazo de 10 días hábiles a contar desde el día siguiente a su notificación.**\n\n---\n\nEn Córdoba, a 8 de enero de 2026\n\nEl/La Técnico/a Instructor/a\n\n\n\nFdo.: Servicio de Cultura y Patrimonio\nDiputación Provincial de Córdoba"
     }
   ],
   "historial": [
@@ -170,6 +189,22 @@
       "tipo": "AGENTE",
       "accion": "CREAR_DOCUMENTO_MARKDOWN",
       "detalles": "Documento DOC-2026-004-005 creado: informe_situacion.md (tipo: INFORME)"
+    },
+    {
+      "id": "HIST-548215",
+      "fecha": "2026-01-11T23:52:28.215614",
+      "usuario": "Automático",
+      "tipo": "AGENTE",
+      "accion": "CREAR_DOCUMENTO_MARKDOWN",
+      "detalles": "Documento DOC-548215 creado desde markdown: propuesta_resolucion.md (tipo: PROPUESTA_RESOLUCION)"
+    },
+    {
+      "id": "HIST-552103",
+      "fecha": "2026-01-11T23:52:32.103288",
+      "usuario": "Automático",
+      "tipo": "ANOTACION",
+      "accion": "ANOTACION",
+      "detalles": "Generada propuesta de resolución de aprobación automática por importe de 8.500,00 euros. Puntuación obtenida: 82/100 puntos. Documento: DOC-548215"
     }
   ],
   "metadatos": {
@@ -187,8 +222,7 @@
       "fecha_limite": "2026-01-10T15:00:00Z",
       "estado": "PENDIENTE",
       "intentos": 0,
-      "responsable": "Automático",
-      "agente_asignado": "RedactorPropuestaResolucion"
+      "responsable": "Automático"
     },
     "tareas_completadas": [
       {
@@ -224,17 +258,6 @@
           "condicion": "propuesta_resolucion_generada == true"
         }
       ]
-    },
-    "evaluacion": {
-      "puntuacion_total": 82,
-      "umbral_aprobacion": 50,
-      "resultado": "SUPERA_UMBRAL",
-      "criterios": {
-        "calidad_tecnica": {"maximo": 40, "obtenido": 34},
-        "viabilidad_economica": {"maximo": 25, "obtenido": 21},
-        "impacto_social": {"maximo": 20, "obtenido": 17},
-        "experiencia_solicitante": {"maximo": 15, "obtenido": 10}
-      }
     }
   }
 }

@@ -72,6 +72,7 @@ from starlette.middleware.cors import CORSMiddleware
 from mcp.server.sse import SseServerTransport
 from .server import create_server, get_server_info
 from .auth import validate_jwt, AuthError
+from ..models import JWTClaims
 from .tools import list_tools as list_exp_tools, call_tool as call_exp_tool
 from .resources import list_resources as list_exp_resources, get_resource as get_exp_resource
 
@@ -91,6 +92,44 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
+
+# Logger específico para auditoría de llamadas a tools
+tool_audit_logger = logging.getLogger("mcp.tool_audit")
+
+
+def log_tool_call(
+    tool_name: str,
+    tool_args: dict,
+    claims: "JWTClaims",
+    request_id: any = None
+) -> None:
+    """
+    Loguea una llamada a tool con información estructurada.
+
+    Args:
+        tool_name: Nombre de la tool invocada
+        tool_args: Parámetros de la llamada
+        claims: Claims del JWT validado
+        request_id: ID de la request JSON-RPC
+    """
+    log_entry = {
+        "event": "TOOL_CALL",
+        "request_id": request_id,
+        "tool": tool_name,
+        "arguments": tool_args,
+        "jwt_claims": {
+            "sub": claims.sub,
+            "iss": claims.iss,
+            "aud": claims.aud,
+            "exp_id": claims.exp_id,
+            "exp_tipo": claims.exp_tipo,
+            "tarea_id": claims.tarea_id,
+            "tarea_nombre": claims.tarea_nombre,
+            "permisos": claims.permisos,
+            "jti": claims.jti,
+        }
+    }
+    tool_audit_logger.info(f"🔧 Tool Call: {json.dumps(log_entry, ensure_ascii=False, default=str)}")
 
 # Crear servidor MCP core
 app_core, context = create_server()
@@ -341,12 +380,15 @@ async def handle_rpc(request: Request) -> JSONResponse:
                 )
 
             # Validar permisos para la tool específica
-            await validate_jwt(
+            claims = await validate_jwt(
                 token,
                 tool_name=tool_name,
                 tool_args=tool_args,
                 server_id=context.server_id
             )
+
+            # Loguear la llamada con tool, parámetros y claims JWT
+            log_tool_call(tool_name, tool_args, claims, request_id)
 
             tool_result = await call_tool(tool_name, tool_args)
             result = {

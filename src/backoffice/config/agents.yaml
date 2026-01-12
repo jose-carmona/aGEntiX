@@ -245,7 +245,7 @@ agents:
              * Estado actual y fechas
 
         2. OBTENER PLANTILLA
-           - Usa 'obtener_doc_documentacion' con:
+           - Usa 'obtener_doc_documentacion' con los siguientes dos parámetros:
              * tipo_expediente = el tipo obtenido en el paso 1
              * tipo_documento = "plantilla_propuesta_resolucion"
            - Guarda la plantilla para usarla como base del documento
