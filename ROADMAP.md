@@ -4,7 +4,7 @@ Hoja de ruta del proyecto con el estado de implementación y próximos pasos.
 
 ## Estado Actual del Proyecto
 
-**Fase actual:** Paso 8 - MCP Documentación de Tipos de Expediente ✅ COMPLETADO
+**Fase actual:** Paso 10 - Captura de Logs de CrewAI ✅ COMPLETADO
 
 ### Resumen de Progreso
 
@@ -19,9 +19,10 @@ Hoja de ruta del proyecto con el estado de implementación y próximos pasos.
 | 7 | MCP de documentos | ⏳ En progreso | - |
 | 8 | MCP Documentación tipos expediente | ✅ Completado | 78 |
 | 9 | Agente generador documentos | 🔜 Pendiente | - |
-| 10 | Escalabilidad horizontal | 🔜 Pendiente | - |
+| 10 | Captura de logs de CrewAI | ✅ Completado | 14 |
+| 11 | Escalabilidad horizontal | 🔜 Pendiente | - |
 
-**Total tests:** 306 (300 passed, 6 skipped)
+**Total tests:** 336
 
 ---
 
@@ -109,6 +110,25 @@ Servidor MCP para consultar documentación de tipos de expediente:
 - `components/mcp/documentacion/` - Panel de documentación
 - `components/mcp/expedientes/` - Panel de expedientes
 
+### Paso 10: Captura de Logs de CrewAI ✅
+
+Sistema para capturar logs internos de CrewAI y redirigirlos al sistema de auditoría:
+
+- ✅ **crewai_log_processor.py** - Procesador de logs de CrewAI
+- ✅ **Integración con output_log_file** - Usa API oficial de CrewAI
+- ✅ **Redacción automática de PII** - Logs pasan por PIIRedactor
+- ✅ **Formato JSON estructurado** - Compatible con sistema de auditoría
+- ✅ **Limpieza automática** - Archivos temporales eliminados después de procesar
+- ✅ **14 tests** de cobertura completa
+
+**Características:**
+- Prefijo `[CrewAI]` en todos los mensajes
+- Metadata con `source: "crewai"` para filtrado
+- Soporta JSON array, JSON lines y texto plano
+- Procesa logs incluso en caso de error del agente
+
+**Documentación:** [prompts/step-10-capture-crewai-logs.md](prompts/step-10-capture-crewai-logs.md)
+
 ---
 
 ## Pasos En Progreso
@@ -141,7 +161,7 @@ Agente capaz de generar documentos basados en plantillas:
 - [ ] Integración con MCP Documentación
 - [ ] Tests de generación
 
-### Paso 10: Escalabilidad Horizontal 🔜
+### Paso 11: Escalabilidad Horizontal 🔜
 
 Mejorar el sistema para escalar horizontalmente:
 
@@ -175,9 +195,9 @@ Sistema fortalecido con manejo completo de errores:
 
 | Métrica | Valor |
 |---------|-------|
-| Tests totales | 306 |
-| Tests pasando | 300 (98%) |
-| Tests skip | 6 |
+| Tests totales | 336 |
+| Tests pasando | 330+ |
+| Tests skip | ~6 |
 | Cobertura PII | 8 tipos |
 | Vulnerabilidades | 0 |
 | Calidad código | 4.7/5 |
@@ -187,7 +207,7 @@ Sistema fortalecido con manejo completo de errores:
 
 | Suite | Tests | Descripción |
 |-------|-------|-------------|
-| Back-Office | 165 | JWT, MCP, PII, Executor, Protocols |
+| Back-Office | 195 | JWT, MCP, PII, Executor, Protocols, CrewAI Logs |
 | API REST | 34 | Health, Agent endpoints |
 | MCP Mock | 78 | Auth, Resources, Tools, Server |
 | Contracts | 14 | Interfaces y contratos |
