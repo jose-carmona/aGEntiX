@@ -23,6 +23,7 @@ from typing import Dict, Any, List, Optional
 
 from ..mcp.registry import MCPClientRegistry
 from ..logging.audit_logger import AuditLogger
+from ..logging.crewai_log_processor import create_crewai_log_file, process_crewai_logs
 from ..settings import get_settings
 from ..config.agent_config_loader import AgentConfigLoader, AgentDefinition
 
@@ -181,6 +182,9 @@ class AgentReal(ABC):
         )
         self.logger.log(f"Herramientas MCP disponibles: {self.config.mcp_tools}")
 
+        # Crear archivo temporal para capturar logs de CrewAI
+        crewai_log_file = create_crewai_log_file(self.run_id)
+
         try:
             # Verificar configuración CrewAI
             if not self.config.crewai_agent:
@@ -220,11 +224,12 @@ class AgentReal(ABC):
                 agent=agent
             )
 
-            # Crear y ejecutar crew
+            # Crear y ejecutar crew con captura de logs
             crew = Crew(
                 agents=[agent],
                 tasks=[task],
-                verbose=True
+                verbose=True,
+                output_log_file=str(crewai_log_file)
             )
 
             # Ejecutar (CrewAI es síncrono, lo envolvemos)
@@ -236,6 +241,12 @@ class AgentReal(ABC):
 
             self.logger.log("Agente completado exitosamente")
 
+            # Procesar logs de CrewAI (redacción PII automática)
+            entries = process_crewai_logs(
+                crewai_log_file, self.logger, delete_after=False
+            )
+            self.logger.log(f"Procesadas {entries} entradas de logs de CrewAI")
+
             # Intentar parsear resultado como JSON
             resultado_parseado = self._parse_result(str(result))
 
@@ -246,10 +257,20 @@ class AgentReal(ABC):
             }
 
         except Exception as e:
+            # Procesar logs incluso en caso de error
+            process_crewai_logs(crewai_log_file, self.logger, delete_after=False)
             # FAIL-FAST: Loguear y propagar error para detener ejecución
             error_msg = f"Error en agente CrewAI: {str(e)}"
             self.logger.error(error_msg)
             raise RuntimeError(error_msg) from e
+
+        finally:
+            # Asegurar limpieza del archivo temporal
+            if crewai_log_file.exists():
+                try:
+                    crewai_log_file.unlink()
+                except OSError:
+                    pass
 
     def _parse_result(self, result: str) -> Dict[str, Any]:
         """
