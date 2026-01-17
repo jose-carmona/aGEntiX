@@ -28,6 +28,11 @@
 - [Contexto disponible para los agentes](032-contexto-agente.md)
 - [Requisitos de auditoría y logging](033-auditoria-agente.md)
 
+### Implementación de Agentes
+
+- [Agentes con CrewAI](060-agentes-crewai.md) - Framework CrewAI con Anthropic Claude
+- [Agentes con LangGraph](063-agentes-langgraph.md) - Framework LangChain/LangGraph alternativo
+
 ## Arquitectura y Diseño
 
 - [Principios arquitectónicos del sistema](040-criterios-diseño.md)

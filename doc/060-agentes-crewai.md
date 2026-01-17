@@ -138,6 +138,7 @@ tools = agent.get_tools_used()
 
 ## Relaciones
 
+- Ver: [Agentes LangGraph](063-agentes-langgraph.md) - Alternativa con LangChain/LangGraph
 - Ver: [Propuesta general](030-propuesta-agentes.md)
 - Ver: [Configuración](031-configuracion-agente.md)
-- Ver: [MCP Registry](mcp-registry.md)
+- Ver: [Acceso MCP](042-acceso-mcp.md)
