@@ -3,10 +3,10 @@
 """
 Registro de agentes disponibles.
 
-Proporciona acceso centralizado a todas las clases de agentes CrewAI.
+Proporciona acceso centralizado a todas las clases de agentes CrewAI y LangGraph.
 """
 
-from typing import Dict, Type
+from typing import Dict, Type, Union
 
 # Agentes reales con CrewAI (Paso 6)
 # Importación condicional para evitar errores si CrewAI no está instalado
@@ -27,9 +27,19 @@ except (ImportError, RuntimeError) as e:
     AgenteTestSimple = None
     CREWAI_AVAILABLE = False
 
+# Agentes reales con LangGraph (Paso 11)
+try:
+    from .base_langgraph import AgentLangGraph
+    from .redactor_resolucion import RedactorResolucion
+    LANGGRAPH_AVAILABLE = True
+except (ImportError, RuntimeError) as e:
+    AgentLangGraph = None
+    RedactorResolucion = None
+    LANGGRAPH_AVAILABLE = False
 
-# Tipo para agentes CrewAI
-AgentType = Type["AgentReal"] if AgentReal else type
+
+# Tipo para agentes (CrewAI o LangGraph)
+AgentType = Union[Type["AgentReal"], Type["AgentLangGraph"]] if AgentReal or AgentLangGraph else type
 
 
 # Registro de agentes disponibles
@@ -45,6 +55,11 @@ if CREWAI_AVAILABLE:
         AGENT_REGISTRY["RedactorPropuestaResolucion"] = RedactorPropuestaResolucion
     if AgenteTestSimple is not None:
         AGENT_REGISTRY["AgenteTestSimple"] = AgenteTestSimple
+
+# Añadir agentes LangGraph si están disponibles
+if LANGGRAPH_AVAILABLE:
+    if RedactorResolucion is not None:
+        AGENT_REGISTRY["RedactorResolucion"] = RedactorResolucion
 
 
 def get_agent_class(agent_name: str) -> AgentType:
@@ -96,6 +111,20 @@ def list_crewai_agents() -> list[str]:
     return []
 
 
+def list_langgraph_agents() -> list[str]:
+    """
+    Lista los nombres de agentes LangGraph.
+
+    Returns:
+        Lista de nombres de agentes LangGraph (vacía si LangGraph no está instalado)
+    """
+    if LANGGRAPH_AVAILABLE:
+        return [
+            "RedactorResolucion"
+        ]
+    return []
+
+
 def is_crewai_available() -> bool:
     """
     Verifica si los agentes CrewAI están disponibles.
@@ -104,3 +133,13 @@ def is_crewai_available() -> bool:
         True si CrewAI está instalado y los agentes disponibles
     """
     return CREWAI_AVAILABLE
+
+
+def is_langgraph_available() -> bool:
+    """
+    Verifica si los agentes LangGraph están disponibles.
+
+    Returns:
+        True si LangGraph está instalado y los agentes disponibles
+    """
+    return LANGGRAPH_AVAILABLE

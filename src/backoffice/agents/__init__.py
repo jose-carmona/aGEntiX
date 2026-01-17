@@ -3,7 +3,7 @@
 """
 Módulo de agentes del backoffice.
 
-Exporta las clases base y el registro de agentes CrewAI.
+Exporta las clases base y el registro de agentes CrewAI y LangGraph.
 """
 
 from .registry import (
@@ -11,7 +11,9 @@ from .registry import (
     get_agent_class,
     list_available_agents,
     list_crewai_agents,
+    list_langgraph_agents,
     is_crewai_available,
+    is_langgraph_available,
 )
 
 # Agentes reales con CrewAI
@@ -29,19 +31,32 @@ except (ImportError, RuntimeError):
     MCPTool = None
     MCPToolFactory = None
 
+# Agentes reales con LangGraph (Paso 11)
+try:
+    from .base_langgraph import AgentLangGraph
+    from .redactor_resolucion import RedactorResolucion
+except (ImportError, RuntimeError):
+    AgentLangGraph = None
+    RedactorResolucion = None
+
 
 __all__ = [
     # Base classes
     "AgentReal",
+    "AgentLangGraph",
     # Registry
     "AGENT_REGISTRY",
     "get_agent_class",
     "list_available_agents",
     "list_crewai_agents",
+    "list_langgraph_agents",
     "is_crewai_available",
+    "is_langgraph_available",
     # CrewAI agents
     "ClasificadorExpediente",
     "RedactorSituacion",
+    # LangGraph agents
+    "RedactorResolucion",
     # Tool wrapper
     "MCPTool",
     "MCPToolFactory",

@@ -18,6 +18,7 @@ from backoffice.config.agent_config_loader import (
     LLMConfig,
     CrewAIAgentConfig,
     CrewAITaskConfig,
+    LangGraphConfig,
     get_agent_loader,
     reset_agent_loader
 )
@@ -90,6 +91,28 @@ class TestAgentDefinition:
         assert crewai_agent.is_crewai is True
         assert crewai_agent.is_mock is False
 
+    def test_is_langgraph_property(self):
+        """is_langgraph retorna True para agentes LangGraph"""
+        langgraph_agent = AgentDefinition(
+            name="LangGraphAgent",
+            type="langgraph",
+            description="Test",
+            model="test",
+            system_prompt=""
+        )
+        mock_agent = AgentDefinition(
+            name="MockAgent",
+            type="mock",
+            description="Test",
+            model="test",
+            system_prompt="Test"
+        )
+
+        assert langgraph_agent.is_langgraph is True
+        assert langgraph_agent.is_crewai is False
+        assert langgraph_agent.is_mock is False
+        assert mock_agent.is_langgraph is False
+
     def test_mcp_tools_property(self):
         """mcp_tools es alias de tools"""
         agent = AgentDefinition(
@@ -147,6 +170,31 @@ class TestCrewAIAgentConfig:
         assert config.backstory == "Test Backstory"
         assert config.verbose is True
         assert config.allow_delegation is False
+
+
+class TestLangGraphConfig:
+    """Tests para LangGraphConfig (Paso 11)"""
+
+    def test_create_langgraph_config(self):
+        """LangGraphConfig se crea correctamente"""
+        config = LangGraphConfig(
+            system_prompt="Eres un experto",
+            task_prompt="Genera un documento para {expediente_id}",
+            max_iterations=15
+        )
+
+        assert config.system_prompt == "Eres un experto"
+        assert config.task_prompt == "Genera un documento para {expediente_id}"
+        assert config.max_iterations == 15
+
+    def test_langgraph_config_defaults(self):
+        """LangGraphConfig tiene defaults correctos"""
+        config = LangGraphConfig(
+            system_prompt="System",
+            task_prompt="Task"
+        )
+
+        assert config.max_iterations == 10  # Default
 
 
 class TestAgentConfigLoader:
@@ -214,6 +262,33 @@ agents:
 """
 
     @pytest.fixture
+    def langgraph_yaml_content(self):
+        """Contenido YAML con agente LangGraph (Paso 11)"""
+        return """
+agents:
+  RedactorResolucion:
+    type: langgraph
+    enabled: true
+    description: "Genera Resoluciones usando LangGraph"
+    llm:
+      provider: anthropic
+      model: claude-sonnet-4-5-20250929
+      max_tokens: 4096
+      temperature: 0.1
+    langgraph_config:
+      system_prompt: "Eres un experto jurídico"
+      task_prompt: "Genera una Resolución para {expediente_id}"
+      max_iterations: 15
+    tools:
+      - consultar_expediente
+      - crear_documento_desde_markdown
+    required_permissions:
+      - expediente.lectura
+      - documento.escritura
+    timeout_seconds: 600
+"""
+
+    @pytest.fixture
     def temp_yaml_file(self, valid_yaml_content):
         """Crea un archivo YAML temporal para tests"""
         with tempfile.NamedTemporaryFile(
@@ -241,6 +316,23 @@ agents:
             encoding='utf-8'
         ) as f:
             f.write(crewai_yaml_content)
+            temp_path = f.name
+
+        yield temp_path
+
+        if os.path.exists(temp_path):
+            os.unlink(temp_path)
+
+    @pytest.fixture
+    def temp_langgraph_yaml_file(self, langgraph_yaml_content):
+        """Crea archivo YAML temporal con agente LangGraph"""
+        with tempfile.NamedTemporaryFile(
+            mode='w',
+            suffix='.yaml',
+            delete=False,
+            encoding='utf-8'
+        ) as f:
+            f.write(langgraph_yaml_content)
             temp_path = f.name
 
         yield temp_path
@@ -336,6 +428,31 @@ agents:
         assert agent.crewai_agent.role == "Clasificador"
         assert agent.crewai_task is not None
         assert "expediente_id" in agent.crewai_task.description
+
+    def test_list_by_type_langgraph(self, temp_langgraph_yaml_file):
+        """list_by_type() filtra por tipo langgraph"""
+        loader = AgentConfigLoader(temp_langgraph_yaml_file)
+        langgraph_agents = loader.list_by_type("langgraph")
+
+        assert len(langgraph_agents) == 1
+        assert "RedactorResolucion" in langgraph_agents
+
+    def test_load_langgraph_agent(self, temp_langgraph_yaml_file):
+        """Carga correctamente un agente LangGraph"""
+        loader = AgentConfigLoader(temp_langgraph_yaml_file)
+        agent = loader.get("RedactorResolucion")
+
+        assert agent.type == "langgraph"
+        assert agent.is_langgraph is True
+        assert agent.is_crewai is False
+        assert agent.llm is not None
+        assert agent.llm.provider == "anthropic"
+        assert agent.langgraph_config is not None
+        assert "experto jurídico" in agent.langgraph_config.system_prompt
+        assert "expediente_id" in agent.langgraph_config.task_prompt
+        assert agent.langgraph_config.max_iterations == 15
+        assert "consultar_expediente" in agent.tools
+        assert "crear_documento_desde_markdown" in agent.tools
 
     def test_load_nonexistent_file(self):
         """Maneja archivo inexistente sin error"""
@@ -524,8 +641,48 @@ class TestAgentConfigLoaderWithRealFile:
         # Verificar timeout (600s = 10 min por ser agente complejo)
         assert agent.timeout_seconds == 600
 
+    def test_redactor_resolucion_config(self):
+        """RedactorResolucion tiene configuración LangGraph correcta (Paso 11)"""
+        config_path = Path(__file__).parent.parent.parent / "src" / "backoffice" / "config" / "agents.yaml"
+
+        if not config_path.exists():
+            pytest.skip("agents.yaml no existe todavía")
+
+        loader = AgentConfigLoader(str(config_path))
+
+        if not loader.exists("RedactorResolucion"):
+            pytest.skip("RedactorResolucion no configurado")
+
+        agent = loader.get("RedactorResolucion")
+
+        # Verificar tipo LangGraph
+        assert agent.type == "langgraph"
+        assert agent.is_langgraph is True
+        assert agent.is_crewai is False
+
+        # Verificar configuración LLM
+        assert agent.llm is not None
+        assert agent.llm.provider == "anthropic"
+
+        # Verificar configuración LangGraph
+        assert agent.langgraph_config is not None
+        assert agent.langgraph_config.system_prompt
+        assert agent.langgraph_config.task_prompt
+        assert "expediente_id" in agent.langgraph_config.task_prompt
+
+        # Verificar herramientas MCP
+        assert "consultar_expediente" in agent.tools
+        assert "crear_documento_desde_markdown" in agent.tools
+
+        # Verificar permisos
+        assert "expediente.lectura" in agent.required_permissions
+        assert "documento.escritura" in agent.required_permissions
+
+        # Verificar timeout
+        assert agent.timeout_seconds == 600
+
     def test_all_agents_have_required_fields(self):
-        """Todos los agentes CrewAI tienen campos requeridos"""
+        """Todos los agentes tienen campos requeridos según su tipo"""
         config_path = Path(__file__).parent.parent.parent / "src" / "backoffice" / "config" / "agents.yaml"
 
         if not config_path.exists():
@@ -535,11 +692,16 @@ class TestAgentConfigLoaderWithRealFile:
 
         for agent in loader.list_agents():
             assert agent.name, "Agente sin nombre"
-            assert agent.type == "crewai", f"{agent.name}: tipo debe ser crewai"
+            assert agent.type in ("crewai", "langgraph"), f"{agent.name}: tipo debe ser crewai o langgraph"
             assert agent.description, f"{agent.name}: sin descripción"
             assert agent.timeout_seconds > 0, f"{agent.name}: timeout inválido"
-
-            # Verificar campos específicos de CrewAI
             assert agent.llm is not None, f"{agent.name}: sin configuración LLM"
-            assert agent.crewai_agent is not None, f"{agent.name}: sin configuración crewai_agent"
-            assert agent.crewai_task is not None, f"{agent.name}: sin configuración crewai_task"
+
+            # Verificar campos específicos según tipo
+            if agent.is_crewai:
+                assert agent.crewai_agent is not None, f"{agent.name}: sin configuración crewai_agent"
+                assert agent.crewai_task is not None, f"{agent.name}: sin configuración crewai_task"
+            elif agent.is_langgraph:
+                assert agent.langgraph_config is not None, f"{agent.name}: sin configuración langgraph_config"
+                assert agent.langgraph_config.system_prompt, f"{agent.name}: sin system_prompt"
+                assert agent.langgraph_config.task_prompt, f"{agent.name}: sin task_prompt"

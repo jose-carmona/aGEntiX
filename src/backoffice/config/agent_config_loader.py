@@ -49,6 +49,17 @@ class CrewAITaskConfig(BaseModel):
 
 
 # =============================================================================
+# Modelos de configuración para LangGraph (Paso 11)
+# =============================================================================
+
+class LangGraphConfig(BaseModel):
+    """Configuración específica del agente LangGraph."""
+    system_prompt: str = Field(..., description="Prompt del sistema")
+    task_prompt: str = Field(..., description="Prompt de la tarea")
+    max_iterations: int = Field(10, description="Máximo de iteraciones del agente")
+
+
+# =============================================================================
 # Modelo principal de definición de agente
 # =============================================================================
 
@@ -82,10 +93,21 @@ class AgentDefinition(BaseModel):
         description="Configuración de la tarea CrewAI"
     )
 
+    # Campos específicos de LangGraph (Paso 11)
+    langgraph_config: Optional[LangGraphConfig] = Field(
+        None,
+        description="Configuración del agente LangGraph"
+    )
+
     @property
     def is_crewai(self) -> bool:
         """Indica si es un agente CrewAI."""
         return self.type == "crewai"
+
+    @property
+    def is_langgraph(self) -> bool:
+        """Indica si es un agente LangGraph."""
+        return self.type == "langgraph"
 
     @property
     def is_mock(self) -> bool:
@@ -196,6 +218,11 @@ class AgentConfigLoader:
         if "crewai_task" in config:
             crewai_task_config = CrewAITaskConfig(**config["crewai_task"])
 
+        # Parsear configuración LangGraph si existe
+        langgraph_config = None
+        if "langgraph_config" in config:
+            langgraph_config = LangGraphConfig(**config["langgraph_config"])
+
         return AgentDefinition(
             name=name,
             type=config.get("type", "mock"),
@@ -209,6 +236,7 @@ class AgentConfigLoader:
             llm=llm_config,
             crewai_agent=crewai_agent_config,
             crewai_task=crewai_task_config,
+            langgraph_config=langgraph_config,
         )
 
     def get(self, agent_name: str) -> AgentDefinition:

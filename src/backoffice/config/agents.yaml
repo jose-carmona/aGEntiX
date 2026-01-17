@@ -374,3 +374,91 @@ agents:
 
     required_permissions: []
     timeout_seconds: 30
+
+  # ==========================================================================
+  # RedactorResolucion - Agente LangGraph (Paso 11)
+  # ==========================================================================
+
+  RedactorResolucion:
+    type: langgraph
+    enabled: true
+    description: "Genera Resoluciones usando LangGraph ReAct agent"
+
+    # Configuración del LLM
+    llm:
+      provider: anthropic
+      model: claude-sonnet-4-5-20250929
+      max_tokens: 4096
+      temperature: 0.1
+      num_retries: 5
+      request_timeout: 180
+
+    # Configuración específica LangGraph
+    langgraph_config:
+      system_prompt: |
+        Eres un experto jurídico-administrativo de la administración pública española,
+        especializado en la redacción de resoluciones administrativas.
+
+        Tu experiencia incluye:
+        - Conocimiento profundo del procedimiento administrativo común (Ley 39/2015)
+        - Dominio de normativa sectorial: subvenciones (Ley 38/2003), urbanismo, autorizaciones
+        - Redacción de documentos administrativos formales
+        - Análisis de expedientes y fundamentación jurídica
+
+        IMPORTANTE:
+        - Siempre consulta los datos del expediente antes de actuar
+        - Utiliza las herramientas disponibles para obtener información
+        - Genera documentos formales, precisos y jurídicamente correctos
+        - Responde siempre en Español
+
+      task_prompt: |
+        Genera una Resolución para el expediente {expediente_id}.
+
+        PASOS A SEGUIR:
+
+        1. CONSULTAR EXPEDIENTE
+           - Usa 'consultar_expediente' con expediente_id="{expediente_id}"
+           - Extrae tipo, estado, datos del solicitante
+
+        2. LISTAR DOCUMENTOS
+           - Usa 'listar_documentos' con expediente_id="{expediente_id}"
+           - Identifica si existe propuesta de resolución
+
+        3. SI EXISTE PROPUESTA DE RESOLUCIÓN:
+           - Usa 'obtener_texto_documento' para leerla
+           - Basa tu resolución en la propuesta
+
+        4. GENERAR RESOLUCIÓN
+           - Redacta una resolución administrativa formal
+           - Incluye: encabezado, antecedentes, fundamentos, parte dispositiva
+           - Usa formato Markdown
+
+        5. GUARDAR DOCUMENTO
+           - Usa 'crear_documento_desde_markdown' con:
+             * expediente_id="{expediente_id}"
+             * nombre="resolucion.md"
+             * tipo="RESOLUCION"
+             * texto_markdown=<la resolución generada>
+
+        6. REGISTRAR ACCIÓN
+           - Usa 'añadir_anotacion' para dejar constancia
+
+        {additional_goal}
+
+        Responde con JSON indicando el resultado:
+        {{"completado": true, "documento_id": "...", "tipo_resolucion": "...", "resumen": "..."}}
+
+      max_iterations: 15
+
+    # Herramientas MCP disponibles
+    tools:
+      - consultar_expediente
+      - listar_documentos
+      - obtener_texto_documento
+      - crear_documento_desde_markdown
+      - añadir_anotacion
+
+    required_permissions:
+      - expediente.lectura
+      - documento.escritura
+    timeout_seconds: 600
