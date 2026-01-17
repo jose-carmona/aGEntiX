@@ -115,14 +115,19 @@ def list_langgraph_agents() -> list[str]:
     """
     Lista los nombres de agentes LangGraph.
 
+    Genera la lista dinámicamente desde AGENT_REGISTRY,
+    verificando qué clases son subclases de AgentLangGraph.
+
     Returns:
         Lista de nombres de agentes LangGraph (vacía si LangGraph no está instalado)
     """
-    if LANGGRAPH_AVAILABLE:
-        return [
-            "RedactorResolucion"
-        ]
-    return []
+    if not LANGGRAPH_AVAILABLE or AgentLangGraph is None:
+        return []
+
+    return [
+        name for name, cls in AGENT_REGISTRY.items()
+        if isinstance(cls, type) and issubclass(cls, AgentLangGraph)
+    ]
 
 
 def is_crewai_available() -> bool:

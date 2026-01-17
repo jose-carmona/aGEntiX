@@ -48,9 +48,23 @@ class AgentLangGraph(ABC):
         tarea_id: ID de la tarea BPMN
         run_id: ID único de esta ejecución
         mcp_registry: Registry para acceso a herramientas MCP
-        logger: Logger de auditoría
-        config: Configuración del agente desde YAML
+
+    Constantes:
+        TOOL_NAME_PATTERN: Regex para caracteres no permitidos en nombres de tools
+        SPANISH_CHAR_REPLACEMENTS: Mapa de caracteres españoles a ASCII
     """
+
+    # Patrón de Anthropic para nombres de tools: ^[a-zA-Z0-9_-]{1,128}$
+    # Este regex encuentra caracteres NO permitidos para reemplazarlos
+    TOOL_NAME_PATTERN = re.compile(r'[^a-zA-Z0-9_-]')
+
+    # Reemplazos de caracteres españoles a ASCII
+    SPANISH_CHAR_REPLACEMENTS = {
+        'ñ': 'n', 'Ñ': 'N',
+        'á': 'a', 'é': 'e', 'í': 'i', 'ó': 'o', 'ú': 'u',
+        'Á': 'A', 'É': 'E', 'Í': 'I', 'Ó': 'O', 'Ú': 'U',
+        'ü': 'u', 'Ü': 'U',
+    }
 
     def __init__(
         self,
@@ -163,28 +177,12 @@ class AgentLangGraph(ABC):
             Nombre sanitizado
         """
         # Reemplazar caracteres especiales comunes en español
-        replacements = {
-            'ñ': 'n',
-            'Ñ': 'N',
-            'á': 'a',
-            'é': 'e',
-            'í': 'i',
-            'ó': 'o',
-            'ú': 'u',
-            'Á': 'A',
-            'É': 'E',
-            'Í': 'I',
-            'Ó': 'O',
-            'Ú': 'U',
-            'ü': 'u',
-            'Ü': 'U',
-        }
         sanitized = name
-        for original, replacement in replacements.items():
+        for original, replacement in self.SPANISH_CHAR_REPLACEMENTS.items():
             sanitized = sanitized.replace(original, replacement)
 
         # Eliminar cualquier caracter que no sea alfanumérico, guión o guión bajo
-        sanitized = re.sub(r'[^a-zA-Z0-9_-]', '_', sanitized)
+        sanitized = self.TOOL_NAME_PATTERN.sub('_', sanitized)
 
         # Truncar a 128 caracteres
         return sanitized[:128]
@@ -243,14 +241,28 @@ class AgentLangGraph(ABC):
         """
         Obtiene la descripción de una herramienta MCP.
 
+        Primero intenta obtener la descripción del MCP Registry (dinámica).
+        Si no está disponible, usa descripciones fallback hardcodeadas.
+
         Args:
             tool_name: Nombre del tool
 
         Returns:
             Descripción del tool
         """
-        # Descripciones conocidas
-        descriptions = {
+        # Intentar obtener descripción del MCP Registry
+        try:
+            tools_info = self.mcp_registry.get_tools_with_schemas()
+            if tool_name in tools_info:
+                description = tools_info[tool_name].get("description", "")
+                if description:
+                    return description
+        except Exception:
+            # Si falla, usar fallback
+            pass
+
+        # Fallback: descripciones conocidas para cuando el MCP no está disponible
+        fallback_descriptions = {
             "consultar_expediente": "Consulta los datos completos de un expediente. Parámetro: expediente_id (string)",
             "listar_documentos": "Lista todos los documentos de un expediente. Parámetro: expediente_id (string)",
             "obtener_texto_documento": "Obtiene el texto de un documento. Parámetros: expediente_id (string), documento_id (string)",
@@ -261,7 +273,7 @@ class AgentLangGraph(ABC):
             "listar_documentacion": "Lista la documentación disponible para un tipo de expediente. Parámetro: tipo_expediente",
         }
 
-        return descriptions.get(
+        return fallback_descriptions.get(
             tool_name,
             f"Herramienta MCP: {tool_name}"
         )
