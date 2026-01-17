@@ -4,7 +4,7 @@ Hoja de ruta del proyecto con el estado de implementación y próximos pasos.
 
 ## Estado Actual del Proyecto
 
-**Fase actual:** Paso 10 - Captura de Logs de CrewAI ✅ COMPLETADO
+**Fase actual:** Paso 11 - Agentes LangGraph ✅ COMPLETADO
 
 ### Resumen de Progreso
 
@@ -20,9 +20,10 @@ Hoja de ruta del proyecto con el estado de implementación y próximos pasos.
 | 8 | MCP Documentación tipos expediente | ✅ Completado | 78 |
 | 9 | Agente generador documentos | 🔜 Pendiente | - |
 | 10 | Captura de logs de CrewAI | ✅ Completado | 14 |
-| 11 | Escalabilidad horizontal | 🔜 Pendiente | - |
+| 11 | Agentes LangGraph | ✅ Completado | 46 |
+| 12 | Escalabilidad horizontal | 🔜 Pendiente | - |
 
-**Total tests:** 336
+**Total tests:** 382
 
 ---
 
@@ -129,6 +130,26 @@ Sistema para capturar logs internos de CrewAI y redirigirlos al sistema de audit
 
 **Documentación:** [prompts/step-10-capture-crewai-logs.md](prompts/step-10-capture-crewai-logs.md)
 
+### Paso 11: Agentes LangGraph ✅
+
+Soporte para agentes usando LangChain/LangGraph como alternativa a CrewAI:
+
+- ✅ **AgentLangGraph (base_langgraph.py)** - Clase base para agentes LangGraph
+- ✅ **RedactorResolucion** - Primer agente LangGraph para generar resoluciones
+- ✅ **LangGraphConfig** - Configuración específica en agent_config_loader.py
+- ✅ **Integración con create_react_agent** - Agente ReAct de LangGraph
+- ✅ **StructuredTool automático** - Conversión de tools MCP a LangChain
+- ✅ **Sanitización de nombres** - Compatibilidad con API Anthropic (ñ→n)
+- ✅ **46 tests** de cobertura completa
+
+**Características:**
+- Misma interfaz que AgentReal (`execute() -> Dict`)
+- Reutiliza captura de logs de CrewAI
+- Soporte para `additional_goal` en prompts
+- Parseo automático de JSON en respuestas
+
+**Documentación:** [prompts/step-11-langchain-agent.md](prompts/step-11-langchain-agent.md)
+
 ---
 
 ## Pasos En Progreso
@@ -161,7 +182,7 @@ Agente capaz de generar documentos basados en plantillas:
 - [ ] Integración con MCP Documentación
 - [ ] Tests de generación
 
-### Paso 11: Escalabilidad Horizontal 🔜
+### Paso 12: Escalabilidad Horizontal 🔜
 
 Mejorar el sistema para escalar horizontalmente:
 
@@ -195,8 +216,8 @@ Sistema fortalecido con manejo completo de errores:
 
 | Métrica | Valor |
 |---------|-------|
-| Tests totales | 336 |
-| Tests pasando | 330+ |
+| Tests totales | 382 |
+| Tests pasando | 376+ |
 | Tests skip | ~6 |
 | Cobertura PII | 8 tipos |
 | Vulnerabilidades | 0 |
@@ -207,11 +228,12 @@ Sistema fortalecido con manejo completo de errores:
 
 | Suite | Tests | Descripción |
 |-------|-------|-------------|
-| Back-Office | 195 | JWT, MCP, PII, Executor, Protocols, CrewAI Logs |
+| Back-Office | 214 | JWT, MCP, PII, Executor, Protocols, CrewAI Logs, LangGraph |
 | API REST | 34 | Health, Agent endpoints |
 | MCP Mock | 78 | Auth, Resources, Tools, Server |
 | Contracts | 14 | Interfaces y contratos |
 | Error Handling | 15 | Resilience (12 activos, 3 skip) |
+| LangGraph | 46 | AgentLangGraph, config, sanitization |
 
 ---
 

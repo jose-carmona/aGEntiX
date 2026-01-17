@@ -14,4 +14,5 @@
 8) crear un nuevo mock MCP sobre documentación asociada al expediente.
 9) nuevo agente capaz de generar un documento basado en una plantilla.
 10) Completamos los agentes CrewAI capturando los logs y encaminarlos a nuestro sistema de log
-11) mejorar el sistema de agentes para que pueda escalar horizontalmente con Celery + redis con diferentes workers.
+11) Agente en Documento de Resolución en LangChain/LangGraph
+12) mejorar el sistema de agentes para que pueda escalar horizontalmente con Celery + redis con diferentes workers.
