@@ -12,7 +12,7 @@ from typing import Dict, Type, Union
 # Importación condicional para evitar errores si CrewAI no está instalado
 # o si hay problemas con dependencias (SQLite, ChromaDB, etc.)
 try:
-    from .base_real import AgentReal
+    from .base_real import AgentCrewAI
     from .clasificador_expediente import ClasificadorExpediente
     from .redactor_situacion import RedactorSituacion
     from .redactor_propuesta_resolucion import RedactorPropuestaResolucion
@@ -20,7 +20,7 @@ try:
     CREWAI_AVAILABLE = True
 except (ImportError, RuntimeError) as e:
     # RuntimeError captura problemas como SQLite incompatible
-    AgentReal = None
+    AgentCrewAI = None
     ClasificadorExpediente = None
     RedactorSituacion = None
     RedactorPropuestaResolucion = None
@@ -39,7 +39,7 @@ except (ImportError, RuntimeError) as e:
 
 
 # Tipo para agentes (CrewAI o LangGraph)
-AgentType = Union[Type["AgentReal"], Type["AgentLangGraph"]] if AgentReal or AgentLangGraph else type
+AgentType = Union[Type["AgentCrewAI"], Type["AgentLangGraph"]] if AgentCrewAI or AgentLangGraph else type
 
 
 # Registro de agentes disponibles

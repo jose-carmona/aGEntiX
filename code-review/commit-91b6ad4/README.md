@@ -32,7 +32,7 @@ Este commit implementa el soporte para agentes LangGraph como alternativa a Crew
 
 **Puntos Positivos:**
 - ✅ Importación condicional de LangGraph (graceful degradation)
-- ✅ Misma interfaz que `AgentReal` (`execute() -> Dict`)
+- ✅ Misma interfaz que `AgentCrewAI` (`execute() -> Dict`)
 - ✅ Sanitización de nombres de herramientas para API Anthropic
 - ✅ Manejo de argumentos envueltos en `kwargs`
 - ✅ Reutilización del sistema de logs de CrewAI
@@ -69,7 +69,7 @@ sanitized = re.sub(r'[^a-zA-Z0-9_-]', '_', sanitized)
 
 **Puntos Positivos:**
 - ✅ Importación condicional con fallback
-- ✅ Tipo `Union[AgentReal, AgentLangGraph]`
+- ✅ Tipo `Union[AgentCrewAI, AgentLangGraph]`
 - ✅ Funciones helper: `list_langgraph_agents()`, `is_langgraph_available()`
 
 **Área de Mejora:**

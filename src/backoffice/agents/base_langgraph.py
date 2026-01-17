@@ -38,7 +38,7 @@ class AgentLangGraph(ABC):
     """
     Clase base para agentes reales con LangGraph.
 
-    Implementa la misma interfaz que AgentReal para compatibilidad.
+    Implementa la misma interfaz que AgentCrewAI para compatibilidad.
 
     IMPORTANTE: Accede a datos del expediente mediante MCP tools,
     NO directamente. El LLM razona sobre los datos obtenidos.

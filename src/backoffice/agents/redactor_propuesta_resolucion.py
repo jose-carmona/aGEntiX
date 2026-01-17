@@ -9,10 +9,10 @@ y el informe de situación previo para generar una Propuesta de Resolución form
 Este es el tercer agente real implementado con CrewAI (Paso 9).
 """
 
-from .base_real import AgentReal
+from .base_real import AgentCrewAI
 
 
-class RedactorPropuestaResolucion(AgentReal):
+class RedactorPropuestaResolucion(AgentCrewAI):
     """
     Agente que genera Propuestas de Resolución usando CrewAI + Anthropic.
 
@@ -52,4 +52,4 @@ class RedactorPropuestaResolucion(AgentReal):
         #     }
         # }
     """
-    pass  # Toda la lógica está en AgentReal + configuración YAML
+    pass  # Toda la lógica está en AgentCrewAI + configuración YAML

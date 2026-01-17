@@ -21,7 +21,7 @@ from dataclasses import is_dataclass
 # Imports del sistema
 from src.backoffice.executor import AgentExecutor
 from src.backoffice.models import AgentExecutionResult, AgentConfig, AgentError
-from src.backoffice.agents.base_real import AgentReal  # Base class for agents
+from src.backoffice.agents.base_real import AgentCrewAI  # Base class for CrewAI agents
 from src.backoffice.mcp.registry import MCPClientRegistry
 from src.backoffice.logging.audit_logger import AuditLogger
 from src.backoffice.auth.jwt_validator import JWTClaims
@@ -123,12 +123,12 @@ def test_contract_agent_execution_result_structure():
 
 
 # ==============================================================================
-# CONTRACT-3: AgentReal.execute() Interface
+# CONTRACT-3: AgentCrewAI.execute() Interface
 # ==============================================================================
 
 def test_contract_base_agent_execute_interface():
     """
-    Test: Interface de AgentReal (base de agentes CrewAI) es estable
+    Test: Interface de AgentCrewAI (base de agentes CrewAI) es estable
 
     Si este test falla:
     - Se cambió la interfaz base de agentes
@@ -136,8 +136,8 @@ def test_contract_base_agent_execute_interface():
     - ACCIÓN: Revisar si cambio es necesario, mantener backward compatibility
     """
     # Verificar que execute existe
-    assert hasattr(AgentReal, 'execute')
-    execute_method = getattr(AgentReal, 'execute')
+    assert hasattr(AgentCrewAI, 'execute')
+    execute_method = getattr(AgentCrewAI, 'execute')
 
     # Verificar que es async
     assert inspect.iscoroutinefunction(execute_method)
@@ -149,7 +149,7 @@ def test_contract_base_agent_execute_interface():
         assert hints['return'] == Dict[str, Any] or hints['return'] == dict
 
     # Verificar que hay otros métodos auxiliares
-    assert hasattr(AgentReal, 'get_tools_used')
+    assert hasattr(AgentCrewAI, 'get_tools_used')
 
 
 # ==============================================================================

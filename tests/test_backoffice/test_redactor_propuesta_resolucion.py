@@ -54,11 +54,11 @@ class TestRedactorPropuestaResolucionRegistry:
         not is_crewai_available(),
         reason="CrewAI no está instalado"
     )
-    def test_redactor_propuesta_resolucion_extends_agent_real(self):
-        """RedactorPropuestaResolucion hereda de AgentReal"""
-        from backoffice.agents.base_real import AgentReal
+    def test_redactor_propuesta_resolucion_extends_agent_crewai(self):
+        """RedactorPropuestaResolucion hereda de AgentCrewAI"""
+        from backoffice.agents.base_real import AgentCrewAI
         agent_class = get_agent_class("RedactorPropuestaResolucion")
-        assert issubclass(agent_class, AgentReal)
+        assert issubclass(agent_class, AgentCrewAI)
 
 
 class TestRedactorPropuestaResolucionConfig:

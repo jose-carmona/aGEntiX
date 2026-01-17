@@ -11,7 +11,7 @@ Los agentes reales acceden a los datos del expediente mediante **herramientas MC
 ## Arquitectura
 
 ```text
-AgentReal (base_real.py)
+AgentCrewAI (base_real.py)
     |
     +-- MCPToolFactory --> MCPTool (wrapper sync→async)
     |                          |
@@ -21,7 +21,7 @@ AgentReal (base_real.py)
 
 ## Componentes
 
-### AgentReal (`base_real.py`)
+### AgentCrewAI (`base_real.py`)
 
 Clase base para agentes reales. Implementa la misma interfaz que `AgentMock`:
 
@@ -121,7 +121,7 @@ tools = agent.get_tools_used()
 
 ## Diferencias con AgentMock
 
-| Aspecto | AgentMock | AgentReal |
+| Aspecto | AgentMock | AgentCrewAI |
 |---------|-----------|-----------|
 | LLM | Ninguno | Anthropic Claude |
 | Razonamiento | Scripted | Dinámico |
@@ -131,7 +131,7 @@ tools = agent.get_tools_used()
 
 ## Compatibilidad
 
-- `AgentReal` implementa la misma interfaz que `AgentMock`
+- `AgentCrewAI` implementa la misma interfaz que `AgentMock`
 - `AgentExecutor` funciona igual con ambos tipos
 - Registry unificado: `AGENT_REGISTRY` contiene ambos tipos
 - Importación condicional: Si CrewAI no está instalado, solo agentes mock disponibles

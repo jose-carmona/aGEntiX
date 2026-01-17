@@ -12,10 +12,10 @@ Solo responde "OK" para verificar que todo el pipeline funciona:
 No usa herramientas MCP ni requiere permisos especiales.
 """
 
-from .base_real import AgentReal
+from .base_real import AgentCrewAI
 
 
-class AgenteTestSimple(AgentReal):
+class AgenteTestSimple(AgentCrewAI):
     """
     Agente de prueba que solo responde "OK".
 
@@ -28,4 +28,4 @@ class AgenteTestSimple(AgentReal):
 
     La configuración se carga desde src/backoffice/config/agents.yaml
     """
-    pass  # Toda la lógica está en AgentReal + configuración YAML
+    pass  # Toda la lógica está en AgentCrewAI + configuración YAML

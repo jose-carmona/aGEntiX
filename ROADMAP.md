@@ -90,7 +90,7 @@ Simplificación del sistema de invocación de agentes:
 
 Sistema de agentes reales usando CrewAI con Anthropic:
 
-- ✅ **AgentReal (base_real.py)** - Clase base para agentes CrewAI
+- ✅ **AgentCrewAI (base_real.py)** - Clase base para agentes CrewAI
 - ✅ **ClasificadorExpediente** - Clasifica expedientes por tipo
 - ✅ **RedactorSituacion** - Genera resúmenes de situación del expediente
 - ✅ **MCPToolWrapper** - Wrapper para exponer herramientas MCP a CrewAI
@@ -143,7 +143,7 @@ Soporte para agentes usando LangChain/LangGraph como alternativa a CrewAI:
 - ✅ **46 tests** de cobertura completa
 
 **Características:**
-- Misma interfaz que AgentReal (`execute() -> Dict`)
+- Misma interfaz que AgentCrewAI (`execute() -> Dict`)
 - Reutiliza captura de logs de CrewAI
 - Soporte para `additional_goal` en prompts
 - Parseo automático de JSON en respuestas

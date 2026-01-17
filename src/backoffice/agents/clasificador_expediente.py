@@ -9,10 +9,10 @@ accediendo a los datos reales del expediente mediante MCP.
 Este es el agente más simple implementado con CrewAI (Paso 6.1).
 """
 
-from .base_real import AgentReal
+from .base_real import AgentCrewAI
 
 
-class ClasificadorExpediente(AgentReal):
+class ClasificadorExpediente(AgentCrewAI):
     """
     Agente que clasifica expedientes usando CrewAI + Anthropic.
 
@@ -43,4 +43,4 @@ class ClasificadorExpediente(AgentReal):
         #     }
         # }
     """
-    pass  # Toda la lógica está en AgentReal + configuración YAML
+    pass  # Toda la lógica está en AgentCrewAI + configuración YAML

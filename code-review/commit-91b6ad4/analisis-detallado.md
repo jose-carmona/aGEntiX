@@ -23,7 +23,7 @@
               ┌───────────────┴───────────────┐
               ▼                               ▼
 ┌─────────────────────────┐     ┌─────────────────────────┐
-│      AgentReal          │     │     AgentLangGraph      │
+│      AgentCrewAI          │     │     AgentLangGraph      │
 │  (base_real.py)         │     │  (base_langgraph.py)    │
 │  - CrewAI integration   │     │  - LangChain integration│
 │  - MCPTool wrapper      │     │  - StructuredTool       │
@@ -232,7 +232,7 @@ def test_track_tool_use(self, ...):
 
 ## 5. Comparación: CrewAI vs LangGraph
 
-| Característica | AgentReal (CrewAI) | AgentLangGraph |
+| Característica | AgentCrewAI (CrewAI) | AgentLangGraph |
 |----------------|-------------------|----------------|
 | Framework | CrewAI | LangChain/LangGraph |
 | Tipo agente | Agent + Crew | ReAct Agent |

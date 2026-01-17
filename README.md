@@ -114,7 +114,7 @@ El Back-Office de agentes (`src/backoffice/`) se organiza en las siguientes capa
 
 | Componente | Ubicación | Descripción |
 |------------|-----------|-------------|
-| **AgentReal** | `agents/base_real.py` | Clase base abstracta para agentes CrewAI. Gestiona LLM, tools MCP y ejecución de crews. |
+| **AgentCrewAI** | `agents/base_real.py` | Clase base abstracta para agentes CrewAI. Gestiona LLM, tools MCP y ejecución de crews. |
 | **AgentRegistry** | `agents/registry.py` | Registro centralizado de clases de agentes. Mapea nombres a implementaciones. |
 | **MCPToolFactory** | `agents/mcp_tool_wrapper.py` | Factory que expone herramientas MCP como Tools de CrewAI con schemas dinámicos. |
 | **SchemaBuilder** | `agents/schema_builder.py` | Construye modelos Pydantic dinámicamente desde JSON Schema (MCP → CrewAI). |
@@ -144,7 +144,7 @@ El Back-Office de agentes (`src/backoffice/`) se organiza en las siguientes capa
 
 ### Componentes de Soporte
 
-- **AgentReal (base_real.py)**: Clase base para agentes CrewAI
+- **AgentCrewAI (base_real.py)**: Clase base para agentes CrewAI
 - **MCPToolWrapper**: Expone herramientas MCP a CrewAI
 - **SchemaBuilder**: Constructor de schemas para tools
 - **AgentConfigLoader**: Carga configuraciones de agente desde YAML

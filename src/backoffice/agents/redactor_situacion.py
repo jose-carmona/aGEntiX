@@ -9,10 +9,10 @@ estructurado con el resumen de situación actual del expediente.
 Este es el segundo agente real implementado con CrewAI (Paso 6.2).
 """
 
-from .base_real import AgentReal
+from .base_real import AgentCrewAI
 
 
-class RedactorSituacion(AgentReal):
+class RedactorSituacion(AgentCrewAI):
     """
     Agente que genera Informes de Situación usando CrewAI + Anthropic.
 
@@ -48,4 +48,4 @@ class RedactorSituacion(AgentReal):
         #     }
         # }
     """
-    pass  # Toda la lógica está en AgentReal + configuración YAML
+    pass  # Toda la lógica está en AgentCrewAI + configuración YAML

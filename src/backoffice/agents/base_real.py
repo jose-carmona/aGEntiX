@@ -39,7 +39,7 @@ except ImportError:
     LLM = None
 
 
-class AgentReal(ABC):
+class AgentCrewAI(ABC):
     """
     Clase base para agentes reales con CrewAI.
 

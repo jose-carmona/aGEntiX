@@ -19,13 +19,13 @@ from .registry import (
 # Agentes reales con CrewAI
 # Puede fallar si CrewAI no está instalado o hay problemas de dependencias
 try:
-    from .base_real import AgentReal
+    from .base_real import AgentCrewAI
     from .clasificador_expediente import ClasificadorExpediente
     from .redactor_situacion import RedactorSituacion
     from .mcp_tool_wrapper import MCPTool, MCPToolFactory
 except (ImportError, RuntimeError):
     # RuntimeError captura problemas como SQLite incompatible
-    AgentReal = None
+    AgentCrewAI = None
     ClasificadorExpediente = None
     RedactorSituacion = None
     MCPTool = None
@@ -42,7 +42,7 @@ except (ImportError, RuntimeError):
 
 __all__ = [
     # Base classes
-    "AgentReal",
+    "AgentCrewAI",
     "AgentLangGraph",
     # Registry
     "AGENT_REGISTRY",
