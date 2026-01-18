@@ -12,7 +12,7 @@ from typing import Dict, Type, Union
 # Importación condicional para evitar errores si CrewAI no está instalado
 # o si hay problemas con dependencias (SQLite, ChromaDB, etc.)
 try:
-    from .base_real import AgentCrewAI
+    from .base_crewai import AgentCrewAI
     from .clasificador_expediente import ClasificadorExpediente
     from .redactor_situacion import RedactorSituacion
     from .redactor_propuesta_resolucion import RedactorPropuestaResolucion

@@ -1,4 +1,4 @@
-# backoffice/agents/base_real.py
+# backoffice/agents/base_crewai.py
 
 """
 Clase base para agentes reales usando CrewAI.

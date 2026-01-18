@@ -9,7 +9,7 @@ estructurado con el resumen de situación actual del expediente.
 Este es el segundo agente real implementado con CrewAI (Paso 6.2).
 """
 
-from .base_real import AgentCrewAI
+from .base_crewai import AgentCrewAI
 
 
 class RedactorSituacion(AgentCrewAI):

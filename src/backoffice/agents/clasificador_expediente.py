@@ -9,7 +9,7 @@ accediendo a los datos reales del expediente mediante MCP.
 Este es el agente más simple implementado con CrewAI (Paso 6.1).
 """
 
-from .base_real import AgentCrewAI
+from .base_crewai import AgentCrewAI
 
 
 class ClasificadorExpediente(AgentCrewAI):

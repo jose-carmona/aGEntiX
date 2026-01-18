@@ -12,7 +12,7 @@ Solo responde "OK" para verificar que todo el pipeline funciona:
 No usa herramientas MCP ni requiere permisos especiales.
 """
 
-from .base_real import AgentCrewAI
+from .base_crewai import AgentCrewAI
 
 
 class AgenteTestSimple(AgentCrewAI):

@@ -19,7 +19,7 @@ from .registry import (
 # Agentes reales con CrewAI
 # Puede fallar si CrewAI no está instalado o hay problemas de dependencias
 try:
-    from .base_real import AgentCrewAI
+    from .base_crewai import AgentCrewAI
     from .clasificador_expediente import ClasificadorExpediente
     from .redactor_situacion import RedactorSituacion
     from .mcp_tool_wrapper import MCPTool, MCPToolFactory

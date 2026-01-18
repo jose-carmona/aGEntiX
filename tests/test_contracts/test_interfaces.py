@@ -21,7 +21,7 @@ from dataclasses import is_dataclass
 # Imports del sistema
 from src.backoffice.executor import AgentExecutor
 from src.backoffice.models import AgentExecutionResult, AgentConfig, AgentError
-from src.backoffice.agents.base_real import AgentCrewAI  # Base class for CrewAI agents
+from src.backoffice.agents.base_crewai import AgentCrewAI  # Base class for CrewAI agents
 from src.backoffice.mcp.registry import MCPClientRegistry
 from src.backoffice.logging.audit_logger import AuditLogger
 from src.backoffice.auth.jwt_validator import JWTClaims

@@ -56,7 +56,7 @@ class TestRedactorPropuestaResolucionRegistry:
     )
     def test_redactor_propuesta_resolucion_extends_agent_crewai(self):
         """RedactorPropuestaResolucion hereda de AgentCrewAI"""
-        from backoffice.agents.base_real import AgentCrewAI
+        from backoffice.agents.base_crewai import AgentCrewAI
         agent_class = get_agent_class("RedactorPropuestaResolucion")
         assert issubclass(agent_class, AgentCrewAI)
 
@@ -173,14 +173,14 @@ class TestRedactorPropuestaResolucionInitialization:
     @pytest.fixture
     def mock_settings(self):
         """Mock de settings"""
-        with patch('backoffice.agents.base_real.get_settings') as mock:
+        with patch('backoffice.agents.base_crewai.get_settings') as mock:
             mock.return_value = Mock(ANTHROPIC_API_KEY="test-key")
             yield mock
 
     @pytest.fixture
     def mock_crewai(self):
         """Mock de CrewAI components"""
-        with patch('backoffice.agents.base_real.LLM') as mock_llm:
+        with patch('backoffice.agents.base_crewai.LLM') as mock_llm:
             mock_llm.return_value = Mock()
             yield mock_llm
 

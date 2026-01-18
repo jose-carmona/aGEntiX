@@ -9,7 +9,7 @@ y el informe de situación previo para generar una Propuesta de Resolución form
 Este es el tercer agente real implementado con CrewAI (Paso 9).
 """
 
-from .base_real import AgentCrewAI
+from .base_crewai import AgentCrewAI
 
 
 class RedactorPropuestaResolucion(AgentCrewAI):
