@@ -35,6 +35,15 @@ function filterLogs(logs: LogEntry[], filters: LogFilters): LogEntry[] {
     );
   }
 
+  // Filtro por runId (agent_run_id)
+  if (filters.runId) {
+    filtered = filtered.filter(
+      (log) =>
+        log.agent_run_id &&
+        log.agent_run_id.toLowerCase().includes(filters.runId!.toLowerCase())
+    );
+  }
+
   // Filtro por rango de fechas
   if (filters.dateFrom) {
     filtered = filtered.filter((log) => new Date(log.timestamp) >= filters.dateFrom!);
@@ -109,6 +118,8 @@ export async function getLogs(
       level: filters.level?.join(','),
       component: filters.component?.join(','),
       agent: filters.agent?.join(','),
+      // IDs como strings
+      agent_run_id: filters.runId,
       // Convertir fechas a ISO strings
       date_from: filters.dateFrom?.toISOString(),
       date_to: filters.dateTo?.toISOString(),

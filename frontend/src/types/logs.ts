@@ -13,11 +13,8 @@ export type LogComponent =
   | 'TaskTracker'
   | 'Unknown';
 
-export type AgentType =
-  | 'ValidadorDocumental'
-  | 'AnalizadorSubvencion'
-  | 'GeneradorInforme'
-  | 'Unknown';
+// AgentType ahora es un string para permitir agentes dinámicos desde el API
+export type AgentType = string;
 
 export interface LogEntry {
   id: string;
@@ -43,6 +40,7 @@ export interface LogFilters {
   component?: LogComponent[];
   agent?: AgentType[];
   expediente_id?: string;
+  runId?: string;
   dateFrom?: Date;
   dateTo?: Date;
   searchText?: string;

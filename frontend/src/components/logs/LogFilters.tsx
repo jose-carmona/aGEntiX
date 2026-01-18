@@ -1,6 +1,8 @@
 import { FunnelIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { useEffect, useState } from 'react';
-import { AgentType, LogComponent, LogFilters as LogFiltersType, LogLevel } from '../../types/logs';
+import { LogComponent, LogFilters as LogFiltersType, LogLevel } from '../../types/logs';
+import { getAvailableAgents } from '../../services/agentService';
+import type { AgentInfo } from '../../types/agent';
 
 interface LogFiltersProps {
   filters: LogFiltersType;
@@ -21,20 +23,40 @@ const LOG_COMPONENTS: LogComponent[] = [
   'TaskTracker',
 ];
 
-const AGENT_TYPES: AgentType[] = [
-  'ValidadorDocumental',
-  'AnalizadorSubvencion',
-  'GeneradorInforme',
-];
-
 export function LogFilters({ filters, onFiltersChange, onClearFilters }: LogFiltersProps) {
   const [showFilters, setShowFilters] = useState(false);
   const [localExpedienteId, setLocalExpedienteId] = useState(filters.expediente_id || '');
+  const [localRunId, setLocalRunId] = useState(filters.runId || '');
+  const [availableAgents, setAvailableAgents] = useState<AgentInfo[]>([]);
+  const [loadingAgents, setLoadingAgents] = useState(false);
+
+  // Cargar agentes disponibles desde el API
+  useEffect(() => {
+    const fetchAgents = async () => {
+      setLoadingAgents(true);
+      try {
+        const agents = await getAvailableAgents();
+        setAvailableAgents(agents);
+      } catch (error) {
+        console.error('Error fetching agents:', error);
+        // En caso de error, mantener lista vacía
+        setAvailableAgents([]);
+      } finally {
+        setLoadingAgents(false);
+      }
+    };
+    fetchAgents();
+  }, []);
 
   // Actualizar expediente_id local cuando cambian los filtros externos
   useEffect(() => {
     setLocalExpedienteId(filters.expediente_id || '');
   }, [filters.expediente_id]);
+
+  // Actualizar runId local cuando cambian los filtros externos
+  useEffect(() => {
+    setLocalRunId(filters.runId || '');
+  }, [filters.runId]);
 
   const handleLevelToggle = (level: LogLevel) => {
     const currentLevels = filters.level || [];
@@ -57,11 +79,11 @@ export function LogFilters({ filters, onFiltersChange, onClearFilters }: LogFilt
     });
   };
 
-  const handleAgentToggle = (agent: AgentType) => {
+  const handleAgentToggle = (agentName: string) => {
     const currentAgents = filters.agent || [];
-    const newAgents = currentAgents.includes(agent)
-      ? currentAgents.filter((a) => a !== agent)
-      : [...currentAgents, agent];
+    const newAgents = currentAgents.includes(agentName)
+      ? currentAgents.filter((a) => a !== agentName)
+      : [...currentAgents, agentName];
 
     onFiltersChange({ ...filters, agent: newAgents.length > 0 ? newAgents : undefined });
   };
@@ -73,6 +95,18 @@ export function LogFilters({ filters, onFiltersChange, onClearFilters }: LogFilt
     // Debounce: actualizar filtro después de que el usuario deje de escribir
     const timer = setTimeout(() => {
       onFiltersChange({ ...filters, expediente_id: value || undefined });
+    }, 500);
+
+    return () => clearTimeout(timer);
+  };
+
+  const handleRunIdChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setLocalRunId(value);
+
+    // Debounce: actualizar filtro después de que el usuario deje de escribir
+    const timer = setTimeout(() => {
+      onFiltersChange({ ...filters, runId: value || undefined });
     }, 500);
 
     return () => clearTimeout(timer);
@@ -93,6 +127,7 @@ export function LogFilters({ filters, onFiltersChange, onClearFilters }: LogFilt
     (filters.component && filters.component.length > 0) ||
     (filters.agent && filters.agent.length > 0) ||
     filters.expediente_id ||
+    filters.runId ||
     filters.dateFrom ||
     filters.dateTo;
 
@@ -176,35 +211,58 @@ export function LogFilters({ filters, onFiltersChange, onClearFilters }: LogFilt
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Agente</label>
             <div className="flex flex-wrap gap-2">
-              {AGENT_TYPES.map((agent) => (
-                <button
-                  key={agent}
-                  onClick={() => handleAgentToggle(agent)}
-                  className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-                    filters.agent?.includes(agent)
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                >
-                  {agent}
-                </button>
-              ))}
+              {loadingAgents ? (
+                <span className="text-sm text-gray-500">Cargando agentes...</span>
+              ) : availableAgents.length === 0 ? (
+                <span className="text-sm text-gray-500">No hay agentes disponibles</span>
+              ) : (
+                availableAgents.map((agent) => (
+                  <button
+                    key={agent.name}
+                    onClick={() => handleAgentToggle(agent.name)}
+                    title={agent.description}
+                    className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                      filters.agent?.includes(agent.name)
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    {agent.name}
+                  </button>
+                ))
+              )}
             </div>
           </div>
 
-          {/* Expediente ID */}
-          <div>
-            <label htmlFor="expediente-id" className="block text-sm font-medium text-gray-700 mb-2">
-              Expediente ID
-            </label>
-            <input
-              id="expediente-id"
-              type="text"
-              value={localExpedienteId}
-              onChange={handleExpedienteIdChange}
-              placeholder="EXP-2024-001"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
+          {/* Expediente ID y Run ID */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="expediente-id" className="block text-sm font-medium text-gray-700 mb-2">
+                Expediente ID
+              </label>
+              <input
+                id="expediente-id"
+                type="text"
+                value={localExpedienteId}
+                onChange={handleExpedienteIdChange}
+                placeholder="EXP-2024-001"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="run-id" className="block text-sm font-medium text-gray-700 mb-2">
+                Run ID
+              </label>
+              <input
+                id="run-id"
+                type="text"
+                value={localRunId}
+                onChange={handleRunIdChange}
+                placeholder="RUN-abc123"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
           </div>
 
           {/* Rango de Fechas */}

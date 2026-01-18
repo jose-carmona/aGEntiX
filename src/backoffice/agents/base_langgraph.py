@@ -162,7 +162,7 @@ class AgentLangGraph(ABC):
             if tool:
                 tools.append(tool)
 
-        self.logger.log(f"Creadas {len(tools)} herramientas LangChain")
+        self.log(f"Creadas {len(tools)} herramientas LangChain")
         return tools
 
     def _sanitize_tool_name(self, name: str) -> str:
@@ -215,7 +215,7 @@ class AgentLangGraph(ABC):
                     actual_args = kwargs
 
                 self._track_tool_use(mcp_name)
-                self.logger.log(
+                self.log(
                     f"[LangGraph] Ejecutando tool MCP: {mcp_name}",
                     metadata={"tool": mcp_name, "args": actual_args}
                 )
@@ -226,7 +226,7 @@ class AgentLangGraph(ABC):
                     return json.dumps(result, ensure_ascii=False, default=str)
                 except Exception as e:
                     error_msg = f"Error en tool {mcp_name}: {str(e)}"
-                    self.logger.error(error_msg)
+                    self.log_error(error_msg, metadata={"tool": mcp_name})
                     return json.dumps({"error": error_msg})
 
             return tool_func
@@ -295,6 +295,35 @@ class AgentLangGraph(ABC):
             additional_goal=self.additional_goal
         )
 
+    def log(
+        self,
+        mensaje: str,
+        nivel: str = "INFO",
+        metadata: Optional[Dict[str, Any]] = None
+    ):
+        """
+        Registra un mensaje en el log incluyendo automáticamente el nombre del agente.
+
+        Args:
+            mensaje: Mensaje a logear
+            nivel: Nivel de log (INFO, WARNING, ERROR)
+            metadata: Metadata adicional (se fusiona con agent)
+        """
+        # Crear metadata con el nombre del agente
+        agent_metadata = {"agent": self.config.name}
+        if metadata:
+            agent_metadata.update(metadata)
+
+        self.logger.log(mensaje, nivel=nivel, metadata=agent_metadata)
+
+    def log_error(self, mensaje: str, metadata: Optional[Dict[str, Any]] = None):
+        """Registra un mensaje de error con el nombre del agente."""
+        self.log(mensaje, nivel="ERROR", metadata=metadata)
+
+    def log_warning(self, mensaje: str, metadata: Optional[Dict[str, Any]] = None):
+        """Registra un mensaje de advertencia con el nombre del agente."""
+        self.log(mensaje, nivel="WARNING", metadata=metadata)
+
     async def execute(self) -> Dict[str, Any]:
         """
         Ejecuta el agente usando LangGraph.
@@ -305,11 +334,11 @@ class AgentLangGraph(ABC):
         Returns:
             Dict con 'completado', 'mensaje', 'datos_actualizados'
         """
-        self.logger.log(
+        self.log(
             f"Iniciando agente LangGraph '{self.config.name}' "
             f"para expediente {self.expediente_id}"
         )
-        self.logger.log(f"Herramientas MCP disponibles: {self.config.mcp_tools}")
+        self.log(f"Herramientas MCP disponibles: {self.config.mcp_tools}")
 
         # Crear archivo temporal para logs
         log_file = create_crewai_log_file(self.run_id)
@@ -332,7 +361,7 @@ class AgentLangGraph(ABC):
             task_content = self._format_template(lg_cfg.task_prompt)
 
             # Ejecutar agente
-            self.logger.log("Ejecutando agente LangGraph...")
+            self.log("Ejecutando agente LangGraph...")
 
             # LangGraph puede ser síncrono, envolver en executor
             loop = asyncio.get_event_loop()
@@ -347,7 +376,7 @@ class AgentLangGraph(ABC):
 
             result = await loop.run_in_executor(None, run_agent)
 
-            self.logger.log("Agente LangGraph completado exitosamente")
+            self.log("Agente LangGraph completado exitosamente")
 
             # Extraer respuesta final
             messages = result.get("messages", [])
@@ -363,7 +392,7 @@ class AgentLangGraph(ABC):
 
             # Procesar logs
             entries = process_crewai_logs(log_file, self.logger, delete_after=False)
-            self.logger.log(f"Procesadas {entries} entradas de logs")
+            self.log(f"Procesadas {entries} entradas de logs")
 
             # Parsear resultado
             resultado_parseado = self._parse_result(final_message)
@@ -377,7 +406,7 @@ class AgentLangGraph(ABC):
         except Exception as e:
             process_crewai_logs(log_file, self.logger, delete_after=False)
             error_msg = f"Error en agente LangGraph: {str(e)}"
-            self.logger.error(error_msg)
+            self.log_error(error_msg)
             raise RuntimeError(error_msg) from e
 
         finally:
@@ -420,7 +449,7 @@ class AgentLangGraph(ABC):
         """
         if tool_name not in self._tools_used:
             self._tools_used.append(tool_name)
-            self.logger.log(f"Herramienta MCP usada: {tool_name}")
+            self.log(f"Herramienta MCP usada: {tool_name}", metadata={"tool": tool_name})
 
     def get_tools_used(self) -> List[str]:
         """

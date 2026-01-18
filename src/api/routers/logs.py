@@ -112,6 +112,7 @@ def filter_logs(
     component: Optional[str] = None,
     agent: Optional[str] = None,
     expediente_id: Optional[str] = None,
+    agent_run_id: Optional[str] = None,
     date_from: Optional[datetime] = None,
     date_to: Optional[datetime] = None,
     search: Optional[str] = None,
@@ -125,6 +126,7 @@ def filter_logs(
         component: Componentes separados por comas
         agent: Agentes separados por comas
         expediente_id: ID de expediente (búsqueda parcial)
+        agent_run_id: ID de ejecución del agente (búsqueda parcial)
         date_from: Fecha desde
         date_to: Fecha hasta
         search: Texto de búsqueda en mensaje y metadata
@@ -162,6 +164,16 @@ def filter_logs(
             for log in filtered
             if log.get("expediente_id")
             and exp_lower in log["expediente_id"].lower()
+        ]
+
+    # Filtro por agent_run_id (búsqueda parcial case-insensitive)
+    if agent_run_id:
+        run_id_lower = agent_run_id.lower()
+        filtered = [
+            log
+            for log in filtered
+            if log.get("agent_run_id")
+            and run_id_lower in log["agent_run_id"].lower()
         ]
 
     # Filtro por rango de fechas
@@ -247,6 +259,7 @@ async def get_logs(
     component: Optional[str] = Query(None, description="Componentes (separados por comas)"),
     agent: Optional[str] = Query(None, description="Agentes (separados por comas)"),
     expediente_id: Optional[str] = Query(None, description="ID de expediente (búsqueda parcial)"),
+    agent_run_id: Optional[str] = Query(None, description="ID de ejecución del agente (búsqueda parcial)"),
     date_from: Optional[datetime] = Query(None, description="Fecha desde (ISO 8601)"),
     date_to: Optional[datetime] = Query(None, description="Fecha hasta (ISO 8601)"),
     search: Optional[str] = Query(None, description="Búsqueda de texto completo"),
@@ -261,12 +274,13 @@ async def get_logs(
     - `component`: Componentes del sistema separados por comas
     - `agent`: Tipos de agente separados por comas
     - `expediente_id`: Búsqueda parcial por ID de expediente
+    - `agent_run_id`: Búsqueda parcial por ID de ejecución del agente
     - `date_from`, `date_to`: Rango de fechas en formato ISO 8601
     - `search`: Búsqueda de texto en mensaje y contexto
 
     **Ejemplo:**
     ```
-    GET /api/v1/logs?level=ERROR,CRITICAL&expediente_id=EXP-2024-001&page=1&page_size=50
+    GET /api/v1/logs?level=ERROR,CRITICAL&agent_run_id=RUN-abc123&page=1&page_size=50
     ```
 
     Returns:
@@ -283,6 +297,7 @@ async def get_logs(
         component=component,
         agent=agent,
         expediente_id=expediente_id,
+        agent_run_id=agent_run_id,
         date_from=date_from,
         date_to=date_to,
         search=search,
