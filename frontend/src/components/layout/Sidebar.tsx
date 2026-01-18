@@ -11,6 +11,10 @@ interface NavItem {
   icon: IconDefinition;
 }
 
+interface SidebarProps {
+  isCollapsed: boolean;
+}
+
 const navItems: NavItem[] = [
   { name: 'Dashboard', path: '/dashboard', icon: faChartLine },
   { name: 'Ejecutar Agente', path: '/execute', icon: faPlay },
@@ -19,7 +23,7 @@ const navItems: NavItem[] = [
   { name: 'MCP Server Mock', path: '/mcp-server', icon: faFolderOpen },
 ];
 
-export const Sidebar: React.FC = () => {
+export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed }) => {
   const { logout } = useAuth();
   const navigate = useNavigate();
 
@@ -29,24 +33,34 @@ export const Sidebar: React.FC = () => {
   };
 
   return (
-    <aside className="fixed top-16 left-0 z-40 w-64 h-[calc(100vh-4rem)] bg-zinc-800 shadow-md flex flex-col">
+    <aside
+      className={clsx(
+        'fixed top-16 left-0 z-40 h-[calc(100vh-4rem)] bg-zinc-800 shadow-md flex flex-col transition-all duration-300',
+        isCollapsed ? 'w-16' : 'w-64'
+      )}
+    >
       <nav className="mt-5 px-2 flex-1">
         <div className="space-y-1">
           {navItems.map((item) => (
             <NavLink
               key={item.path}
               to={item.path}
+              title={isCollapsed ? item.name : undefined}
               className={({ isActive }) =>
                 clsx(
-                  'group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors duration-200',
+                  'group flex items-center py-2 text-sm font-medium rounded-md transition-colors duration-200',
+                  isCollapsed ? 'px-2 justify-center' : 'px-3',
                   isActive
                     ? 'bg-zinc-700 text-white'
                     : 'text-zinc-300 hover:bg-zinc-700 hover:text-white'
                 )
               }
             >
-              <FontAwesomeIcon icon={item.icon} className="mr-3 w-5" />
-              {item.name}
+              <FontAwesomeIcon
+                icon={item.icon}
+                className={clsx('w-5', !isCollapsed && 'mr-3')}
+              />
+              {!isCollapsed && item.name}
             </NavLink>
           ))}
         </div>
@@ -54,10 +68,17 @@ export const Sidebar: React.FC = () => {
       <div className="px-2 pb-4">
         <button
           onClick={handleLogout}
-          className="w-full flex items-center px-3 py-2 text-sm font-medium rounded-md text-zinc-300 hover:bg-zinc-700 hover:text-white transition-colors duration-200"
+          title={isCollapsed ? 'Cerrar sesión' : undefined}
+          className={clsx(
+            'w-full flex items-center py-2 text-sm font-medium rounded-md text-zinc-300 hover:bg-zinc-700 hover:text-white transition-colors duration-200',
+            isCollapsed ? 'px-2 justify-center' : 'px-3'
+          )}
         >
-          <FontAwesomeIcon icon={faRightFromBracket} className="mr-3 w-5" />
-          Cerrar sesión
+          <FontAwesomeIcon
+            icon={faRightFromBracket}
+            className={clsx('w-5', !isCollapsed && 'mr-3')}
+          />
+          {!isCollapsed && 'Cerrar sesión'}
         </button>
       </div>
     </aside>
