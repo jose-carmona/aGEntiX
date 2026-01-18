@@ -19,7 +19,6 @@ router = APIRouter()
 @router.get(
     "/health",
     response_model=HealthResponse,
-    tags=["Health"],
     summary="Health check de la API",
     description="Verifica que la API y sus dependencias estén operativas"
 )

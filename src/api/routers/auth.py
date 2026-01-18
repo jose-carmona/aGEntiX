@@ -181,7 +181,6 @@ async def verify_admin_token(authorization: str = Header(..., description="Beare
 @router.post(
     "/validate-admin-token",
     response_model=TokenValidationResponse,
-    tags=["Authentication"],
     summary="Validar token de administración",
     description=(
         "Valida el token de administración para acceso al dashboard web.\n\n"
@@ -231,7 +230,6 @@ async def validate_admin_token(request: TokenValidationRequest):
 @router.post(
     "/generate-jwt",
     response_model=GenerateJWTResponse,
-    tags=["Authentication"],
     summary="Generar JWT de prueba para testing de agentes",
     description=(
         "Genera un token JWT válido para probar la ejecución de agentes.\n\n"

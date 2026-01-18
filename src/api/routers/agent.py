@@ -35,7 +35,6 @@ logger = logging.getLogger(__name__)
 @router.get(
     "/agents",
     response_model=ListAgentsResponse,
-    tags=["Agent"],
     summary="Listar agentes disponibles",
     description="Obtiene la lista de agentes configurados y sus descripciones"
 )
@@ -69,7 +68,6 @@ async def list_agents():
     "/execute",
     response_model=ExecuteAgentResponse,
     status_code=202,
-    tags=["Agent"],
     summary="Ejecutar agente de forma asíncrona",
     description="Inicia la ejecución de un agente y retorna inmediatamente. "
                 "El resultado se enviará al callback_url cuando termine (si se especifica)."
@@ -292,7 +290,6 @@ async def execute_and_callback(
 @router.get(
     "/status/{agent_run_id}",
     response_model=AgentStatusResponse,
-    tags=["Agent"],
     summary="Consultar estado de ejecución",
     description="Obtiene el estado actual de una ejecución de agente"
 )

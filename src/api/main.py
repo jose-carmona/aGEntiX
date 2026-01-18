@@ -94,6 +94,7 @@ app.include_router(
 
 app.include_router(
     logs.router,
+    prefix="/api/v1/logs",
     tags=["Logs"]
 )
 

@@ -15,7 +15,7 @@ from src.api.routers.auth import verify_admin_token
 from src.backoffice.settings import settings
 
 
-router = APIRouter(prefix="/api/v1/logs", tags=["logs"])
+router = APIRouter()
 
 
 # ============================================================================
