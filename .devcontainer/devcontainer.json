@@ -1,11 +1,10 @@
 {
   "name": "aGEntiX Development",
-  "image": "mcr.microsoft.com/devcontainers/python:3.11-bullseye",
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "app",
+  "workspaceFolder": "/workspaces/aGEntiX",
 
   "features": {
-    "ghcr.io/devcontainers/features/node:1": {
-      "version": "lts"
-    },
     "ghcr.io/devcontainers/features/git:1": {
       "version": "latest"
     },
@@ -69,34 +68,55 @@
         "eamodio.gitlens",
         "donjayamanne.githistory",
         "github.vscode-pull-request-github",
-        "esbenp.prettier-vscode"
+        "esbenp.prettier-vscode",
+        "cweijan.vscode-redis-client"
       ]
     }
   },
 
-  "forwardPorts": [8000, 8080, 5173],
+  "forwardPorts": [6379, 8000, 8080, 5173, 5555],
   "portsAttributes": {
+    "6379": {
+      "label": "Redis",
+      "onAutoForward": "silent"
+    },
     "8000": {
       "label": "MCP HTTP Server",
       "onAutoForward": "notify"
     },
+    "8080": {
+      "label": "API Backend",
+      "onAutoForward": "notify"
+    },
     "5173": {
-      "label": "MCP Inspector",
+      "label": "Frontend Vite",
       "onAutoForward": "openBrowser"
+    },
+    "5555": {
+      "label": "Flower (Celery UI)",
+      "onAutoForward": "notify"
     }
   },
+
+  "initializeCommand": "mkdir -p ${localEnv:HOME}/.claude ${localEnv:HOME}/.local/share/claude && touch ${localEnv:HOME}/.claude.json",
 
   "postCreateCommand": ".devcontainer/post-create.sh",
 
   "remoteUser": "vscode",
 
   "mounts": [
+    "source=${localEnv:HOME}/.claude,target=/home/vscode/.claude,type=bind,consistency=cached",
+    "source=${localEnv:HOME}/.claude.json,target=/home/vscode/.claude.json,type=bind",
     "source=${localWorkspaceFolder}/.git,target=/workspaces/${localWorkspaceFolderBasename}/.git,type=bind,consistency=cached"
   ],
 
   "containerEnv": {
     "PYTHONUNBUFFERED": "1",
     "PIP_DISABLE_PIP_VERSION_CHECK": "1",
-    "PYTHONUTF8": "1"
+    "PYTHONUTF8": "1",
+    "REDIS_HOST": "localhost",
+    "REDIS_PORT": "6379",
+    "CELERY_BROKER_URL": "redis://localhost:6379/0",
+    "CELERY_RESULT_BACKEND": "redis://localhost:6379/0"
   }
 }
