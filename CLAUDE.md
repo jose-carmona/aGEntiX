@@ -8,14 +8,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Current Project Status
 
-**Current Phase:** Paso 3 - Frontend Dashboard (Fase 2 - Dashboard de Métricas) ✅ COMPLETED
+**Current Phase:** Paso 12 - Escalado Horizontal con Celery + Redis ✅ COMPLETED
 
 ### Completed Phases
 
 #### Paso 1 - Back-Office Mock with Multi-MCP Architecture ✅
 #### Paso 2 - API REST con FastAPI ✅
-#### Paso 3 - Fase 1: Sistema de Autenticación Frontend ✅
-#### Paso 3 - Fase 2: Dashboard de Métricas ✅
+#### Paso 3 - Sistema de Autenticación Frontend y Dashboard ✅
+#### Paso 12 - Escalado Horizontal con Celery + Redis ✅
 
 ### Implemented Features (Paso 1 - Back-Office)
 
@@ -104,19 +104,52 @@ See `code-review/commit-c039abe/` for detailed analysis and improvement plan (10
 
 **Documentation:** `/doc/paso-3-fase-2-dashboard-metricas.md`
 
+### Implemented Features (Paso 12 - Escalado Horizontal)
+
+- ✅ **Celery + Redis**: Sistema de colas distribuido para ejecución de agentes
+- ✅ **Feature Flag `USE_CELERY`**: Migración gradual sin downtime
+  - `false`: BackgroundTasks en proceso (desarrollo)
+  - `true`: Celery + Redis distribuido (producción)
+- ✅ **TaskTracker Dual Backend**:
+  - `TaskTrackerInMemory`: Para desarrollo (USE_CELERY=false)
+  - `TaskTrackerRedis`: Para producción (USE_CELERY=true, TTL 7 días)
+- ✅ **Celery Task con Resiliencia**:
+  - Auto-retry con backoff exponencial
+  - Métricas Prometheus (counter, histogram)
+  - Timeout configurable
+- ✅ **Scripts de Inicio**: `run-celery.sh`, `run-flower.sh`
+- ✅ **Docker Compose**: `docker-compose.prod.yml` para producción
+- ✅ **Flower UI**: Monitoreo de workers y tareas
+
+**Componentes Celery:**
+- `src/backoffice/redis_client.py` - Cliente Redis con connection pooling
+- `src/backoffice/celery_app.py` - Configuración Celery
+- `src/backoffice/tasks/agent_execution.py` - Tarea principal
+- `src/api/services/task_tracker_redis.py` - TaskTracker Redis
+
 ## Quick Reference for Common Tasks
 
 ### Running the Application
 
+#### Scripts de Inicio Disponibles
+
+| Script | Puerto | Descripción |
+|--------|--------|-------------|
+| `./run-mcp.sh` | 8000 | MCP Mock Server |
+| `./run-api.sh` | 8080 | API REST FastAPI |
+| `./run-celery.sh` | - | Celery Worker |
+| `./run-flower.sh` | 5555 | Flower UI (monitoreo) |
+
 #### Backend (API REST - Port 8080)
 
 ```bash
-cd /workspaces/aGEntiX
+# Opción 1: Script (recomendado)
+./run-api.sh
 
-# Iniciar servidor FastAPI
+# Opción 2: Manual
 python -m uvicorn src.api.main:app --reload --port 8080
 
-# Verificar que está corriendo
+# Verificar
 curl http://localhost:8080/health
 ```
 
@@ -139,13 +172,55 @@ npm run dev
 #### MCP Mock Server (Port 8000)
 
 ```bash
-cd src/mcp_mock/mcp_expedientes
+# Opción 1: Script (recomendado)
+./run-mcp.sh
 
-# Iniciar servidor MCP
+# Opción 2: Manual
+cd src/mcp_mock/mcp_expedientes
 python -m uvicorn server_http:app --reload --port 8000
 
 # Generar token de prueba
 python -m generate_token EXP-2024-001
+```
+
+#### Celery Worker (Modo Distribuido)
+
+```bash
+# Requisito: Redis corriendo
+redis-cli ping  # Debe responder PONG
+
+# Iniciar worker
+./run-celery.sh
+
+# Variables de entorno opcionales:
+CELERY_CONCURRENCY=4 ./run-celery.sh
+CELERY_LOGLEVEL=debug ./run-celery.sh
+```
+
+#### Flower (Monitoreo Celery - Port 5555)
+
+```bash
+./run-flower.sh
+
+# Acceso: http://localhost:5555
+# Credenciales: admin/admin (configurables via FLOWER_USER/FLOWER_PASSWORD)
+```
+
+#### Desarrollo con Celery Habilitado
+
+```bash
+# 1. Asegurar Redis corriendo
+redis-server --daemonize yes
+
+# 2. Configurar .env
+echo "USE_CELERY=true" >> .env
+
+# 3. Iniciar servicios (cada uno en terminal separado)
+./run-mcp.sh      # Terminal 1
+./run-celery.sh   # Terminal 2
+./run-flower.sh   # Terminal 3 (opcional)
+./run-api.sh      # Terminal 4
+cd frontend && npm run dev  # Terminal 5
 ```
 
 ### Running Tests
@@ -170,6 +245,7 @@ python -m generate_token EXP-2024-001
   - **Admin Auth:** API_ADMIN_TOKEN (for dashboard access)
   - **Config:** MCP_CONFIG_PATH, LOG_LEVEL, LOG_DIR
   - **CORS:** CORS_ORIGINS (include frontend port 5173)
+  - **Celery:** USE_CELERY, CELERY_BROKER_URL, CELERY_RESULT_BACKEND, CELERY_TASK_TIME_LIMIT
 
 - **Frontend Environment**: `frontend/.env`
   - VITE_API_URL=http://localhost:8080 (backend API URL)
@@ -204,6 +280,10 @@ src/
 │   ├── logging/
 │   │   ├── pii_redactor.py  # PII redaction (8 types)
 │   │   └── audit_logger.py  # Structured logging
+│   ├── tasks/               # Celery Tasks (Paso 12)
+│   │   └── agent_execution.py  # Task principal
+│   ├── celery_app.py        # Celery configuration
+│   ├── redis_client.py      # Redis connection pool
 │   └── agents/
 │       ├── base.py          # BaseAgent class
 │       └── [specific agents]  # Mock implementations
@@ -408,24 +488,13 @@ See `/doc/010-tipos-tareas.md` through `/doc/013-tareas-ia-candidatas.md` for de
 
 ## Next Steps (Roadmap)
 
-### Paso 2: API REST with FastAPI
-- Endpoint `POST /api/v1/agent/execute`
-- Background async tasks
-- Webhooks to notify BPMN
-- Prometheus metrics
-- OpenAPI documentation
+### Completed ✅
+- **Paso 1-3**: Back-Office, API REST, Frontend Dashboard
+- **Paso 12**: Escalado horizontal con Celery + Redis
 
-### Paso 3: Real AI Agents
-- LangGraph/CrewAI integration
-- Real LLMs (Anthropic Claude, OpenAI)
-- Multi-step dynamic reasoning
-- Maintains `AgentExecutor` interface (backward compatible)
-
-### Paso 4: Horizontal Scalability
-- Celery + Redis task queue
-- Multiple concurrent workers
-- Automatic load balancing
-- Monitoring and metrics
+### Pending
+- **Paso 9-11**: Generador de documentos, integración LangGraph
+- **Production deployment**: Kubernetes, CI/CD
 
 ## Language
 
@@ -458,28 +527,34 @@ The primary language of this project is **Spanish**. Code comments, documentatio
 ## Useful Commands
 
 ```bash
-# Start MCP server
+# Start services (scripts recomendados)
+./run-mcp.sh      # MCP Mock (puerto 8000)
+./run-api.sh      # API REST (puerto 8080)
+./run-celery.sh   # Celery Worker
+./run-flower.sh   # Flower UI (puerto 5555)
+
+# Start MCP server (manual)
 cd src/mcp_mock/mcp_expedientes
 python -m uvicorn server_http:app --reload --port 8000
 
 # Generate test token
-cd src/mcp_mock/mcp_expedientes
 python -m generate_token EXP-2024-001
 
 # Run specific test file
 pytest tests/test_backoffice/test_jwt_validator.py -v
 
 # Run all tests
-./run-tests.sh  # 119 tests total
-
-# Run only backoffice tests
-./run-tests.sh --backoffice-only  # 86 tests
-
-# Run only MCP tests
-./run-tests.sh --mcp-only  # 33 tests
+./run-tests.sh  # 248+ tests total
 
 # Run with coverage
 pytest --cov=src/backoffice --cov=src/mcp_mock --cov-report=html
+
+# Celery commands
+redis-cli ping                    # Verificar Redis
+./run-celery.sh                   # Iniciar worker
+./run-flower.sh                   # Iniciar Flower
+celery -A backoffice.celery_app inspect active  # Ver tareas activas
+celery -A backoffice.celery_app purge           # Limpiar cola
 
 # Check code quality
 pylint src/backoffice/

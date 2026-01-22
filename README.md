@@ -17,7 +17,8 @@ GEX es la aplicación central de gestión administrativa desarrollada por Eprins
 | 1-3 | Infraestructura (Back-Office, API, Frontend) | ✅ Completado |
 | 4-6 | Agentes reales con CrewAI | ✅ Completado |
 | 7-8 | MCPs adicionales (Documentos, Documentación) | ✅ Completado |
-| 9-10 | Generador documentos, Escalabilidad | 🔜 Pendiente |
+| 9-11 | Generador documentos, LangGraph | 🔜 Pendiente |
+| 12 | Escalado horizontal (Celery + Redis) | ✅ Completado |
 
 **Ver [ROADMAP.md](ROADMAP.md) para detalles completos de progreso y próximos pasos.**
 
@@ -256,6 +257,58 @@ El script automatiza todo el flujo:
 ./test-agent.sh EXP-2024-001 AgenteTestSimple    # Agente de prueba (solo responde OK)
 ```
 
+### Scripts de Inicio
+
+El proyecto incluye scripts para iniciar cada componente:
+
+| Script | Puerto | Descripción |
+|--------|--------|-------------|
+| `./run-mcp.sh` | 8000 | MCP Mock Server (Expedientes) |
+| `./run-api.sh` | 8080 | API REST FastAPI |
+| `./run-celery.sh` | - | Celery Worker (requiere Redis) |
+| `./run-flower.sh` | 5555 | Flower UI (monitoreo Celery) |
+| `cd frontend && npm run dev` | 5173 | Frontend React |
+
+**Modo desarrollo básico (sin Celery):**
+```bash
+# Terminal 1: MCP Mock
+./run-mcp.sh
+
+# Terminal 2: API
+./run-api.sh
+
+# Terminal 3: Frontend
+cd frontend && npm run dev
+```
+
+**Modo desarrollo con Celery (escalable):**
+```bash
+# Terminal 1: Redis (si no está corriendo)
+redis-server --daemonize yes
+
+# Terminal 2: MCP Mock
+./run-mcp.sh
+
+# Terminal 3: Celery Worker
+./run-celery.sh
+
+# Terminal 4: Flower (opcional, monitoreo)
+./run-flower.sh
+
+# Terminal 5: API (con USE_CELERY=true en .env)
+./run-api.sh
+
+# Terminal 6: Frontend
+cd frontend && npm run dev
+```
+
+**Variables de entorno para Celery (.env):**
+```bash
+USE_CELERY=true                              # Activar modo Celery
+CELERY_BROKER_URL=redis://localhost:6379/0   # Redis broker
+CELERY_RESULT_BACKEND=redis://localhost:6379/0
+```
+
 ### Opción A: API REST (Recomendado para Integración)
 
 Para integración programática o automatización:
@@ -438,10 +491,17 @@ aGEntiX/
 │
 ├── doc/                            # Documentación Zettelkasten
 ├── code-review/                    # Code reviews por commit
+├── scripts/                        # Scripts de producción
+│   ├── start_worker.sh            # Worker Celery (producción)
+│   └── start_flower.sh            # Flower UI (producción)
 ├── ROADMAP.md                      # Hoja de ruta del proyecto
 ├── run-tests.sh                    # Script unificado de tests
 ├── run-api.sh                      # Script para iniciar API
+├── run-mcp.sh                      # Script para iniciar MCP Mock
+├── run-celery.sh                   # Script para iniciar Celery Worker
+├── run-flower.sh                   # Script para iniciar Flower UI
 ├── test-agent.sh                   # Script para probar agentes E2E
+├── docker-compose.prod.yml         # Docker Compose para producción
 └── README.md                       # Este archivo
 ```
 
@@ -493,6 +553,12 @@ CORS_ORIGINS=http://localhost:3000,http://localhost:5173,http://localhost:8080,*
 
 # MCP Configuration
 MCP_CONFIG_PATH=backoffice/config/mcp_servers.yaml
+
+# Celery + Redis (Paso 12 - Escalado Horizontal)
+USE_CELERY=false                             # true para modo distribuido
+CELERY_BROKER_URL=redis://localhost:6379/0
+CELERY_RESULT_BACKEND=redis://localhost:6379/0
+CELERY_TASK_TIME_LIMIT=3600
 
 # Logging
 LOG_LEVEL=INFO
