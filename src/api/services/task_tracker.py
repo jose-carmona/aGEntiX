@@ -3,20 +3,30 @@
 """
 Task Tracker para seguimiento de ejecuciones de agentes.
 
-Mantiene en memoria el estado de las ejecuciones asíncronas.
-En producción (Paso 5) esto será reemplazado por Redis.
+Soporta dos backends:
+- TaskTrackerInMemory: Para desarrollo y testing (USE_CELERY=false)
+- TaskTrackerRedis: Para producción distribuida (USE_CELERY=true)
+
+La elección del backend se hace automáticamente según el flag USE_CELERY.
 """
 
+import logging
 from datetime import datetime, timezone
-from typing import Dict, Optional, Any
+from typing import Dict, Optional, Any, Union
 from threading import Lock
 
+from backoffice.settings import settings
 
-class TaskTracker:
+logger = logging.getLogger(__name__)
+
+
+class TaskTrackerInMemory:
     """
     Tracker simple en memoria para estado de tareas asíncronas.
 
     Thread-safe mediante Lock.
+
+    Usado cuando USE_CELERY=false para desarrollo y testing.
     """
 
     def __init__(self):
@@ -154,15 +164,48 @@ class TaskTracker:
             return len(to_delete)
 
 
-# Instancia global
-_task_tracker = TaskTracker()
+# Alias para backward compatibility
+TaskTracker = TaskTrackerInMemory
 
 
-def get_task_tracker() -> TaskTracker:
+# Instancias globales (singleton pattern)
+_task_tracker_in_memory: Optional[TaskTrackerInMemory] = None
+_task_tracker_redis: Optional[Any] = None  # Type hint evita import circular
+
+
+def get_task_tracker() -> Union[TaskTrackerInMemory, Any]:
     """
-    Dependency injection para FastAPI.
+    Factory para obtener el TaskTracker apropiado según USE_CELERY.
+
+    - USE_CELERY=false: Retorna TaskTrackerInMemory (desarrollo)
+    - USE_CELERY=true: Retorna TaskTrackerRedis (producción)
 
     Returns:
-        Instancia global del TaskTracker
+        Instancia singleton del TaskTracker configurado.
     """
-    return _task_tracker
+    global _task_tracker_in_memory, _task_tracker_redis
+
+    if settings.USE_CELERY:
+        # Modo Celery: usar Redis
+        if _task_tracker_redis is None:
+            from .task_tracker_redis import TaskTrackerRedis
+            _task_tracker_redis = TaskTrackerRedis()
+            logger.info("TaskTracker: Usando backend Redis (USE_CELERY=true)")
+        return _task_tracker_redis
+    else:
+        # Modo BackgroundTasks: usar memoria
+        if _task_tracker_in_memory is None:
+            _task_tracker_in_memory = TaskTrackerInMemory()
+            logger.info("TaskTracker: Usando backend InMemory (USE_CELERY=false)")
+        return _task_tracker_in_memory
+
+
+def reset_task_tracker() -> None:
+    """
+    Resetea las instancias singleton (para testing).
+
+    Esto permite cambiar entre backends en tests.
+    """
+    global _task_tracker_in_memory, _task_tracker_redis
+    _task_tracker_in_memory = None
+    _task_tracker_redis = None

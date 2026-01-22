@@ -1,0 +1,200 @@
+# docker-compose.prod.yml
+#
+# Docker Compose para producción con Celery + Redis
+#
+# Uso:
+#   docker-compose -f docker-compose.prod.yml up -d
+#
+# Servicios:
+#   - redis: Broker de mensajes y backend de resultados
+#   - api: API FastAPI (stateless)
+#   - celery_worker: Workers Celery para ejecutar agentes
+#   - flower: UI de monitoreo de Celery
+#
+# IMPORTANTE: Configurar variables en .env antes de usar
+
+version: '3.8'
+
+services:
+  # ===========================================================================
+  # Redis - Broker y Backend
+  # ===========================================================================
+  redis:
+    image: redis:7-alpine
+    container_name: agentix-redis
+    command: >
+      redis-server
+      --requirepass ${REDIS_PASSWORD:-changeme}
+      --appendonly yes
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-changeme}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    restart: unless-stopped
+    networks:
+      - agentix-network
+
+  # ===========================================================================
+  # API FastAPI - Stateless
+  # ===========================================================================
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: agentix-api
+    command: >
+      uvicorn src.api.main:app
+      --host 0.0.0.0
+      --port 8080
+      --workers ${API_WORKERS:-4}
+    ports:
+      - "${API_PORT:-8080}:8080"
+    environment:
+      # Feature Flag
+      - USE_CELERY=true
+
+      # Redis
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_DB=0
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-changeme}
+
+      # Celery
+      - CELERY_BROKER_URL=redis://:${REDIS_PASSWORD:-changeme}@redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://:${REDIS_PASSWORD:-changeme}@redis:6379/0
+
+      # JWT
+      - JWT_SECRET=${JWT_SECRET:?JWT_SECRET required}
+      - JWT_ALGORITHM=${JWT_ALGORITHM:-HS256}
+      - JWT_EXPECTED_ISSUER=${JWT_EXPECTED_ISSUER:-agentix-bpmn}
+      - JWT_EXPECTED_SUBJECT=${JWT_EXPECTED_SUBJECT:-Automático}
+      - JWT_REQUIRED_AUDIENCE=${JWT_REQUIRED_AUDIENCE:-agentix-mcp-expedientes}
+
+      # Admin Auth
+      - API_ADMIN_TOKEN=${API_ADMIN_TOKEN:?API_ADMIN_TOKEN required}
+
+      # Logging
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+
+      # MCP
+      - MCP_CONFIG_PATH=/app/src/backoffice/config/mcp_servers.yaml
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+    networks:
+      - agentix-network
+
+  # ===========================================================================
+  # Celery Workers - Ejecutan agentes
+  # ===========================================================================
+  celery_worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: >
+      celery -A backoffice.celery_app worker
+      --loglevel=${LOG_LEVEL:-info}
+      --concurrency=${CELERY_WORKER_CONCURRENCY:-4}
+      --max-tasks-per-child=100
+    environment:
+      # Redis
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_DB=0
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-changeme}
+
+      # Celery
+      - CELERY_BROKER_URL=redis://:${REDIS_PASSWORD:-changeme}@redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://:${REDIS_PASSWORD:-changeme}@redis:6379/0
+      - CELERY_TASK_TIME_LIMIT=${CELERY_TASK_TIME_LIMIT:-3600}
+
+      # JWT (necesario para validación en workers)
+      - JWT_SECRET=${JWT_SECRET:?JWT_SECRET required}
+      - JWT_ALGORITHM=${JWT_ALGORITHM:-HS256}
+      - JWT_EXPECTED_ISSUER=${JWT_EXPECTED_ISSUER:-agentix-bpmn}
+      - JWT_EXPECTED_SUBJECT=${JWT_EXPECTED_SUBJECT:-Automático}
+      - JWT_REQUIRED_AUDIENCE=${JWT_REQUIRED_AUDIENCE:-agentix-mcp-expedientes}
+
+      # MCP
+      - MCP_CONFIG_PATH=/app/src/backoffice/config/mcp_servers.yaml
+
+      # LLM (si se usa Claude/OpenAI)
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+
+      # Logging
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    depends_on:
+      redis:
+        condition: service_healthy
+    deploy:
+      replicas: ${CELERY_WORKER_REPLICAS:-2}
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    restart: unless-stopped
+    networks:
+      - agentix-network
+
+  # ===========================================================================
+  # Flower - UI de Monitoreo
+  # ===========================================================================
+  flower:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: agentix-flower
+    command: >
+      celery -A backoffice.celery_app flower
+      --port=5555
+      --basic_auth=${FLOWER_USER:-admin}:${FLOWER_PASSWORD:-changeme}
+      --url_prefix=flower
+    ports:
+      - "${FLOWER_PORT:-5555}:5555"
+    environment:
+      - CELERY_BROKER_URL=redis://:${REDIS_PASSWORD:-changeme}@redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://:${REDIS_PASSWORD:-changeme}@redis:6379/0
+    depends_on:
+      redis:
+        condition: service_healthy
+      celery_worker:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5555/flower/healthcheck"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+    networks:
+      - agentix-network
+
+# ===========================================================================
+# Volumes
+# ===========================================================================
+volumes:
+  redis_data:
+    driver: local
+
+# ===========================================================================
+# Networks
+# ===========================================================================
+networks:
+  agentix-network:
+    driver: bridge

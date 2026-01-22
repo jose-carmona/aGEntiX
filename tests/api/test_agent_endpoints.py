@@ -10,13 +10,30 @@ Incluye tests para:
 """
 
 import pytest
+import re
 from fastapi.testclient import TestClient
 from unittest.mock import Mock, AsyncMock, patch
 
 from api.main import app
 from backoffice.config import reset_agent_loader
+from backoffice.settings import settings
 
 client = TestClient(app)
+
+
+def is_valid_agent_run_id(agent_run_id: str) -> bool:
+    """
+    Valida que agent_run_id sea válido.
+
+    Acepta dos formatos:
+    - BackgroundTasks mode: "RUN-..." (e.g., "RUN-abc123")
+    - Celery mode: UUID (e.g., "550e8400-e29b-41d4-a716-446655440000")
+    """
+    if agent_run_id.startswith("RUN-"):
+        return True
+    # UUID pattern
+    uuid_pattern = r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    return bool(re.match(uuid_pattern, agent_run_id, re.IGNORECASE))
 
 
 # =============================================================================
@@ -188,7 +205,8 @@ class TestExecuteAgentSimplified:
         data = response.json()
         assert data["status"] == "accepted"
         assert "agent_run_id" in data
-        assert data["agent_run_id"].startswith("RUN-")
+        assert is_valid_agent_run_id(data["agent_run_id"]), \
+            f"agent_run_id '{data['agent_run_id']}' debe ser 'RUN-*' o UUID"
         assert data["callback_url"] == "https://example.com/callback"
 
     @patch('api.routers.agent.create_default_executor')
@@ -353,6 +371,11 @@ class TestCallbackUrlValidation:
 class TestAgentConfigIntegration:
     """Tests de integración entre endpoints y configuración de agentes"""
 
+    @pytest.mark.skipif(
+        settings.USE_CELERY,
+        reason="Este test requiere BackgroundTasks mode. Con Celery, el executor "
+               "se crea dentro del worker, no en el router."
+    )
     @patch('api.routers.agent.create_default_executor')
     def test_execute_uses_agent_config_from_yaml(self, mock_executor):
         """Execute usa la configuración del agente desde YAML"""

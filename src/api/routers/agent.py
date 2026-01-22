@@ -6,6 +6,10 @@ Endpoints para ejecución y gestión de agentes.
 - POST /execute: Ejecuta un agente de forma asíncrona
 - GET /status/{agent_run_id}: Consulta estado de ejecución
 - GET /agents: Lista agentes disponibles
+
+Soporta dos modos de ejecución según USE_CELERY:
+- false: BackgroundTasks (desarrollo, testing)
+- true: Celery + Redis (producción, escalable)
 """
 
 import asyncio
@@ -91,7 +95,7 @@ async def execute_agent(
     2. Carga configuración del agente desde YAML
     3. Crea executor con DI
     4. Registra tarea en tracker
-    5. Inicia ejecución en background
+    5. Inicia ejecución en background (Celery o BackgroundTasks según USE_CELERY)
     6. Retorna 202 Accepted inmediatamente
 
     **Callback:**
@@ -130,14 +134,7 @@ async def execute_agent(
 
     agent_definition = agent_loader.get(request.agent)
 
-    # 3. Crear executor con implementaciones por defecto
-    executor = create_default_executor(
-        mcp_config_path=settings.MCP_CONFIG_PATH,
-        jwt_secret=settings.JWT_SECRET,
-        jwt_algorithm=settings.JWT_ALGORITHM
-    )
-
-    # 4. Construir AgentConfig combinando YAML + request
+    # 3. Construir AgentConfig combinando YAML + request
     # El additional_goal se añadirá al goal del agente definido en YAML
     # Para agentes CrewAI, el modelo está en llm.model
     modelo = agent_definition.model
@@ -152,46 +149,165 @@ async def execute_agent(
         additional_goal=request.additional_goal  # Se interpola en {additional_goal} del goal
     )
 
-    # 5. Generar run_id y registrar tarea
-    agent_run_id = f"RUN-{datetime.now(timezone.utc).strftime('%Y%m%d-%H%M%S-%f')}"
+    # 4. Determinar callback_url y timeout
+    callback_url = str(request.callback_url) if request.callback_url else None
+    timeout_seconds = agent_definition.timeout_seconds
 
-    task_tracker = get_task_tracker()
-    task_tracker.register(
-        agent_run_id=agent_run_id,
-        expediente_id=request.context.expediente_id,
-        tarea_id=request.context.tarea_id
-    )
+    # 5. Elegir modo de ejecución según USE_CELERY
+    if settings.USE_CELERY:
+        # Modo Celery: encolar tarea en Redis
+        agent_run_id = _execute_with_celery(
+            token=token,
+            expediente_id=request.context.expediente_id,
+            tarea_id=request.context.tarea_id,
+            agent_config=agent_config,
+            callback_url=callback_url,
+            timeout_seconds=timeout_seconds
+        )
+        message = "Ejecución de agente encolada en Celery"
+    else:
+        # Modo BackgroundTasks: ejecución en proceso
+        agent_run_id = _execute_with_background_tasks(
+            background_tasks=background_tasks,
+            token=token,
+            expediente_id=request.context.expediente_id,
+            tarea_id=request.context.tarea_id,
+            agent_config=agent_config,
+            callback_url=callback_url,
+            timeout_seconds=timeout_seconds
+        )
+        message = "Ejecución de agente iniciada"
 
     logger.info(
         f"Agente registrado: {agent_run_id} "
         f"(expediente={request.context.expediente_id}, "
         f"tarea={request.context.tarea_id}, "
-        f"agente={request.agent})"
+        f"agente={request.agent}, "
+        f"mode={'celery' if settings.USE_CELERY else 'background'})"
     )
 
-    # 6. Determinar callback_url y timeout
-    callback_url = str(request.callback_url) if request.callback_url else None
-    timeout_seconds = agent_definition.timeout_seconds
+    # 6. Retornar 202 Accepted inmediatamente
+    return ExecuteAgentResponse(
+        agent_run_id=agent_run_id,
+        message=message,
+        callback_url=callback_url
+    )
 
-    # 7. Ejecutar en background
+
+def _execute_with_celery(
+    token: str,
+    expediente_id: str,
+    tarea_id: str,
+    agent_config: AgentConfig,
+    callback_url: Optional[str],
+    timeout_seconds: int
+) -> str:
+    """
+    Ejecuta agente usando Celery (modo distribuido).
+
+    Args:
+        token: JWT token
+        expediente_id: ID del expediente
+        tarea_id: ID de la tarea BPMN
+        agent_config: Configuración del agente
+        callback_url: URL para callback (puede ser None)
+        timeout_seconds: Timeout máximo
+
+    Returns:
+        agent_run_id (= Celery task ID)
+    """
+    from backoffice.tasks import execute_agent_task
+
+    # Serializar AgentConfig a dict para Celery (JSON serializable)
+    agent_config_dict = {
+        "nombre": agent_config.nombre,
+        "system_prompt": agent_config.system_prompt,
+        "modelo": agent_config.modelo,
+        "herramientas": agent_config.herramientas,
+        "additional_goal": agent_config.additional_goal
+    }
+
+    # Encolar tarea en Celery
+    celery_task = execute_agent_task.delay(
+        token=token,
+        expediente_id=expediente_id,
+        tarea_id=tarea_id,
+        agent_config_dict=agent_config_dict,
+        callback_url=callback_url,
+        timeout_seconds=timeout_seconds
+    )
+
+    # El task_id de Celery es nuestro agent_run_id
+    agent_run_id = celery_task.id
+
+    # Registrar en TaskTracker (Redis)
+    task_tracker = get_task_tracker()
+    task_tracker.register(
+        agent_run_id=agent_run_id,
+        expediente_id=expediente_id,
+        tarea_id=tarea_id
+    )
+
+    logger.info(f"[Celery] Tarea encolada: {agent_run_id}")
+
+    return agent_run_id
+
+
+def _execute_with_background_tasks(
+    background_tasks: BackgroundTasks,
+    token: str,
+    expediente_id: str,
+    tarea_id: str,
+    agent_config: AgentConfig,
+    callback_url: Optional[str],
+    timeout_seconds: int
+) -> str:
+    """
+    Ejecuta agente usando BackgroundTasks (modo local).
+
+    Args:
+        background_tasks: FastAPI BackgroundTasks
+        token: JWT token
+        expediente_id: ID del expediente
+        tarea_id: ID de la tarea BPMN
+        agent_config: Configuración del agente
+        callback_url: URL para callback (puede ser None)
+        timeout_seconds: Timeout máximo
+
+    Returns:
+        agent_run_id generado localmente
+    """
+    # Crear executor
+    executor = create_default_executor(
+        mcp_config_path=settings.MCP_CONFIG_PATH,
+        jwt_secret=settings.JWT_SECRET,
+        jwt_algorithm=settings.JWT_ALGORITHM
+    )
+
+    # Generar run_id y registrar tarea
+    agent_run_id = f"RUN-{datetime.now(timezone.utc).strftime('%Y%m%d-%H%M%S-%f')}"
+
+    task_tracker = get_task_tracker()
+    task_tracker.register(
+        agent_run_id=agent_run_id,
+        expediente_id=expediente_id,
+        tarea_id=tarea_id
+    )
+
+    # Ejecutar en background
     background_tasks.add_task(
         execute_and_callback,
         executor=executor,
         token=token,
-        expediente_id=request.context.expediente_id,
-        tarea_id=request.context.tarea_id,
+        expediente_id=expediente_id,
+        tarea_id=tarea_id,
         agent_config=agent_config,
         agent_run_id=agent_run_id,
         callback_url=callback_url,
         timeout_seconds=timeout_seconds
     )
 
-    # 8. Retornar 202 Accepted inmediatamente
-    return ExecuteAgentResponse(
-        agent_run_id=agent_run_id,
-        message="Ejecución de agente iniciada",
-        callback_url=callback_url
-    )
+    return agent_run_id
 
 
 async def execute_and_callback(
@@ -311,6 +427,11 @@ async def get_agent_status(agent_run_id: str):
     status = task_tracker.get_status(agent_run_id)
 
     if not status:
+        # Si usamos Celery, intentar fallback a estado de Celery
+        if settings.USE_CELERY:
+            status = _get_celery_task_status(agent_run_id)
+
+    if not status:
         logger.warning(f"Status no encontrado: {agent_run_id}")
         raise HTTPException(
             status_code=404,
@@ -318,3 +439,52 @@ async def get_agent_status(agent_run_id: str):
         )
 
     return AgentStatusResponse(**status)
+
+
+def _get_celery_task_status(agent_run_id: str) -> Optional[dict]:
+    """
+    Fallback: obtiene estado desde Celery directamente.
+
+    Útil si el TaskTracker no tiene la información pero
+    Celery sí la tiene.
+    """
+    try:
+        from celery.result import AsyncResult
+        from backoffice.celery_app import celery_app
+
+        celery_result = AsyncResult(agent_run_id, app=celery_app)
+
+        if celery_result.state == 'PENDING':
+            # PENDING puede significar que no existe o que está en cola
+            return None
+
+        # Mapear estados Celery a nuestro formato
+        status_map = {
+            'PENDING': 'pending',
+            'STARTED': 'running',
+            'RETRY': 'running',
+            'SUCCESS': 'completed',
+            'FAILURE': 'failed'
+        }
+
+        status = status_map.get(celery_result.state, 'unknown')
+        success = celery_result.successful() if celery_result.ready() else None
+
+        result_dict = {
+            "agent_run_id": agent_run_id,
+            "expediente_id": "unknown",  # No disponible desde Celery directamente
+            "tarea_id": "unknown",
+            "status": status,
+            "started_at": None,
+            "completed_at": None,
+            "elapsed_seconds": 0,
+            "success": success,
+            "resultado": celery_result.result if celery_result.successful() else None,
+            "error": {"mensaje": str(celery_result.result)} if celery_result.failed() else None
+        }
+
+        return result_dict
+
+    except Exception as e:
+        logger.debug(f"No se pudo obtener estado de Celery: {e}")
+        return None
