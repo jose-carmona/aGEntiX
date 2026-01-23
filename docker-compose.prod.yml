@@ -11,7 +11,25 @@
 #   - celery_worker: Workers Celery para ejecutar agentes
 #   - flower: UI de monitoreo de Celery
 #
-# IMPORTANTE: Configurar variables en .env antes de usar
+# ==============================================================================
+# SEGURIDAD - ANTES DE PRODUCCIÓN (P3 - code-review/commit-41f313a)
+# ==============================================================================
+#
+# 1. Generar secretos seguros ejecutando:
+#    ./scripts/generate_secrets.sh > .env.prod
+#
+# 2. Las siguientes variables DEBEN cambiarse (los defaults son INSEGUROS):
+#    - REDIS_PASSWORD (default: changeme)
+#    - FLOWER_PASSWORD (default: changeme)
+#    - JWT_SECRET (REQUERIDO, sin default)
+#    - API_ADMIN_TOKEN (REQUERIDO, sin default)
+#
+# 3. Nunca usar los valores por defecto en producción
+#
+# 4. Usar docker-compose con el archivo .env.prod:
+#    docker-compose -f docker-compose.prod.yml --env-file .env.prod up -d
+#
+# ==============================================================================
 
 version: '3.8'
 

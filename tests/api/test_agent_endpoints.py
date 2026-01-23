@@ -423,3 +423,65 @@ class TestAgentConfigIntegration:
         assert captured_config['modelo'] == "claude-3-haiku-20240307"
         assert captured_config['additional_goal'] == "Objetivo adicional del usuario"
         assert "consultar_expediente" in captured_config['herramientas']
+
+
+# =============================================================================
+# Tests para P2: Constante CELERY_STATE_MAP
+# =============================================================================
+
+class TestCeleryStateMap:
+    """
+    Tests para P2: Mapeo de estados Celery a estados de la API.
+
+    Ver code-review/commit-41f313a/plan-mejoras.md
+    """
+
+    def test_celery_state_map_exists(self):
+        """Verifica que la constante CELERY_STATE_MAP existe."""
+        from api.routers.agent import CELERY_STATE_MAP
+
+        assert CELERY_STATE_MAP is not None
+        assert isinstance(CELERY_STATE_MAP, dict)
+
+    def test_celery_state_map_contains_standard_states(self):
+        """Verifica que contiene los estados estándar de Celery."""
+        from api.routers.agent import CELERY_STATE_MAP
+
+        expected_states = ['PENDING', 'STARTED', 'SUCCESS', 'FAILURE', 'RETRY']
+        for state in expected_states:
+            assert state in CELERY_STATE_MAP, f"Falta estado Celery: {state}"
+
+    def test_celery_state_map_maps_to_api_states(self):
+        """Verifica que mapea a estados válidos de la API."""
+        from api.routers.agent import CELERY_STATE_MAP
+
+        valid_api_states = {'pending', 'running', 'completed', 'failed', 'cancelled', 'unknown'}
+
+        for celery_state, api_state in CELERY_STATE_MAP.items():
+            assert api_state in valid_api_states, \
+                f"Estado API inválido '{api_state}' para Celery state '{celery_state}'"
+
+    def test_celery_state_map_success_maps_to_completed(self):
+        """Verifica que SUCCESS mapea a completed."""
+        from api.routers.agent import CELERY_STATE_MAP
+
+        assert CELERY_STATE_MAP['SUCCESS'] == 'completed'
+
+    def test_celery_state_map_failure_maps_to_failed(self):
+        """Verifica que FAILURE mapea a failed."""
+        from api.routers.agent import CELERY_STATE_MAP
+
+        assert CELERY_STATE_MAP['FAILURE'] == 'failed'
+
+    def test_celery_state_map_started_maps_to_running(self):
+        """Verifica que STARTED mapea a running."""
+        from api.routers.agent import CELERY_STATE_MAP
+
+        assert CELERY_STATE_MAP['STARTED'] == 'running'
+
+    def test_celery_state_map_includes_revoked(self):
+        """Verifica que incluye el estado REVOKED."""
+        from api.routers.agent import CELERY_STATE_MAP
+
+        assert 'REVOKED' in CELERY_STATE_MAP
+        assert CELERY_STATE_MAP['REVOKED'] == 'cancelled'

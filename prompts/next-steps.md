@@ -16,3 +16,7 @@
 10) Completamos los agentes CrewAI capturando los logs y encaminarlos a nuestro sistema de log
 11) Agente en Documento de Resolución en LangChain/LangGraph
 12) mejorar el sistema de agentes para que pueda escalar horizontalmente con Celery + redis con diferentes workers.
+
+Por revisar:
+* Code-review
+* los logs debe pasar por el logger

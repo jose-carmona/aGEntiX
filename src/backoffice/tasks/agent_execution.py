@@ -8,6 +8,9 @@ Esta tarea se ejecuta en workers Celery distribuidos, permitiendo:
 - Reintentos automáticos con backoff exponencial
 - Persistencia de estado en Redis
 - Monitoreo vía Flower
+
+IMPORTANTE: Todos los logs usan AuditLogger para redacción automática de PII
+(GDPR/LOPD/ENS compliance). Ver P4 en code-review/commit-41f313a.
 """
 
 import asyncio
@@ -21,9 +24,11 @@ from prometheus_client import Counter, Histogram
 
 from backoffice.celery_app import celery_app
 from backoffice.executor_factory import create_default_executor
+from backoffice.logging.audit_logger import AuditLogger
 from backoffice.models import AgentConfig
 from backoffice.settings import settings
 
+# Logger estándar solo para mensajes de debug sin PII
 logger = logging.getLogger(__name__)
 
 # Métricas Prometheus
@@ -33,11 +38,13 @@ task_counter = Counter(
     ['agent_name', 'status']
 )
 
+# P1: Buckets configurables via PROMETHEUS_DURATION_BUCKETS
+# Ver code-review/commit-41f313a/plan-mejoras.md
 task_duration = Histogram(
     'agentix_celery_task_duration_seconds',
     'Duración ejecución agente en Celery',
     ['agent_name'],
-    buckets=[1, 5, 10, 30, 60, 120, 300, 600, 1800, 3600]
+    buckets=settings.prometheus_duration_buckets
 )
 
 
@@ -134,14 +141,22 @@ def execute_agent_task(
     agent_name = agent_config_dict.get('nombre', 'unknown')
     start_time = time.time()
 
-    logger.info(
+    # Crear AuditLogger para redacción automática de PII (GDPR/LOPD/ENS)
+    # Los logs se guardan en /logs/{expediente_id}/{agent_run_id}.log
+    task_logger = AuditLogger(
+        expediente_id=expediente_id,
+        agent_run_id=agent_run_id,
+        log_dir=settings.LOG_DIR
+    )
+
+    task_logger.log(
         f"[Celery] Iniciando ejecución: task_id={agent_run_id}, "
         f"expediente={expediente_id}, agente={agent_name}"
     )
 
     try:
         # Actualizar estado en TaskTracker a "running"
-        _update_task_status(agent_run_id, 'running')
+        _update_task_status(agent_run_id, 'running', task_logger)
 
         # Convertir dict a AgentConfig
         config = AgentConfig(
@@ -169,7 +184,7 @@ def execute_agent_task(
         task_counter.labels(agent_name=agent_name, status='success').inc()
         task_duration.labels(agent_name=agent_name).observe(duration)
 
-        logger.info(
+        task_logger.log(
             f"[Celery] Completado: task_id={agent_run_id}, "
             f"success={result.success}, duration={duration:.2f}s"
         )
@@ -185,11 +200,11 @@ def execute_agent_task(
         }
 
         # Actualizar estado final en TaskTracker
-        _update_task_completed(agent_run_id, result)
+        _update_task_completed(agent_run_id, result, task_logger)
 
         # Enviar webhook si hay callback_url
         if callback_url:
-            _send_webhook_async(callback_url, agent_run_id, result)
+            _send_webhook_async(callback_url, agent_run_id, result, task_logger)
 
         return result_dict
 
@@ -198,7 +213,7 @@ def execute_agent_task(
         duration = time.time() - start_time
         task_counter.labels(agent_name=agent_name, status='timeout').inc()
 
-        logger.error(
+        task_logger.error(
             f"[Celery] Soft timeout: task_id={agent_run_id}, "
             f"duration={duration:.2f}s"
         )
@@ -209,10 +224,10 @@ def execute_agent_task(
             "detalle": f"task_id={agent_run_id}"
         }
 
-        _update_task_failed(agent_run_id, error_dict)
+        _update_task_failed(agent_run_id, error_dict, task_logger)
 
         if callback_url:
-            _send_webhook_error(callback_url, agent_run_id, error_dict)
+            _send_webhook_error(callback_url, agent_run_id, error_dict, task_logger)
 
         return {
             "success": False,
@@ -220,7 +235,7 @@ def execute_agent_task(
             "resultado": {},
             "herramientas_usadas": [],
             "error": error_dict,
-            "log_auditoria": []
+            "log_auditoria": task_logger.get_log_entries()
         }
 
     except Exception as e:
@@ -228,23 +243,27 @@ def execute_agent_task(
         duration = time.time() - start_time
         task_counter.labels(agent_name=agent_name, status='failed').inc()
 
-        logger.error(
+        # Usar AuditLogger para redactar PII en str(e)
+        # str(e) puede contener datos personales del expediente
+        task_logger.error(
             f"[Celery] Error: task_id={agent_run_id}, "
             f"error={type(e).__name__}: {str(e)}, "
-            f"duration={duration:.2f}s",
-            exc_info=True
+            f"duration={duration:.2f}s"
         )
+
+        # También log a debug para traceback completo (sin PII en el tipo de excepción)
+        logger.debug(f"Traceback for task {agent_run_id}", exc_info=True)
 
         error_dict = {
             "codigo": "INTERNAL_ERROR",
             "mensaje": f"Error interno: {type(e).__name__}",
-            "detalle": str(e)
+            "detalle": str(e)  # Se redactará cuando se devuelva en log_auditoria
         }
 
-        _update_task_failed(agent_run_id, error_dict)
+        _update_task_failed(agent_run_id, error_dict, task_logger)
 
         if callback_url:
-            _send_webhook_error(callback_url, agent_run_id, error_dict)
+            _send_webhook_error(callback_url, agent_run_id, error_dict, task_logger)
 
         # Propagar excepción para retry automático si es transitoria
         raise
@@ -261,7 +280,11 @@ def _error_to_dict(error) -> Dict[str, Any]:
     }
 
 
-def _update_task_status(agent_run_id: str, status: str) -> None:
+def _update_task_status(
+    agent_run_id: str,
+    status: str,
+    task_logger: Optional[AuditLogger] = None
+) -> None:
     """Actualiza estado de tarea en TaskTracker (Redis)."""
     try:
         from api.services.task_tracker import get_task_tracker
@@ -269,30 +292,53 @@ def _update_task_status(agent_run_id: str, status: str) -> None:
         if status == 'running':
             tracker.mark_running(agent_run_id)
     except Exception as e:
-        logger.warning(f"No se pudo actualizar TaskTracker: {e}")
+        # Usar AuditLogger si disponible, sino logger estándar
+        if task_logger:
+            task_logger.warning(f"No se pudo actualizar TaskTracker: {e}")
+        else:
+            logger.warning(f"No se pudo actualizar TaskTracker (sin contexto PII): {e}")
 
 
-def _update_task_completed(agent_run_id: str, result) -> None:
+def _update_task_completed(
+    agent_run_id: str,
+    result,
+    task_logger: Optional[AuditLogger] = None
+) -> None:
     """Marca tarea como completada en TaskTracker."""
     try:
         from api.services.task_tracker import get_task_tracker
         tracker = get_task_tracker()
         tracker.mark_completed(agent_run_id, result)
     except Exception as e:
-        logger.warning(f"No se pudo marcar completada en TaskTracker: {e}")
+        if task_logger:
+            task_logger.warning(f"No se pudo marcar completada en TaskTracker: {e}")
+        else:
+            logger.warning(f"No se pudo marcar completada en TaskTracker (sin contexto PII): {e}")
 
 
-def _update_task_failed(agent_run_id: str, error_dict: Dict[str, str]) -> None:
+def _update_task_failed(
+    agent_run_id: str,
+    error_dict: Dict[str, str],
+    task_logger: Optional[AuditLogger] = None
+) -> None:
     """Marca tarea como fallida en TaskTracker."""
     try:
         from api.services.task_tracker import get_task_tracker
         tracker = get_task_tracker()
         tracker.mark_failed(agent_run_id, error_dict)
     except Exception as e:
-        logger.warning(f"No se pudo marcar fallida en TaskTracker: {e}")
+        if task_logger:
+            task_logger.warning(f"No se pudo marcar fallida en TaskTracker: {e}")
+        else:
+            logger.warning(f"No se pudo marcar fallida en TaskTracker (sin contexto PII): {e}")
 
 
-def _send_webhook_async(callback_url: str, agent_run_id: str, result) -> None:
+def _send_webhook_async(
+    callback_url: str,
+    agent_run_id: str,
+    result,
+    task_logger: Optional[AuditLogger] = None
+) -> None:
     """Envía webhook con resultado exitoso."""
     try:
         from api.services.webhook import send_webhook_with_retry
@@ -306,10 +352,19 @@ def _send_webhook_async(callback_url: str, agent_run_id: str, result) -> None:
             )
         )
     except Exception as e:
-        logger.error(f"Error enviando webhook: {e}")
+        # Usar AuditLogger para redactar PII en mensajes de error
+        if task_logger:
+            task_logger.error(f"Error enviando webhook: {e}")
+        else:
+            logger.error(f"Error enviando webhook (sin contexto PII): {e}")
 
 
-def _send_webhook_error(callback_url: str, agent_run_id: str, error_dict: Dict[str, str]) -> None:
+def _send_webhook_error(
+    callback_url: str,
+    agent_run_id: str,
+    error_dict: Dict[str, str],
+    task_logger: Optional[AuditLogger] = None
+) -> None:
     """Envía webhook con error."""
     try:
         from api.services.webhook import send_webhook_with_retry
@@ -322,4 +377,7 @@ def _send_webhook_error(callback_url: str, agent_run_id: str, error_dict: Dict[s
             )
         )
     except Exception as e:
-        logger.error(f"Error enviando webhook de error: {e}")
+        if task_logger:
+            task_logger.error(f"Error enviando webhook de error: {e}")
+        else:
+            logger.error(f"Error enviando webhook de error (sin contexto PII): {e}")

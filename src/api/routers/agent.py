@@ -35,6 +35,17 @@ from backoffice.config import get_agent_loader
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
+# P2: Mapeo de estados Celery a estados de la API
+# Ver code-review/commit-41f313a/plan-mejoras.md
+CELERY_STATE_MAP = {
+    'PENDING': 'pending',
+    'STARTED': 'running',
+    'RETRY': 'running',
+    'SUCCESS': 'completed',
+    'FAILURE': 'failed',
+    'REVOKED': 'cancelled',
+}
+
 
 @router.get(
     "/agents",
@@ -458,16 +469,8 @@ def _get_celery_task_status(agent_run_id: str) -> Optional[dict]:
             # PENDING puede significar que no existe o que está en cola
             return None
 
-        # Mapear estados Celery a nuestro formato
-        status_map = {
-            'PENDING': 'pending',
-            'STARTED': 'running',
-            'RETRY': 'running',
-            'SUCCESS': 'completed',
-            'FAILURE': 'failed'
-        }
-
-        status = status_map.get(celery_result.state, 'unknown')
+        # Usar constante CELERY_STATE_MAP definida a nivel de módulo
+        status = CELERY_STATE_MAP.get(celery_result.state, 'unknown')
         success = celery_result.successful() if celery_result.ready() else None
 
         result_dict = {
