@@ -425,7 +425,7 @@ agents:
            - Identifica si existe propuesta de resolución
 
         3. SI EXISTE PROPUESTA DE RESOLUCIÓN:
-           - Usa 'obtener_texto_documento' para leerla
+           - Usa 'obtener_texto_documento' para leerla con expediente_id="{expediente_id}" y el documento_id correspondiente
            - Basa tu resolución en la propuesta
 
         4. GENERAR RESOLUCIÓN
@@ -441,7 +441,9 @@ agents:
              * texto_markdown=<la resolución generada>
 
         6. REGISTRAR ACCIÓN
-           - Usa 'añadir_anotacion' para dejar constancia
+           - Usa 'añadir_anotacion' para dejar constancia:
+             * expediente_id="{expediente_id}"
+             * texto="Generada resolución desde aGEntiX"
 
         {additional_goal}
 
